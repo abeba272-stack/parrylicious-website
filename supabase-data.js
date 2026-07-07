@@ -77,12 +77,23 @@ export async function getCurrentUser() {
 
 export async function getCurrentUserRole() {
   assertConfigured();
-  const { data, error } = await supabase.rpc('current_user_role');
-  if (error) {
-    if (isMissingRpc(error)) return 'customer';
-    throw error;
+  const syncResult = await supabase.rpc('sync_my_role_from_email');
+  if (!syncResult.error) {
+    return mapRole(syncResult.data);
   }
-  return mapRole(data);
+  if (!isMissingRpc(syncResult.error)) {
+    const message = String(syncResult.error?.message || '').toLowerCase();
+    if (!message.includes('auth_required')) {
+      throw syncResult.error;
+    }
+  }
+
+  const fallback = await supabase.rpc('current_user_role');
+  if (fallback.error) {
+    if (isMissingRpc(fallback.error)) return 'customer';
+    throw fallback.error;
+  }
+  return mapRole(fallback.data);
 }
 
 export async function getMyProfile() {
@@ -144,7 +155,13 @@ export async function adminSetUserRoleByEmail(email, role) {
     p_role: normalizedRole
   });
   if (error) throw error;
-  return data || null;
+  const row = Array.isArray(data) ? (data[0] || null) : (data || null);
+  if (!row) return null;
+  return {
+    userId: row.user_id || null,
+    email: row.email || normalizedEmail.toLowerCase(),
+    role: mapRole(row.role)
+  };
 }
 
 export async function adminListUsersWithRoles(limitRows = 120) {
