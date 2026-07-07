@@ -571,8 +571,12 @@ roleForm?.addEventListener('submit', async (event) => {
   }
 
   try {
-    await adminSetUserRoleByEmail(email, role);
-    showRoleStatus(`Rolle für ${email} auf ${role} gesetzt.`);
+    const result = await adminSetUserRoleByEmail(email, role);
+    if (result?.userId) {
+      showRoleStatus(`Rolle für ${email} auf ${role} gesetzt (sofort aktiv + für zukünftige Logins).`);
+    } else {
+      showRoleStatus(`Rollenregel für ${email} auf ${role} gespeichert (aktiv sobald Account erstellt wird).`);
+    }
     roleEmail.value = '';
     await loadRoleUsers();
   } catch (error) {

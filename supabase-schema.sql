@@ -4,6 +4,7 @@
 -- 2) bookings/waitlist with strict RLS
 -- 3) secure RPC functions for slot checks + booking create/cancel/status updates
 -- 4) payment tracking fields for Stripe checkout/webhook integration
+-- 5) automatic role assignment by email rules
 
 create extension if not exists pgcrypto;
 
@@ -14,6 +15,13 @@ create table if not exists public.profiles (
   phone text,
   address text,
   avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.role_email_rules (
+  email text primary key,
+  role text not null default 'customer' check (role in ('customer', 'staff', 'admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -71,6 +79,8 @@ set payment_status = case when deposit_paid then 'paid' else 'unpaid' end
 where payment_status is null or payment_status = '';
 
 create index if not exists profiles_role_idx on public.profiles(role);
+create index if not exists role_email_rules_role_idx on public.role_email_rules(role);
+create unique index if not exists role_email_rules_email_lower_uidx on public.role_email_rules ((lower(email)));
 create index if not exists bookings_user_created_idx on public.bookings(user_id, created_at desc);
 create index if not exists bookings_date_status_idx on public.bookings(date_iso, status);
 create index if not exists bookings_stylist_date_idx on public.bookings(stylist_id, date_iso);
@@ -92,6 +102,11 @@ create trigger set_profiles_updated_at
 before update on public.profiles
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists set_role_email_rules_updated_at on public.role_email_rules;
+create trigger set_role_email_rules_updated_at
+before update on public.role_email_rules
+for each row execute procedure public.set_updated_at();
+
 drop trigger if exists set_bookings_updated_at on public.bookings;
 create trigger set_bookings_updated_at
 before update on public.bookings
@@ -102,6 +117,24 @@ create trigger set_waitlist_updated_at
 before update on public.waitlist
 for each row execute procedure public.set_updated_at();
 
+create or replace function public.role_for_email(p_email text)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select r.role
+      from public.role_email_rules r
+      where lower(r.email) = lower(coalesce(p_email, ''))
+      limit 1
+    ),
+    'customer'
+  );
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -109,9 +142,10 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name)
+  insert into public.profiles (id, role, full_name)
   values (
     new.id,
+    public.role_for_email(new.email),
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
   )
   on conflict (id) do nothing;
@@ -124,12 +158,24 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
 
-insert into public.profiles (id, full_name)
+insert into public.profiles (id, role, full_name)
 select
   u.id,
+  public.role_for_email(u.email),
   coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1))
 from auth.users u
 on conflict (id) do nothing;
+
+insert into public.role_email_rules (email, role)
+select
+  lower(u.email),
+  p.role
+from auth.users u
+join public.profiles p on p.id = u.id
+where u.email is not null
+  and p.role in ('staff', 'admin')
+on conflict (email) do update
+set role = excluded.role;
 
 create or replace function public.user_role(p_user_id uuid)
 returns text
@@ -149,6 +195,41 @@ security definer
 set search_path = public
 as $$
   select public.user_role(auth.uid());
+$$;
+
+create or replace function public.sync_my_role_from_email()
+returns text
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_email text;
+  v_full_name text;
+  v_role text;
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+
+  select
+    u.email,
+    coalesce(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1))
+  into v_email, v_full_name
+  from auth.users u
+  where u.id = v_user_id
+  limit 1;
+
+  v_role := public.role_for_email(v_email);
+
+  insert into public.profiles (id, role, full_name)
+  values (v_user_id, v_role, v_full_name)
+  on conflict (id) do update
+    set role = excluded.role;
+
+  return v_role;
+end;
 $$;
 
 create or replace function public.is_staff_role(p_user_id uuid)
@@ -397,19 +478,22 @@ begin
   where lower(u.email) = v_email
   limit 1;
 
-  if v_target is null then
-    raise exception 'USER_NOT_FOUND';
-  end if;
-
-  insert into public.profiles (id, role)
-  values (v_target, v_role)
-  on conflict (id) do update
+  insert into public.role_email_rules (email, role)
+  values (v_email, v_role)
+  on conflict (email) do update
     set role = excluded.role;
+
+  if v_target is not null then
+    insert into public.profiles (id, role)
+    values (v_target, v_role)
+    on conflict (id) do update
+      set role = excluded.role;
+  end if;
 
   return query
   select
     v_target as user_id,
-    (select u.email from auth.users u where u.id = v_target) as email,
+    v_email as email,
     v_role as role;
 end;
 $$;
@@ -461,6 +545,7 @@ end;
 $$;
 
 alter table public.profiles enable row level security;
+alter table public.role_email_rules enable row level security;
 alter table public.bookings enable row level security;
 alter table public.waitlist enable row level security;
 
@@ -487,6 +572,35 @@ for update
 to authenticated
 using (id = auth.uid() or public.user_role(auth.uid()) = 'admin')
 with check (id = auth.uid() or public.user_role(auth.uid()) = 'admin');
+
+drop policy if exists "role_email_rules_select_admin" on public.role_email_rules;
+create policy "role_email_rules_select_admin"
+on public.role_email_rules
+for select
+to authenticated
+using (public.user_role(auth.uid()) = 'admin');
+
+drop policy if exists "role_email_rules_insert_admin" on public.role_email_rules;
+create policy "role_email_rules_insert_admin"
+on public.role_email_rules
+for insert
+to authenticated
+with check (public.user_role(auth.uid()) = 'admin');
+
+drop policy if exists "role_email_rules_update_admin" on public.role_email_rules;
+create policy "role_email_rules_update_admin"
+on public.role_email_rules
+for update
+to authenticated
+using (public.user_role(auth.uid()) = 'admin')
+with check (public.user_role(auth.uid()) = 'admin');
+
+drop policy if exists "role_email_rules_delete_admin" on public.role_email_rules;
+create policy "role_email_rules_delete_admin"
+on public.role_email_rules
+for delete
+to authenticated
+using (public.user_role(auth.uid()) = 'admin');
 
 drop policy if exists "bookings_select_own" on public.bookings;
 drop policy if exists "bookings_select" on public.bookings;
@@ -553,6 +667,7 @@ to authenticated
 using (user_id = auth.uid() or public.is_staff_role(auth.uid()));
 
 grant execute on function public.current_user_role() to authenticated;
+grant execute on function public.sync_my_role_from_email() to authenticated;
 grant execute on function public.slot_is_available(date, text, integer, text, uuid) to authenticated;
 grant execute on function public.create_booking_secure(text, text, integer, numeric, numeric, text, text, date, text, jsonb, boolean) to authenticated;
 grant execute on function public.cancel_my_booking(uuid) to authenticated;

@@ -26,15 +26,19 @@ Produktionsstand der Website mit:
    - lokal optional: `http://localhost:3000/login.html`
 4. OAuth Provider aktivieren (`Authentication -> Providers`):
    - Google
-5. Rollen vergeben (mind. ein Staff/Admin):
-   - `select id, email from auth.users order by created_at desc;`
-   - `update public.profiles set role = 'staff' where id = '<USER_UUID>';`
-   - optional admin: `update public.profiles set role = 'admin' where id = '<USER_UUID>';`
+5. Rollen per E-Mail-Regel vergeben (automatisch bei Login/Registrierung):
+   - im Dashboard als `admin` unter "Rollenverwaltung" E-Mail + Rolle setzen
+   - oder SQL:
+     - `insert into public.role_email_rules (email, role) values ('admin1@mail.de', 'admin') on conflict (email) do update set role = excluded.role;`
+     - `insert into public.role_email_rules (email, role) values ('admin2@mail.de', 'admin') on conflict (email) do update set role = excluded.role;`
+     - `insert into public.role_email_rules (email, role) values ('staff1@mail.de', 'staff') on conflict (email) do update set role = excluded.role;`
+     - `insert into public.role_email_rules (email, role) values ('staff2@mail.de', 'staff') on conflict (email) do update set role = excluded.role;`
 
 ## Account-Typen
 - `customer`: Eigene Buchungen/Warteliste, eigene Stornos, Anzahlung starten, eigenes Profil pflegen.
 - `staff`: Alle Buchungen/Warteliste sehen, Buchungen bestätigen/stornieren.
 - `admin`: Wie `staff` plus Rollenverwaltung im Dashboard.
+- Ohne E-Mail-Regel ist der Default immer `customer`.
 
 ## Backend Environment Variables
 Für `/api/*` (z. B. auf Vercel):
