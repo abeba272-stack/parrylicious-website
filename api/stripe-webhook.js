@@ -1,15 +1,24 @@
 const crypto = require('crypto');
 
-const { setCors, sendJson, supabaseRequest } = require('./_lib');
+const { setCors, sendJson, sql } = require('./_lib');
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
 async function patchBookingPayment(bookingId, patch) {
   if (!bookingId) return null;
-  const data = await supabaseRequest(`/rest/v1/bookings?id=eq.${encodeURIComponent(bookingId)}`, {
-    method: 'PATCH',
-    body: patch
-  });
-  return Array.isArray(data) ? data[0] || null : null;
+  const rows = await sql`
+    update bookings
+    set payment_status = ${patch.payment_status},
+        payment_provider = ${patch.payment_provider},
+        deposit_paid = ${patch.deposit_paid},
+        paid_at = ${patch.paid_at},
+        stripe_checkout_session_id = ${patch.stripe_checkout_session_id},
+        stripe_payment_intent_id = ${patch.stripe_payment_intent_id},
+        payment_reference = ${patch.payment_reference},
+        payment_receipt_url = ${patch.payment_receipt_url}
+    where id = ${bookingId}
+    returning *
+  `;
+  return Array.isArray(rows) ? rows[0] || null : null;
 }
 
 async function readRawBody(req) {

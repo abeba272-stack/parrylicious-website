@@ -4,7 +4,7 @@ const {
   setCors,
   sendJson,
   bodyFromReq,
-  supabaseRequest,
+  sql,
   getAuthUser,
   getUserRole,
   isStaffRole,
@@ -17,11 +17,21 @@ function toStripeAmount(amount) {
 }
 
 async function patchBookingPayment(bookingId, patch) {
-  const data = await supabaseRequest(`/rest/v1/bookings?id=eq.${encodeURIComponent(bookingId)}`, {
-    method: 'PATCH',
-    body: patch
-  });
-  return Array.isArray(data) ? data[0] || null : null;
+  if (!bookingId) return null;
+  const rows = await sql`
+    update bookings
+    set payment_status = ${patch.payment_status},
+        payment_provider = ${patch.payment_provider},
+        deposit_paid = ${patch.deposit_paid},
+        payment_reference = ${patch.payment_reference},
+        stripe_checkout_session_id = ${patch.stripe_checkout_session_id},
+        stripe_payment_intent_id = ${patch.stripe_payment_intent_id},
+        payment_receipt_url = ${patch.payment_receipt_url},
+        paid_at = ${patch.paid_at}
+    where id = ${bookingId}
+    returning *
+  `;
+  return Array.isArray(rows) ? rows[0] || null : null;
 }
 
 module.exports = async function handler(req, res) {
@@ -47,7 +57,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const authUser = await getAuthUser(req);
+    const authUser = getAuthUser(req);
     if (!authUser?.id) {
       return sendJson(res, 401, { message: 'Nicht eingeloggt.' });
     }

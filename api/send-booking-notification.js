@@ -92,7 +92,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const authUser = await getAuthUser(req);
+    const authUser = getAuthUser(req);
     if (!authUser?.id) {
       return sendJson(res, 401, { message: 'Nicht eingeloggt.' });
     }
