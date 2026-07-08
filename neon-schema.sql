@@ -470,6 +470,9 @@ create or replace function public.admin_set_user_role_by_email(
 returns table(user_id uuid, email text, role text)
 language plpgsql
 as $$
+-- Bei Mehrdeutigkeit (OUT-Spalten email/role vs. Tabellenspalten) die Spalte
+-- bevorzugen — sonst 'column reference "email" is ambiguous' im INSERT/ON CONFLICT.
+#variable_conflict use_column
 declare
   v_target uuid;
   v_email text;

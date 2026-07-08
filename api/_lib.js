@@ -32,7 +32,12 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { neon } = require('@neondatabase/serverless');
+const { neon, types } = require('@neondatabase/serverless');
+
+// Postgres `date` (OID 1082) als reinen 'YYYY-MM-DD'-String zurückgeben, statt
+// als JS-Date (das sonst per UTC-Serialisierung das Datum um einen Tag
+// verschieben würde). timestamptz (created_at/paid_at) bleibt ISO-Zeitstempel.
+types.setTypeParser(1082, (value) => value);
 
 const sql = neon(process.env.DATABASE_URL);
 
