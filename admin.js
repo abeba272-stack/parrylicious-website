@@ -1,5 +1,5 @@
 import { fmtDate, currency, formatMinutes } from './common.js';
-import { isSupabaseConfigured } from './supabase.js';
+import { isAuthConfigured } from './auth-client.js';
 import {
   getCurrentUser,
   getCurrentUserRole,
@@ -14,7 +14,7 @@ import {
   removeMyWaitlistEntry,
   clearMyBookings,
   clearMyWaitlist
-} from './supabase-data.js';
+} from './data-client.js';
 import { createCheckoutSession, sendBookingNotification } from './backend-client.js';
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -585,8 +585,8 @@ roleForm?.addEventListener('submit', async (event) => {
 });
 
 async function boot() {
-  if (!isSupabaseConfigured) {
-    alert('Supabase ist nicht konfiguriert. Bitte zuerst login.html einrichten.');
+  if (!isAuthConfigured) {
+    alert('Das Backend ist nicht konfiguriert. Bitte zuerst login.html einrichten.');
     window.location.href = 'login.html?next=admin.html';
     return;
   }

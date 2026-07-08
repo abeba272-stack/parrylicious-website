@@ -1,6 +1,6 @@
 import { services } from './data/services.js';
 import { storage, fmtDate, currency, formatMinutes } from './common.js';
-import { isSupabaseConfigured } from './supabase.js';
+import { isAuthConfigured } from './auth-client.js';
 import {
   getCurrentUser,
   getMyProfile,
@@ -10,7 +10,7 @@ import {
   createMyBooking,
   createMyWaitlistEntry,
   checkSlotAvailability
-} from './supabase-data.js';
+} from './data-client.js';
 import {
   createCheckoutSession,
   verifyCheckoutSession,
@@ -799,7 +799,7 @@ async function handlePaymentReturn() {
 
 /* init */
 async function boot(){
-  if (!isSupabaseConfigured) {
+  if (!isAuthConfigured) {
     isGuestBooking = true;
     bookingsCache = storage.get(GUEST_BOOKINGS_KEY, []);
     waitlistCache = storage.get(GUEST_WAITLIST_KEY, []);

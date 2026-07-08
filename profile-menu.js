@@ -1,5 +1,5 @@
-import { supabase, isSupabaseConfigured } from './supabase.js';
-import { getCurrentUserRole } from './supabase-data.js';
+import { isAuthConfigured, getSession, signOut, onAuthStateChange } from './auth-client.js';
+import { getCurrentUserRole } from './data-client.js';
 
 function safeRoleLabel(role) {
   if (role === 'admin') return 'admin';
@@ -33,11 +33,15 @@ function buildMenu(container) {
 }
 
 async function readUserState() {
-  if (!isSupabaseConfigured || !supabase) return { email: null, role: 'gast/kunde' };
+  if (!isAuthConfigured) return { email: null, role: 'gast/kunde' };
 
-  const { data, error } = await supabase.auth.getSession();
-  if (error) return { email: null, role: 'gast/kunde' };
-  const email = data.session?.user?.email || null;
+  let session = null;
+  try {
+    session = await getSession();
+  } catch (_error) {
+    return { email: null, role: 'gast/kunde' };
+  }
+  const email = session?.user?.email || null;
   if (!email) return { email: null, role: 'gast/kunde' };
 
   let role = 'customer';
@@ -82,15 +86,15 @@ async function initMenu(container) {
   wireInteractions(parts);
 
   parts.logoutBtn.addEventListener('click', async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    if (!isAuthConfigured) return;
+    await signOut();
     parts.dropdown.classList.add('hidden');
     await syncState(parts);
     window.location.href = 'home.html';
   });
 
-  if (isSupabaseConfigured && supabase) {
-    supabase.auth.onAuthStateChange(() => {
+  if (isAuthConfigured) {
+    onAuthStateChange(() => {
       syncState(parts);
     });
   }

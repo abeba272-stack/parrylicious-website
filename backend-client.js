@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { isAuthConfigured, getAccessToken } from './auth-client.js';
 import { BACKEND_API_BASE_URL } from './backend-config.js';
 
 function getErrorMessage(error) {
@@ -51,10 +51,9 @@ function resolveApiUrl(path) {
 }
 
 async function getAccessTokenSafe() {
-  if (!isSupabaseConfigured || !supabase) return null;
+  if (!isAuthConfigured) return null;
   try {
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.access_token || null;
+    return await getAccessToken();
   } catch (_error) {
     return null;
   }
