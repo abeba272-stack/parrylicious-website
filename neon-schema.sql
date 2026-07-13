@@ -88,8 +88,11 @@ create table if not exists public.role_email_rules (
 
 create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.auth_users(id) on delete cascade,
-  status text not null default 'requested' check (status in ('requested', 'confirmed', 'canceled')),
+  -- user_id ist nullable: Gast-Buchungen ohne Konto (Kontakt steht in customer jsonb).
+  user_id uuid references public.auth_users(id) on delete set null,
+  status text not null default 'requested' check (status in ('pending_payment', 'requested', 'confirmed', 'canceled')),
+  -- Für pending_payment-Holds: Ablauf der Slot-Reservierung während des Checkouts.
+  hold_expires_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   service_id text not null,
@@ -114,7 +117,8 @@ create table if not exists public.bookings (
 
 create table if not exists public.waitlist (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.auth_users(id) on delete cascade,
+  -- user_id nullable: Gast-Warteliste ohne Konto.
+  user_id uuid references public.auth_users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   service_id text not null,
@@ -134,6 +138,14 @@ alter table public.bookings add column if not exists payment_receipt_url text;
 alter table public.bookings add column if not exists paid_at timestamptz;
 alter table public.profiles add column if not exists address text;
 alter table public.profiles add column if not exists avatar_url text;
+
+-- Gast-Buchung / Pflicht-Anzahlung / Slot-Hold (idempotent für bestehende DB).
+alter table public.bookings add column if not exists hold_expires_at timestamptz;
+alter table public.bookings alter column user_id drop not null;
+alter table public.waitlist alter column user_id drop not null;
+alter table public.bookings drop constraint if exists bookings_status_check;
+alter table public.bookings add constraint bookings_status_check
+  check (status in ('pending_payment', 'requested', 'confirmed', 'canceled'));
 
 update public.bookings
 set payment_status = case when deposit_paid then 'paid' else 'unpaid' end
@@ -293,6 +305,8 @@ as $$
     from public.bookings b
     where b.date_iso = p_date_iso
       and b.status <> 'canceled'
+      -- Verfallene pending_payment-Holds blockieren den Slot nicht mehr.
+      and (b.status <> 'pending_payment' or b.hold_expires_at is null or b.hold_expires_at > now())
       and (p_exclude_booking_id is null or b.id <> p_exclude_booking_id)
   )
   select
@@ -391,6 +405,145 @@ begin
   returning * into v_booking;
 
   return v_booking;
+end;
+$$;
+
+-- Gast-Buchung als kurzlebigen Hold anlegen (Slot reservieren bis Zahlung).
+-- user_id optional (null = Gast). Advisory-Lock + Slot-Check wie create_booking_secure.
+create or replace function public.create_booking_hold(
+  p_service_id text,
+  p_service_name text,
+  p_duration_min integer,
+  p_price_from numeric,
+  p_deposit numeric,
+  p_stylist_id text,
+  p_stylist_name text,
+  p_date_iso date,
+  p_time text,
+  p_customer jsonb,
+  p_hold_minutes integer default 30,
+  p_user_id uuid default null
+)
+returns public.bookings
+language plpgsql
+as $$
+declare
+  v_booking public.bookings;
+begin
+  if p_duration_min is null or p_duration_min <= 0 then
+    raise exception 'INVALID_DURATION';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext(p_date_iso::text || '|' || coalesce(p_stylist_id, 'auto')));
+
+  if not public.slot_is_available(
+    p_date_iso, p_time, p_duration_min, coalesce(p_stylist_id, 'auto'), null
+  ) then
+    raise exception 'SLOT_UNAVAILABLE';
+  end if;
+
+  insert into public.bookings (
+    user_id, status, hold_expires_at, service_id, service_name, duration_min,
+    price_from, deposit, stylist_id, stylist_name, date_iso, time, customer,
+    deposit_paid, payment_status
+  )
+  values (
+    p_user_id,
+    'pending_payment',
+    now() + make_interval(mins => greatest(1, coalesce(p_hold_minutes, 30))),
+    p_service_id, p_service_name, p_duration_min,
+    coalesce(p_price_from, 0), coalesce(p_deposit, 0), coalesce(p_stylist_id, 'auto'),
+    coalesce(p_stylist_name, 'Egal (automatisch)'), p_date_iso, p_time,
+    coalesce(p_customer, '{}'::jsonb), false, 'pending'
+  )
+  returning * into v_booking;
+
+  return v_booking;
+end;
+$$;
+
+-- Anzahlung bestätigen: Hold -> bestätigte, bezahlte Buchung (vom Webhook aufgerufen).
+create or replace function public.confirm_booking_payment(
+  p_booking_id uuid,
+  p_payment_provider text default 'stripe',
+  p_payment_reference text default null,
+  p_stripe_checkout_session_id text default null,
+  p_stripe_payment_intent_id text default null,
+  p_payment_receipt_url text default null
+)
+returns public.bookings
+language plpgsql
+as $$
+declare
+  v_booking public.bookings;
+begin
+  update public.bookings
+  set status = 'confirmed',
+      deposit_paid = true,
+      payment_status = 'paid',
+      hold_expires_at = null,
+      paid_at = coalesce(paid_at, now()),
+      payment_provider = coalesce(p_payment_provider, payment_provider),
+      payment_reference = coalesce(p_payment_reference, payment_reference),
+      stripe_checkout_session_id = coalesce(p_stripe_checkout_session_id, stripe_checkout_session_id),
+      stripe_payment_intent_id = coalesce(p_stripe_payment_intent_id, stripe_payment_intent_id),
+      payment_receipt_url = coalesce(p_payment_receipt_url, payment_receipt_url)
+  where id = p_booking_id
+  returning * into v_booking;
+
+  if v_booking.id is null then
+    raise exception 'BOOKING_NOT_FOUND';
+  end if;
+  return v_booking;
+end;
+$$;
+
+-- Staff-/Admin-Account anlegen (nur Admin). Passwort-Hash kommt aus dem API-Layer.
+create or replace function public.admin_create_staff(
+  p_actor_id uuid,
+  p_email text,
+  p_password_hash text,
+  p_role text
+)
+returns table(user_id uuid, email text, role text)
+language plpgsql
+as $$
+#variable_conflict use_column
+declare
+  v_email text := lower(trim(coalesce(p_email, '')));
+  v_role text := lower(trim(coalesce(p_role, 'staff')));
+  v_id uuid;
+begin
+  if p_actor_id is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+  if public.user_role(p_actor_id) <> 'admin' then
+    raise exception 'FORBIDDEN';
+  end if;
+  if v_email = '' then
+    raise exception 'EMAIL_REQUIRED';
+  end if;
+  if v_role not in ('staff', 'admin') then
+    raise exception 'INVALID_ROLE';
+  end if;
+  if p_password_hash is null or length(p_password_hash) < 20 then
+    raise exception 'INVALID_PASSWORD';
+  end if;
+  if exists (select 1 from public.auth_users u where lower(u.email) = v_email) then
+    raise exception 'EMAIL_EXISTS';
+  end if;
+
+  insert into public.auth_users (email, password_hash, email_verified)
+  values (v_email, p_password_hash, true)
+  returning id into v_id;
+
+  insert into public.role_email_rules (email, role)
+  values (v_email, v_role)
+  on conflict (email) do update set role = excluded.role;
+
+  update public.profiles set role = v_role where id = v_id;
+
+  return query select v_id as user_id, v_email as email, v_role as role;
 end;
 $$;
 

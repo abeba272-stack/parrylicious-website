@@ -54,35 +54,38 @@ function sendPgError(res, error) {
   return sendJson(res, status, { error: code, message: messages[code] || messages.INTERNAL });
 }
 
-// GET: Liste (staff/admin -> alle, sonst eigene) oder Einzelbuchung (?id=).
+// GET: Nur Staff/Admin. Liste aller bezahlten/aktiven Buchungen oder Einzelbuchung (?id=).
+// pending_payment-Holds (unbezahlt, transient) werden NICHT angezeigt.
 async function handleGet(req, res) {
   const user = requireAuthUser(req, res);
   if (!user) return;
 
+  const role = await getUserRole(user.id);
+  if (!isStaffRole(role)) {
+    return sendJson(res, 403, { error: 'FORBIDDEN', message: 'Nur für Mitarbeiter.' });
+  }
+
   const query = getQuery(req);
   const id = query.id ? String(query.id).trim() : '';
 
-  const role = await getUserRole(user.id);
-  const staff = isStaffRole(role);
-
   if (id) {
-    // Nicht-existent oder kein UUID -> 404 (kein Existenz-Leak, kein 500).
     if (!isUuid(id)) {
       return sendJson(res, 404, { error: 'BOOKING_NOT_FOUND_OR_FORBIDDEN', message: 'Buchung nicht gefunden.' });
     }
-    const rows = await sql`select * from bookings where id = ${id} limit 1`;
+    const rows = await sql`select * from bookings where id = ${id} and status <> 'pending_payment' limit 1`;
     const row = Array.isArray(rows) ? rows[0] : null;
-    // Eigene ODER staff/admin. Sonst 404 statt 403 (kein Existenz-Leak).
-    if (!row || (row.user_id !== user.id && !staff)) {
+    if (!row) {
       return sendJson(res, 404, { error: 'BOOKING_NOT_FOUND_OR_FORBIDDEN', message: 'Buchung nicht gefunden.' });
     }
     return sendJson(res, 200, mapBookingRow(row));
   }
 
-  const rows = staff
-    ? await sql`select * from bookings order by created_at desc limit 500`
-    : await sql`select * from bookings where user_id = ${user.id} order by created_at desc limit 500`;
-
+  const rows = await sql`
+    select * from bookings
+    where status <> 'pending_payment'
+    order by created_at desc
+    limit 500
+  `;
   const list = (Array.isArray(rows) ? rows : []).map(mapBookingRow);
   return sendJson(res, 200, list);
 }

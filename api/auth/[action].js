@@ -154,48 +154,6 @@ async function buildSession(userRow) {
  * Aktionen: E-Mail/Passwort
  * ------------------------------------------------------------------------- */
 
-async function handleSignup(req, res) {
-  const body = bodyFromReq(req) || {};
-  const email = normalizeEmail(body.email);
-  const password = body.password;
-
-  if (!email || !EMAIL_RE.test(email)) {
-    return sendJson(res, 400, {
-      error: 'EMAIL_INVALID',
-      message: 'Bitte gib eine gültige E-Mail-Adresse an.'
-    });
-  }
-  if (!isValidPassword(password)) {
-    return sendJson(res, 400, {
-      error: 'WEAK_PASSWORD',
-      message: 'Das Passwort muss mindestens 8 Zeichen lang sein.'
-    });
-  }
-
-  const passwordHash = await hashPassword(password);
-
-  let rows;
-  try {
-    rows = await sql`
-      insert into auth_users (email, password_hash, email_verified)
-      values (${email}, ${passwordHash}, false)
-      returning *
-    `;
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      return sendJson(res, 409, {
-        error: 'EMAIL_EXISTS',
-        message: 'Diese E-Mail ist bereits registriert.'
-      });
-    }
-    throw error;
-  }
-
-  // handle_new_user-Trigger hat das Profil bereits angelegt.
-  const session = await buildSession(rows[0]);
-  return sendJson(res, 200, session);
-}
-
 async function handleLogin(req, res) {
   const body = bodyFromReq(req) || {};
   const email = normalizeEmail(body.email);
@@ -233,160 +191,8 @@ async function handleLogin(req, res) {
 }
 
 /* ---------------------------------------------------------------------------
- * Aktionen: Google OAuth
+ * Aktionen: refresh
  * ------------------------------------------------------------------------- */
-
-function handleGoogle(req, res) {
-  const next = sanitizeNext(getQuery(req, 'next'));
-  const state = jwt.sign(
-    { next, nonce: crypto.randomBytes(16).toString('hex') },
-    process.env.JWT_SECRET,
-    { expiresIn: STATE_TTL, algorithm: 'HS256' }
-  );
-
-  const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID || '',
-    redirect_uri: `${process.env.API_BASE_URL}/api/auth/callback`,
-    response_type: 'code',
-    scope: 'openid email profile',
-    state,
-    prompt: 'select_account'
-  });
-
-  return redirect(res, `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
-}
-
-// (a) google_id-Match -> Login; (b) sonst lower(email)-Match -> verknüpfen +
-// email_verified=true; (c) sonst neu anlegen (email_verified=true).
-async function upsertGoogleUser({ googleId, email, fullName, avatarUrl }) {
-  const byGoogle = await sql`select * from auth_users where google_id = ${googleId} limit 1`;
-  if (Array.isArray(byGoogle) && byGoogle[0]) {
-    return byGoogle[0];
-  }
-
-  const linked = await sql`
-    update auth_users
-    set google_id = ${googleId},
-        email_verified = true,
-        full_name = coalesce(full_name, ${fullName}),
-        avatar_url = coalesce(avatar_url, ${avatarUrl}),
-        updated_at = now()
-    where lower(email) = ${email}
-      and google_id is null
-    returning *
-  `;
-  if (Array.isArray(linked) && linked[0]) {
-    return linked[0];
-  }
-
-  // E-Mail existiert bereits, ist aber an ein anderes Google-Konto gebunden ->
-  // per E-Mail einloggen (das bestehende Konto).
-  const existing = await sql`select * from auth_users where lower(email) = ${email} limit 1`;
-  if (Array.isArray(existing) && existing[0]) {
-    return existing[0];
-  }
-
-  const created = await sql`
-    insert into auth_users (email, google_id, email_verified, full_name, avatar_url)
-    values (${email}, ${googleId}, true, ${fullName}, ${avatarUrl})
-    returning *
-  `;
-  return created[0];
-}
-
-async function handleCallback(req, res) {
-  const frontendUrl = process.env.FRONTEND_URL || '';
-  const errorRedirect = (code) =>
-    redirect(res, `${frontendUrl}/login.html#error=${encodeURIComponent(code)}`);
-
-  try {
-    const code = getQuery(req, 'code');
-    const state = getQuery(req, 'state');
-    if (!code || !state) {
-      return errorRedirect('missing_params');
-    }
-
-    let statePayload;
-    try {
-      statePayload = jwt.verify(state, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-    } catch (_error) {
-      return errorRedirect('invalid_state');
-    }
-    const next = sanitizeNext(statePayload && statePayload.next);
-
-    // 1) Code gegen Tokens tauschen.
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID || '',
-        client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirect_uri: `${process.env.API_BASE_URL}/api/auth/callback`,
-        grant_type: 'authorization_code',
-        code
-      })
-    });
-    const tokenJson = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenJson.access_token) {
-      return errorRedirect('token_exchange_failed');
-    }
-
-    // 2) Userinfo abrufen.
-    const infoResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
-      headers: { Authorization: `Bearer ${tokenJson.access_token}` }
-    });
-    const info = await infoResponse.json().catch(() => ({}));
-    if (!infoResponse.ok || !info.sub) {
-      return errorRedirect('userinfo_failed');
-    }
-
-    const email = normalizeEmail(info.email);
-    if (!email) {
-      return errorRedirect('no_email');
-    }
-
-    const userRow = await upsertGoogleUser({
-      googleId: String(info.sub),
-      email,
-      fullName: info.name || null,
-      avatarUrl: info.picture || null
-    });
-
-    // 3) Einmal-Code für Frontend-Handoff.
-    const oneTimeCode = await createAuthToken(userRow.id, 'login_code', LOGIN_CODE_TTL_SECONDS);
-    const location =
-      `${frontendUrl}/login.html#code=${oneTimeCode}` +
-      (next ? `&next=${encodeURIComponent(next)}` : '');
-    return redirect(res, location);
-  } catch (_error) {
-    return errorRedirect('server_error');
-  }
-}
-
-/* ---------------------------------------------------------------------------
- * Aktionen: exchange / refresh
- * ------------------------------------------------------------------------- */
-
-async function handleExchange(req, res) {
-  const body = bodyFromReq(req) || {};
-  const code = body.code;
-  const invalid = () =>
-    sendJson(res, 401, {
-      error: 'CODE_INVALID',
-      message: 'Der Anmelde-Code ist ungültig oder abgelaufen.'
-    });
-
-  if (!code) return invalid();
-
-  const consumed = await consumeAuthToken(String(code), 'login_code');
-  if (!consumed) return invalid();
-
-  const userRow = await getAuthUserRow(consumed.userId);
-  if (!userRow) return invalid();
-
-  const session = await buildSession(userRow);
-  return sendJson(res, 200, session);
-}
 
 async function handleRefresh(req, res) {
   const body = bodyFromReq(req) || {};
@@ -562,12 +368,11 @@ async function handleResetPassword(req, res) {
  * Dispatcher
  * ------------------------------------------------------------------------- */
 
+// Modell: nur Angestellten-Accounts (vom Admin angelegt). Keine öffentliche
+// Selbst-Registrierung, kein Google-Login. Daher sind signup/google/callback/
+// exchange NICHT geroutet (Staff nutzen login + optionalen Passwort-Reset).
 const ROUTES = {
-  signup: { method: 'POST', handler: handleSignup },
   login: { method: 'POST', handler: handleLogin },
-  google: { method: 'GET', handler: handleGoogle },
-  callback: { method: 'GET', handler: handleCallback },
-  exchange: { method: 'POST', handler: handleExchange },
   refresh: { method: 'POST', handler: handleRefresh },
   me: { method: 'GET', handler: handleMe },
   logout: { method: 'POST', handler: handleLogout },

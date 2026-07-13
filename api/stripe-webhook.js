@@ -3,24 +3,6 @@ const crypto = require('crypto');
 const { setCors, sendJson, sql } = require('./_lib');
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
-async function patchBookingPayment(bookingId, patch) {
-  if (!bookingId) return null;
-  const rows = await sql`
-    update bookings
-    set payment_status = ${patch.payment_status},
-        payment_provider = ${patch.payment_provider},
-        deposit_paid = ${patch.deposit_paid},
-        paid_at = ${patch.paid_at},
-        stripe_checkout_session_id = ${patch.stripe_checkout_session_id},
-        stripe_payment_intent_id = ${patch.stripe_payment_intent_id},
-        payment_reference = ${patch.payment_reference},
-        payment_receipt_url = ${patch.payment_receipt_url}
-    where id = ${bookingId}
-    returning *
-  `;
-  return Array.isArray(rows) ? rows[0] || null : null;
-}
-
 async function readRawBody(req) {
   if (typeof req.body === 'string') return req.body;
   if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
@@ -222,9 +204,17 @@ module.exports = async function handler(req, res) {
     }
 
     if (handledSuccessEvents.has(eventType)) {
-      await patchBookingPayment(bookingId, paymentPatchFromSession(session, true));
+      // Hold -> bestätigte, bezahlte Buchung. Idempotent (paid_at bleibt erhalten).
+      const p = paymentPatchFromSession(session, true);
+      await sql`
+        select * from confirm_booking_payment(
+          ${bookingId}, 'stripe', ${p.payment_reference},
+          ${p.stripe_checkout_session_id}, ${p.stripe_payment_intent_id}, ${p.payment_receipt_url}
+        )
+      `;
     } else if (handledFailureEvents.has(eventType)) {
-      await patchBookingPayment(bookingId, paymentPatchFromSession(session, false));
+      // Abgebrochen/abgelaufen: nur den unbezahlten Hold freigeben, bestätigte Buchungen bleiben.
+      await sql`delete from bookings where id = ${bookingId} and status = 'pending_payment'`;
     }
 
     return sendJson(res, 200, {
