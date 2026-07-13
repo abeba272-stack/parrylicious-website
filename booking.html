@@ -16,9 +16,7 @@
       <a class="brand" href="home.html"><img src="assets/logo.jpg" alt="Parrylicious Studio Logo" class="logo"/></a>
       <nav class="nav">
         <a href="home.html#services">Leistungen</a>
-        <a href="login.html">Login</a>
         <a class="btn small" href="home.html">Zurück</a>
-        <div data-profile-menu></div>
       </nav>
     </div>
   </header>
@@ -28,9 +26,9 @@
       <div class="section-head">
         <h2>Termin anfragen</h2>
         <p class="muted">
-          Ablauf: Service wählen → Datum/Slot auswählen → Daten eingeben → optionale Online-Anzahlung → Bestätigung per SMS/E‑Mail.
+          Ablauf: Service wählen → Datum/Slot auswählen → Daten eingeben → Anzahlung online → Termin bestätigt.
         </p>
-        <p class="muted" id="bookingModeHint">Du kannst mit Login oder als Gast buchen.</p>
+        <p class="muted" id="bookingModeHint">Sichere deinen Termin mit einer Anzahlung – der Rest wird vor Ort im Salon bezahlt.</p>
       </div>
 
       <div class="wizard">
@@ -44,7 +42,7 @@
 
         <section class="panel" id="step1">
           <h3>Service auswählen</h3>
-          <p class="muted">Preise laut Studio-Liste. Anpassungen kannst du im Admin-Panel pflegen.</p>
+          <p class="muted">Alle Preise verstehen sich „ab“ – der genaue Betrag hängt von Haarlänge und -zustand ab.</p>
           <div class="grid" id="servicePicker"></div>
           <div class="row end gap">
             <button class="btn" id="toStep2" disabled>Weiter</button>
@@ -91,7 +89,7 @@
 
         <section class="panel hidden" id="step4">
           <h3>Deine Angaben</h3>
-          <p class="muted">Mit Login landet die Buchung in deinem Konto. Ohne Login buchst du als Gast.</p>
+          <p class="muted">Wir brauchen diese Angaben für die Terminbestätigung und Rückfragen.</p>
 
           <form id="detailsForm" class="form">
             <div class="two-col">
@@ -133,27 +131,26 @@
         </section>
 
         <section class="panel hidden" id="step5">
-          <h3>Anzahlung (optional)</h3>
-          <p class="muted">Mit Login kannst du die Anzahlung direkt online zahlen (Stripe). Als Gast bleibt die Anfrage ohne Online-Zahlung möglich.</p>
+          <h3>Anzahlung &amp; Terminbestätigung</h3>
+          <p class="muted">Zahle jetzt sicher deine Anzahlung online – damit ist dein Termin fest reserviert. Der Restbetrag wird vor Ort im Salon bezahlt.</p>
           <div class="card">
             <div class="summary" id="summary"></div>
             <div class="row gap">
-              <button class="btn" id="payDeposit">Anzahlung online bezahlen</button>
-              <button class="btn ghost" id="skipPay">Ohne Online-Zahlung anfragen</button>
+              <button class="btn" id="payDeposit">Anzahlung sicher online bezahlen</button>
             </div>
             <p class="fineprint">
-              Storno: bis 7 Tage vorher kostenlos, danach keine Rückerstattung der Anzahlung.
+              Zahlung erfolgt verschlüsselt über Stripe. Storno bis 7 Tage vorher kostenlos, danach wird die Anzahlung nicht erstattet.
             </p>
           </div>
           <div class="row between gap">
             <button class="btn ghost" data-back="4">Zurück</button>
-            <a class="btn" href="home.html">Zur Startseite</a>
+            <a class="btn ghost" href="home.html">Abbrechen</a>
           </div>
         </section>
 
         <section class="panel hidden" id="done">
-          <h3>✅ Anfrage gespeichert</h3>
-          <p class="muted">Wir bestätigen deinen Termin per SMS/E‑Mail.</p>
+          <h3>✅ Termin bestätigt</h3>
+          <p class="muted">Deine Anzahlung ist eingegangen und dein Termin ist fest reserviert. Wir freuen uns auf dich!</p>
           <div class="card">
             <div class="summary" id="doneSummary"></div>
             <div class="row gap">
@@ -163,14 +160,6 @@
           </div>
         </section>
 
-      </div>
-
-      <div class="hintbox">
-        <div class="hintbox-title">Technischer Hinweis</div>
-        <div class="muted">
-          Für Auth, Stripe, SMS und E‑Mail wird ein API-Backend benötigt (z. B. Vercel Functions mit `/api/*`).
-          Die Oberfläche kann weiterhin statisch bleiben.
-        </div>
       </div>
 
     </div>
@@ -186,7 +175,6 @@
     </div>
   </footer>
 
-  <script type="module" src="profile-menu.js"></script>
   <script type="module" src="booking.js"></script>
 </body>
 </html>

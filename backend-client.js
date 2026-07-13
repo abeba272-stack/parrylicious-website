@@ -71,6 +71,33 @@ export async function createCheckoutSession(input) {
   }
 }
 
+// Öffentlicher Gast-Checkout: legt Slot-Hold an + startet Stripe-Anzahlung.
+// Rückgabe: { ok, url, bookingId } oder { ok:false, message, code }.
+export async function startBookingCheckout(input) {
+  try {
+    const data = await requestJson('/api/bookings/checkout', {
+      method: 'POST',
+      body: input
+    });
+    return { ok: true, ...data };
+  } catch (error) {
+    return { ok: false, message: getErrorMessage(error) };
+  }
+}
+
+// Öffentliche Gast-Warteliste.
+export async function submitWaitlist(input) {
+  try {
+    const data = await requestJson('/api/waitlist', {
+      method: 'POST',
+      body: input
+    });
+    return { ok: true, ...data };
+  } catch (error) {
+    return { ok: false, message: getErrorMessage(error) };
+  }
+}
+
 export async function verifyCheckoutSession(sessionId) {
   try {
     const data = await requestJson(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}`);
