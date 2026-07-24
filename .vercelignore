@@ -1,0 +1,5 @@
+.env
+.env.*
+dev-server.cjs
+node_modules
+.git

@@ -59,18 +59,6 @@ async function getAccessTokenSafe() {
   }
 }
 
-export async function createCheckoutSession(input) {
-  try {
-    const data = await requestJson('/api/create-checkout-session', {
-      method: 'POST',
-      body: input
-    });
-    return { ok: true, ...data };
-  } catch (error) {
-    return { ok: false, message: getErrorMessage(error) };
-  }
-}
-
 // Öffentlicher Gast-Checkout: legt Slot-Hold an + startet Stripe-Anzahlung.
 // Rückgabe: { ok, url, bookingId } oder { ok:false, message, code }.
 export async function startBookingCheckout(input) {
