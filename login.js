@@ -1,13 +1,10 @@
 import {
   isAuthConfigured,
   getSession,
-  signUp,
   signInWithPassword,
-  signInWithGoogle,
   signOut,
   requestPasswordReset,
   resetPassword,
-  handleAuthRedirect,
   onAuthStateChange
 } from './auth-client.js';
 
@@ -15,8 +12,6 @@ document.getElementById('year').textContent = new Date().getFullYear();
 
 const statusEl = document.getElementById('loginStatus');
 const form = document.getElementById('loginForm');
-const registerBtn = document.getElementById('registerBtn');
-const googleBtn = document.getElementById('googleBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 const loginActions = document.getElementById('loginActions');
@@ -30,18 +25,7 @@ function clear(){ statusEl.textContent = ''; }
 
 function mapAuthError(error) {
   const code = String(error?.code || '').toUpperCase();
-  switch (code) {
-    case 'EMAIL_EXISTS':
-      return 'Diese E-Mail ist bereits registriert.';
-    case 'INVALID_CREDENTIALS':
-      return 'E-Mail oder Passwort ist falsch.';
-    case 'GOOGLE_ONLY':
-      return 'Dieses Konto wurde mit Google erstellt. Bitte melde dich mit Google an.';
-    case 'CODE_INVALID':
-      return 'Der Anmelde-Code ist ungueltig oder abgelaufen.';
-    default:
-      break;
-  }
+  if (code === 'INVALID_CREDENTIALS') return 'E-Mail oder Passwort ist falsch.';
   const message = String(error?.message || '').toLowerCase();
   if (message.includes('network') || message.includes('fetch')) return 'Netzwerkfehler. Bitte versuche es erneut.';
   return error?.message || 'Unbekannter Fehler.';
@@ -59,8 +43,9 @@ function sanitizeNextPath(path) {
   return path;
 }
 
+// Standardziel nach Staff-Login ist das Dashboard.
 function getSafeNextPath() {
-  return sanitizeNextPath(nextParam);
+  return sanitizeNextPath(nextParam) || 'admin.html';
 }
 
 function setLoggedInUI(email){
@@ -112,8 +97,6 @@ function enterResetMode() {
   }
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.textContent = 'Neues Passwort setzen';
-  registerBtn.classList.add('hidden');
-  googleBtn.classList.add('hidden');
   forgotPasswordBtn.classList.add('hidden');
 
   form.addEventListener('submit', async (e) => {
@@ -136,44 +119,7 @@ function enterResetMode() {
   });
 }
 
-async function initAuthPage() {
-  // OAuth-Rueckkehr (login.html#code=... bzw. #error=...) zuerst verarbeiten.
-  try {
-    const result = await handleAuthRedirect();
-    if (result) {
-      const nextPath = sanitizeNextPath(result.next) || getSafeNextPath();
-      if (nextPath) {
-        window.location.href = nextPath;
-        return;
-      }
-    }
-  } catch (error) {
-    showError('Google-Anmeldung fehlgeschlagen', error);
-  }
-
-  googleBtn.addEventListener('click', () => {
-    clear();
-    signInWithGoogle(getSafeNextPath() || '');
-  });
-
-  registerBtn.addEventListener('click', async () => {
-    clear();
-    const fd = new FormData(form);
-    const email = String(fd.get('email') || '').trim();
-    const password = String(fd.get('password') || '');
-    if (!email || !password) {
-      show('Bitte E-Mail und Passwort ausfuellen.');
-      return;
-    }
-    try {
-      await signUp(email, password);
-    } catch (error) {
-      showError('Registrierung fehlgeschlagen', error);
-      return;
-    }
-    await refreshSession();
-  });
-
+function initAuthPage() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clear();
@@ -229,8 +175,6 @@ async function initAuthPage() {
 if (!isAuthConfigured) {
   show('Das Backend ist noch nicht konfiguriert. Bitte BACKEND_API_BASE_URL in backend-config.js setzen.');
   form.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
-  googleBtn.disabled = true;
-  registerBtn.disabled = true;
   forgotPasswordBtn.disabled = true;
 } else if (resetToken) {
   enterResetMode();

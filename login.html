@@ -15,9 +15,7 @@
     <div class="container row">
       <a class="brand" href="home.html"><img src="assets/logo.jpg" alt="Parrylicious Studio Logo" class="logo"/></a>
       <nav class="nav">
-        <a href="booking.html">Termin</a>
-        <a class="btn small" href="home.html">Zurück</a>
-        <div data-profile-menu></div>
+        <a class="btn small" href="home.html">Zurück zur Website</a>
       </nav>
     </div>
   </header>
@@ -25,17 +23,12 @@
   <main class="section">
     <div class="container narrow">
       <div class="section-head">
-        <h2>Kunden-Login</h2>
-        <p class="muted">E-Mail/Passwort oder OAuth via Google.</p>
+        <p class="kicker">Interner Bereich</p>
+        <h2>Team-Login</h2>
+        <p class="muted">Zugang nur für Mitarbeitende. Accounts werden von der Studioleitung angelegt.</p>
       </div>
 
       <div class="card">
-        <div class="row">
-          <button class="btn ghost" id="googleBtn">Mit Google anmelden</button>
-        </div>
-
-        <div class="divider"></div>
-
         <form id="loginForm" class="form">
           <label>E‑Mail
             <input name="email" type="email" required placeholder="name@mail.de" />
@@ -44,9 +37,8 @@
             <input name="password" type="password" required placeholder="••••••••" />
           </label>
 
-          <div class="row between gap" id="loginActions">
+          <div class="row gap" id="loginActions">
             <button class="btn" type="submit">Einloggen</button>
-            <button class="btn ghost" type="button" id="registerBtn">Registrieren</button>
           </div>
           <button class="link" type="button" id="forgotPasswordBtn">Passwort vergessen?</button>
         </form>
@@ -57,12 +49,11 @@
       </div>
 
       <div class="card">
-        <h3>Warum Login?</h3>
-        <ul class="list">
-          <li>Termine verwalten (verschieben/absagen)</li>
-          <li>Buchungs- und Anzahlungsstatus im Dashboard einsehen</li>
-          <li>Haarprofil + Vorlieben speichern</li>
-        </ul>
+        <h3>Nur für das Team</h3>
+        <p class="muted">
+          Im Dashboard verwalten Mitarbeitende Buchungen und Warteliste, bestätigen oder stornieren Termine
+          und sehen den Zahlungsstatus. Kundinnen und Kunden buchen ganz ohne Login direkt über die Website.
+        </p>
       </div>
 
     </div>
@@ -78,7 +69,6 @@
     </div>
   </footer>
 
-  <script type="module" src="profile-menu.js"></script>
   <script type="module" src="login.js"></script>
 </body>
 </html>
