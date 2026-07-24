@@ -5,17 +5,13 @@ import {
   getCurrentUserRole,
   getMyBookings,
   getMyWaitlist,
-  getMyProfile,
-  saveMyProfile,
   adminSetUserRoleByEmail,
+  adminCreateStaff,
   adminListUsersWithRoles,
   updateBookingStatus,
-  cancelMyBooking,
-  removeMyWaitlistEntry,
-  clearMyBookings,
-  clearMyWaitlist
+  removeMyWaitlistEntry
 } from './data-client.js';
-import { createCheckoutSession, sendBookingNotification } from './backend-client.js';
+import { sendBookingNotification } from './backend-client.js';
 
 document.getElementById('year').textContent = new Date().getFullYear();
 document.getElementById('today').textContent = new Date().toLocaleString('de-DE', {
@@ -35,18 +31,7 @@ const dashboardHint = document.getElementById('dashboardHint');
 
 const kpiBookings = document.getElementById('kpiBookings');
 const kpiWaitlist = document.getElementById('kpiWaitlist');
-const kpiOpenPayments = document.getElementById('kpiOpenPayments');
-
-const profileForm = document.getElementById('profileForm');
-const profileStatus = document.getElementById('profileStatus');
-const profileAvatar = document.getElementById('profileAvatar');
-const profileAvatarUrl = document.getElementById('profileAvatarUrl');
-const profileAvatarUpload = document.getElementById('profileAvatarUpload');
-const profileAvatarGenerate = document.getElementById('profileAvatarGenerate');
-const profileAvatarRemove = document.getElementById('profileAvatarRemove');
-const profileFullName = document.getElementById('profileFullName');
-const profilePhone = document.getElementById('profilePhone');
-const profileAddress = document.getElementById('profileAddress');
+const kpiConfirmed = document.getElementById('kpiConfirmed');
 
 const adminRoleCard = document.getElementById('adminRoleCard');
 const roleForm = document.getElementById('roleForm');
@@ -55,35 +40,27 @@ const roleSelect = document.getElementById('roleSelect');
 const roleStatus = document.getElementById('roleStatus');
 const roleUsersTable = document.getElementById('roleUsersTable');
 
+const staffForm = document.getElementById('staffForm');
+const staffEmail = document.getElementById('staffEmail');
+const staffPassword = document.getElementById('staffPassword');
+const staffRole = document.getElementById('staffRole');
+const staffStatus = document.getElementById('staffStatus');
+
 let bookingsCache = [];
 let waitlistCache = [];
 let roleUsersCache = [];
-let profileCache = null;
 let currentUser = null;
 let currentRole = 'customer';
-
-function isStaffRole() {
-  return currentRole === 'staff' || currentRole === 'admin';
-}
 
 function isAdminRole() {
   return currentRole === 'admin';
 }
 
-function bookings() {
-  return bookingsCache;
-}
-
-function waitlist() {
-  return waitlistCache;
-}
+function bookings() { return bookingsCache; }
+function waitlist() { return waitlistCache; }
 
 function normalizeRole(role) {
   return role === 'admin' || role === 'staff' ? role : 'customer';
-}
-
-function normalizeAvatarUrl(url) {
-  return String(url || '').trim();
 }
 
 function escapeHtml(value) {
@@ -100,32 +77,11 @@ function safeHttpUrl(value) {
   if (!raw) return '';
   try {
     const parsed = new URL(raw, window.location.origin);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-      return parsed.href;
-    }
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
   } catch (_error) {
     return '';
   }
   return '';
-}
-
-function avatarFromSeed(seed) {
-  const cleanSeed = String(seed || '').trim();
-  if (!cleanSeed) return '';
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(cleanSeed)}&backgroundColor=d8bb9a,2b1a12&textColor=0e0604`;
-}
-
-function resolveAvatarUrl(profile) {
-  const direct = normalizeAvatarUrl(profile?.avatarUrl);
-  if (direct) return direct;
-  const seed = profile?.fullName || currentUser?.email || 'Parrylicious';
-  return avatarFromSeed(seed);
-}
-
-function showProfileStatus(message, isError = false) {
-  if (!profileStatus) return;
-  profileStatus.textContent = message;
-  profileStatus.style.color = isError ? '#8f1c1c' : '';
 }
 
 function showRoleStatus(message, isError = false) {
@@ -134,54 +90,10 @@ function showRoleStatus(message, isError = false) {
   roleStatus.style.color = isError ? '#8f1c1c' : '';
 }
 
-function renderProfile() {
-  if (!profileForm) return;
-
-  const profile = profileCache || {
-    fullName: '',
-    phone: '',
-    address: '',
-    avatarUrl: ''
-  };
-
-  profileFullName.value = profile.fullName || '';
-  profilePhone.value = profile.phone || '';
-  profileAddress.value = profile.address || '';
-
-  const avatar = resolveAvatarUrl(profile);
-  profileAvatarUrl.value = normalizeAvatarUrl(profile.avatarUrl) || avatar;
-  profileAvatar.src = avatar || 'assets/logo.jpg';
-}
-
-function setProfileAvatarUrl(url) {
-  if (!profileAvatar || !profileAvatarUrl) return;
-  const clean = normalizeAvatarUrl(url);
-  profileAvatarUrl.value = clean;
-  profileAvatar.src = clean || 'assets/logo.jpg';
-}
-
-async function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-function canPayDeposit(booking) {
-  if (!booking) return false;
-  if (isStaffRole()) return false;
-  if (booking.status === 'canceled') return false;
-  if (booking.depositPaid || booking.paymentStatus === 'paid') return false;
-  return true;
-}
-
-function paymentActionLabel(booking) {
-  if (!booking) return 'Anzahlung zahlen';
-  if (booking.paymentStatus === 'pending') return 'Anzahlung fortsetzen';
-  if (booking.paymentStatus === 'failed') return 'Erneut zahlen';
-  return 'Anzahlung zahlen';
+function showStaffStatus(message, isError = false) {
+  if (!staffStatus) return;
+  staffStatus.textContent = message;
+  staffStatus.style.color = isError ? '#8f1c1c' : '';
 }
 
 function pill(status) {
@@ -215,15 +127,14 @@ function matches(b) {
 function renderKpis() {
   if (kpiBookings) kpiBookings.textContent = String(bookings().length);
   if (kpiWaitlist) kpiWaitlist.textContent = String(waitlist().length);
-  if (kpiOpenPayments) {
-    const open = bookings().filter((b) => b.status !== 'canceled' && !b.depositPaid && b.paymentStatus !== 'paid').length;
-    kpiOpenPayments.textContent = String(open);
+  if (kpiConfirmed) {
+    const confirmed = bookings().filter((b) => b.status === 'confirmed').length;
+    kpiConfirmed.textContent = String(confirmed);
   }
 }
 
 function renderRoleUsers() {
   if (!roleUsersTable) return;
-
   roleUsersTable.innerHTML = '';
   if (!isAdminRole()) return;
 
@@ -238,8 +149,6 @@ function renderRoleUsers() {
   roleUsersCache.forEach((u) => {
     const fullName = escapeHtml(u.fullName || u.email || '-');
     const email = escapeHtml(u.email || '-');
-    const phone = escapeHtml(u.phone || '-');
-    const address = escapeHtml(u.address || '-');
     const role = escapeHtml(u.role || 'customer');
     const item = document.createElement('div');
     item.className = 'item';
@@ -248,7 +157,6 @@ function renderRoleUsers() {
         <div>
           <strong>${fullName}</strong>
           <div class="muted small">${email}</div>
-          <div class="muted small">📞 ${phone} · 🏠 ${address}</div>
         </div>
         <span class="pill">${role}</span>
       </div>
@@ -283,16 +191,6 @@ function render() {
     const notes = escapeHtml(b.customer?.notes || '');
     const receiptUrl = safeHttpUrl(b.paymentReceiptUrl);
 
-    const actions = isStaffRole()
-      ? `
-        <button class="btn small" data-confirm="${b.id}" ${b.status === 'confirmed' ? 'disabled' : ''}>Bestätigen</button>
-        <button class="btn small ghost" data-cancel="${b.id}" ${b.status === 'canceled' ? 'disabled' : ''}>Stornieren</button>
-      `
-      : `
-        ${canPayDeposit(b) ? `<button class="btn small" data-pay="${b.id}">${paymentActionLabel(b)}</button>` : ''}
-        <button class="btn small ghost" data-cancel-own="${b.id}" ${b.status === 'canceled' ? 'disabled' : ''}>Termin stornieren</button>
-      `;
-
     div.innerHTML = `
       <div class="row between">
         <div>
@@ -313,14 +211,13 @@ function render() {
       ${notes ? `<div class="muted small" style="margin-top:8px">📝 ${notes}</div>` : ''}
       ${receiptUrl ? `<div class="muted small" style="margin-top:8px">🧾 <a href="${receiptUrl}" target="_blank" rel="noreferrer">Stripe-Zahlungsbeleg</a></div>` : ''}
       <div class="row end gap" style="margin-top:12px">
-        ${actions}
+        <button class="btn small" data-confirm="${b.id}" ${b.status === 'confirmed' ? 'disabled' : ''}>Bestätigen</button>
+        <button class="btn small ghost" data-cancel="${b.id}" ${b.status === 'canceled' ? 'disabled' : ''}>Stornieren</button>
       </div>
     `;
 
     div.querySelector('[data-confirm]')?.addEventListener('click', () => updateStatus(b.id, 'confirmed'));
     div.querySelector('[data-cancel]')?.addEventListener('click', () => updateStatus(b.id, 'canceled'));
-    div.querySelector('[data-cancel-own]')?.addEventListener('click', () => updateStatus(b.id, 'canceled'));
-    div.querySelector('[data-pay]')?.addEventListener('click', () => payDepositForBooking(b));
     table.appendChild(div);
   });
 
@@ -368,18 +265,11 @@ function renderWaitlist() {
 }
 
 async function updateStatus(id, status) {
-  const list = bookings();
-  const current = list.find((x) => x.id === id);
+  const current = bookings().find((x) => x.id === id);
   if (!current) return;
 
   try {
-    let updated = null;
-    if (isStaffRole()) {
-      updated = await updateBookingStatus(id, status);
-    } else {
-      if (status !== 'canceled') return;
-      updated = await cancelMyBooking(id);
-    }
+    const updated = await updateBookingStatus(id, status);
     Object.assign(current, updated);
     render();
   } catch (error) {
@@ -405,21 +295,6 @@ async function updateStatus(id, status) {
     ? `✅ Termin für ${current.customer?.firstName || ''} am ${fmtDate(current.dateISO)} um ${current.time} bestätigt.`
     : `❌ Termin für ${current.customer?.firstName || ''} am ${fmtDate(current.dateISO)} wurde storniert.`;
   alert(msg);
-}
-
-async function payDepositForBooking(booking) {
-  if (!booking?.id) return;
-  const origin = `${window.location.origin}/booking.html`;
-  const checkout = await createCheckoutSession({
-    bookingId: booking.id,
-    successUrl: `${origin}?payment=success&session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}`,
-    cancelUrl: `${origin}?payment=cancel&booking_id=${booking.id}`
-  });
-  if (!checkout.ok || !checkout.url) {
-    alert(`Checkout konnte nicht gestartet werden: ${checkout.message || 'Unbekannter Fehler'}`);
-    return;
-  }
-  window.location.href = checkout.url;
 }
 
 statusFilter.addEventListener('change', render);
@@ -461,23 +336,6 @@ document.getElementById('exportCsv').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('clearData').addEventListener('click', () => {
-  clearAllData();
-});
-
-async function clearAllData() {
-  if (!confirm('Wirklich alle eigenen Daten löschen?')) return;
-  try {
-    await clearMyBookings(currentUser?.id);
-    await clearMyWaitlist(currentUser?.id);
-    bookingsCache = [];
-    waitlistCache = [];
-    render();
-  } catch (error) {
-    alert(`Loeschen fehlgeschlagen: ${error.message}`);
-  }
-}
-
 async function loadRoleUsers() {
   if (!isAdminRole()) {
     roleUsersCache = [];
@@ -497,7 +355,6 @@ async function loadRoleUsers() {
 async function loadData() {
   bookingsCache = await getMyBookings();
   waitlistCache = await getMyWaitlist();
-  profileCache = await getMyProfile();
 }
 
 function renderIdentity() {
@@ -505,60 +362,15 @@ function renderIdentity() {
   if (sessionUser) sessionUser.textContent = currentUser?.email || '';
 
   if (dashboardHint) {
-    if (currentRole === 'admin') {
-      dashboardHint.textContent = 'Admin-Ansicht: Du verwaltest alle Termine und kannst Rollen vergeben.';
-    } else if (currentRole === 'staff') {
-      dashboardHint.textContent = 'Staff-Ansicht: Du verwaltest alle Termine, ohne Rollenverwaltung.';
-    } else {
-      dashboardHint.textContent = 'Kundenansicht: Du verwaltest nur deine eigenen Buchungen und Profilinfos.';
-    }
+    dashboardHint.textContent = isAdminRole()
+      ? 'Admin-Ansicht: Du verwaltest alle Termine und kannst Team-Accounts und Rollen verwalten.'
+      : 'Team-Ansicht: Du verwaltest alle Termine (bestätigen, stornieren, Warteliste).';
   }
 
   if (adminRoleCard) {
     adminRoleCard.classList.toggle('hidden', !isAdminRole());
   }
 }
-
-profileAvatarUpload?.addEventListener('change', async (event) => {
-  const file = event.target?.files?.[0];
-  if (!file) return;
-  try {
-    const dataUrl = await readFileAsDataUrl(file);
-    setProfileAvatarUrl(dataUrl);
-    showProfileStatus('Profilbild geladen. Bitte Profil speichern.');
-  } catch (error) {
-    showProfileStatus(error.message, true);
-  }
-});
-
-profileAvatarGenerate?.addEventListener('click', () => {
-  const seed = profileFullName?.value || currentUser?.email || 'Parrylicious';
-  const avatarUrl = avatarFromSeed(seed);
-  setProfileAvatarUrl(avatarUrl);
-  showProfileStatus('Avatar erstellt. Bitte Profil speichern.');
-});
-
-profileAvatarRemove?.addEventListener('click', () => {
-  setProfileAvatarUrl('');
-  showProfileStatus('Profilbild entfernt. Bitte Profil speichern.');
-});
-
-profileForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  try {
-    const saved = await saveMyProfile({
-      fullName: profileFullName?.value || '',
-      phone: profilePhone?.value || '',
-      address: profileAddress?.value || '',
-      avatarUrl: profileAvatarUrl?.value || ''
-    });
-    profileCache = saved;
-    renderProfile();
-    showProfileStatus('Profil erfolgreich gespeichert.');
-  } catch (error) {
-    showProfileStatus(`Profil konnte nicht gespeichert werden: ${error.message}`, true);
-  }
-});
 
 roleForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -569,18 +381,38 @@ roleForm?.addEventListener('submit', async (event) => {
     showRoleStatus('Bitte E-Mail eingeben.', true);
     return;
   }
-
   try {
     const result = await adminSetUserRoleByEmail(email, role);
     if (result?.userId) {
-      showRoleStatus(`Rolle für ${email} auf ${role} gesetzt (sofort aktiv + für zukünftige Logins).`);
+      showRoleStatus(`Rolle für ${email} auf ${role} gesetzt.`);
     } else {
-      showRoleStatus(`Rollenregel für ${email} auf ${role} gespeichert (aktiv sobald Account erstellt wird).`);
+      showRoleStatus(`Rollenregel für ${email} auf ${role} gespeichert (aktiv sobald der Account existiert).`);
     }
     roleEmail.value = '';
     await loadRoleUsers();
   } catch (error) {
     showRoleStatus(`Rolle konnte nicht gesetzt werden: ${error.message}`, true);
+  }
+});
+
+staffForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  showStaffStatus('');
+  const email = String(staffEmail?.value || '').trim();
+  const password = String(staffPassword?.value || '');
+  const role = staffRole?.value === 'admin' ? 'admin' : 'staff';
+  if (!email || password.length < 8) {
+    showStaffStatus('Bitte E-Mail und ein Passwort mit mindestens 8 Zeichen angeben.', true);
+    return;
+  }
+  try {
+    await adminCreateStaff(email, password, role);
+    showStaffStatus(`Account für ${email} (${role}) angelegt. Die Person kann sich jetzt einloggen.`);
+    staffEmail.value = '';
+    staffPassword.value = '';
+    await loadRoleUsers();
+  } catch (error) {
+    showStaffStatus(`Account konnte nicht angelegt werden: ${error.message}`, true);
   }
 });
 
@@ -597,9 +429,14 @@ async function boot() {
       return;
     }
     currentRole = await getCurrentUserRole();
+    // Nur Team-Mitglieder haben Zugriff auf das Dashboard.
+    if (currentRole !== 'staff' && currentRole !== 'admin') {
+      alert('Dieser Bereich ist nur für Mitarbeitende.');
+      window.location.href = 'home.html';
+      return;
+    }
     renderIdentity();
     await loadData();
-    renderProfile();
     await loadRoleUsers();
     render();
   } catch (error) {

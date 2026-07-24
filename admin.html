@@ -35,7 +35,7 @@
 
       <div class="dashboard-kpis">
         <article class="card kpi-card">
-          <div class="kpi-label">Meine Termine</div>
+          <div class="kpi-label">Termine gesamt</div>
           <div class="kpi-value" id="kpiBookings">0</div>
         </article>
         <article class="card kpi-card">
@@ -43,74 +43,53 @@
           <div class="kpi-value" id="kpiWaitlist">0</div>
         </article>
         <article class="card kpi-card">
-          <div class="kpi-label">Offene Anzahlungen</div>
-          <div class="kpi-value" id="kpiOpenPayments">0</div>
+          <div class="kpi-label">Bestätigt</div>
+          <div class="kpi-value" id="kpiConfirmed">0</div>
         </article>
       </div>
 
-      <div class="two-col">
-        <div class="card">
-          <h3>Mein Profil</h3>
-          <p class="muted">Diese Kundendaten werden in deinem Konto gespeichert.</p>
-          <div class="profile-panel">
-            <img id="profileAvatar" class="profile-avatar-lg" src="assets/logo.jpg" alt="Profilbild" />
-            <div class="profile-avatar-actions">
-              <label class="btn small ghost" for="profileAvatarUpload">Profilbild hochladen</label>
-              <input id="profileAvatarUpload" type="file" accept="image/*" class="hidden" />
-              <button class="btn small ghost" id="profileAvatarGenerate" type="button">Avatar erstellen</button>
-              <button class="btn small ghost" id="profileAvatarRemove" type="button">Profilbild entfernen</button>
-            </div>
+      <div class="card">
+        <h3>Rollen & Rechte</h3>
+        <div class="role-grid">
+          <div class="role-row">
+            <span class="pill">staff</span>
+            <span class="muted small">Alle Termine und die Warteliste sehen, bestätigen und stornieren.</span>
           </div>
-
-          <form class="form" id="profileForm">
-            <input type="hidden" id="profileAvatarUrl" />
-            <label>Vollständiger Name
-              <input id="profileFullName" placeholder="z. B. Abeba Sundermann" />
-            </label>
-            <label>Telefon
-              <input id="profilePhone" placeholder="z. B. +49..." />
-            </label>
-            <label>Adresse
-              <input id="profileAddress" placeholder="Straße, Hausnummer, PLZ, Ort" />
-            </label>
-            <div class="row end gap">
-              <button class="btn small" type="submit">Profil speichern</button>
-            </div>
-          </form>
-          <div class="fineprint" id="profileStatus"></div>
+          <div class="role-row">
+            <span class="pill">admin</span>
+            <span class="muted small">Wie staff + Team-Accounts anlegen und Rollen verwalten.</span>
+          </div>
         </div>
-
-        <div class="card">
-          <h3>Rollen & Rechte</h3>
-          <div class="role-grid">
-            <div class="role-row">
-              <span class="pill">customer</span>
-              <span class="muted small">Eigene Termine sehen, stornieren, Anzahlung zahlen.</span>
-            </div>
-            <div class="role-row">
-              <span class="pill">staff</span>
-              <span class="muted small">Alle Termine sehen, bestätigen und stornieren.</span>
-            </div>
-            <div class="role-row">
-              <span class="pill">admin</span>
-              <span class="muted small">Wie staff + Rollen anderer Benutzer verwalten.</span>
-            </div>
+        <div class="divider"></div>
+        <div class="row between">
+          <div>
+            <div class="muted small">Heute</div>
+            <div class="muted" id="today"></div>
           </div>
-          <div class="divider"></div>
-          <h3>Heute</h3>
-          <div class="muted" id="today"></div>
-          <div class="row gap" style="margin-top:12px">
-            <button class="btn small" id="exportCsv">Export CSV</button>
-            <button class="btn small ghost" id="clearData">Eigene Daten löschen</button>
-          </div>
+          <button class="btn small" id="exportCsv">Termine als CSV exportieren</button>
         </div>
       </div>
 
       <div class="card hidden" id="adminRoleCard">
-        <h3>Admin: Rollenverwaltung</h3>
-        <p class="muted">Rolle per E-Mail festlegen (greift sofort und auch für künftige Logins/Registrierungen).</p>
+        <h3>Admin: Team-Account anlegen</h3>
+        <p class="muted">Lege einen Login für eine Mitarbeiterin oder einen Mitarbeiter an. Kundinnen und Kunden brauchen keinen Account.</p>
+        <form class="row gap admin-role-form" id="staffForm">
+          <input id="staffEmail" type="email" placeholder="team@parrylicious.store" required />
+          <input id="staffPassword" type="password" placeholder="Passwort (min. 8 Zeichen)" minlength="8" required />
+          <select id="staffRole" required>
+            <option value="staff">staff</option>
+            <option value="admin">admin</option>
+          </select>
+          <button class="btn small" type="submit">Account anlegen</button>
+        </form>
+        <div class="fineprint" id="staffStatus"></div>
+
+        <div class="divider"></div>
+
+        <h3>Rolle bestehender Accounts ändern</h3>
+        <p class="muted">Rolle per E-Mail festlegen (greift sofort, auch bevor der Account existiert).</p>
         <form class="row gap admin-role-form" id="roleForm">
-          <input id="roleEmail" type="email" placeholder="kunde@mail.de" required />
+          <input id="roleEmail" type="email" placeholder="person@mail.de" required />
           <select id="roleSelect" required>
             <option value="customer">customer</option>
             <option value="staff">staff</option>

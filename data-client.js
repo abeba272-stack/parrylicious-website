@@ -160,6 +160,23 @@ export async function adminSetUserRoleByEmail(email, role) {
   };
 }
 
+// Nur Admin: Staff-/Admin-Account anlegen (E-Mail + Passwort + Rolle) -> /api/admin/staff.
+export async function adminCreateStaff(email, password, role) {
+  const data = await apiFetch('/api/admin/staff', {
+    method: 'POST',
+    body: {
+      email: String(email || '').trim(),
+      password: String(password || ''),
+      role: mapRole(role) === 'admin' ? 'admin' : 'staff'
+    }
+  });
+  return {
+    userId: data?.userId || null,
+    email: data?.email || String(email || '').trim().toLowerCase(),
+    role: mapRole(data?.role)
+  };
+}
+
 export async function adminListUsersWithRoles(limitRows = 120) {
   const list = await apiFetch(
     `/api/admin/roles?limit=${encodeURIComponent(limitRows)}`,
