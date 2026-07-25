@@ -177,6 +177,14 @@ export async function adminCreateStaff(email, password, role) {
   };
 }
 
+// Nur Admin: Team-Account löschen -> DELETE /api/admin/staff.
+export async function adminDeleteStaff(email) {
+  await apiFetch('/api/admin/staff', {
+    method: 'DELETE',
+    body: { email: String(email || '').trim() }
+  });
+}
+
 export async function adminListUsersWithRoles(limitRows = 120) {
   const list = await apiFetch(
     `/api/admin/roles?limit=${encodeURIComponent(limitRows)}`,

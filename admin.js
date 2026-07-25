@@ -7,6 +7,7 @@ import {
   getMyWaitlist,
   adminSetUserRoleByEmail,
   adminCreateStaff,
+  adminDeleteStaff,
   adminListUsersWithRoles,
   updateBookingStatus,
   removeMyWaitlistEntry
@@ -146,10 +147,13 @@ function renderRoleUsers() {
     return;
   }
 
+  const myEmail = String(currentUser?.email || '').toLowerCase();
   roleUsersCache.forEach((u) => {
+    const rawEmail = String(u.email || '');
     const fullName = escapeHtml(u.fullName || u.email || '-');
     const email = escapeHtml(u.email || '-');
     const role = escapeHtml(u.role || 'customer');
+    const isSelf = rawEmail.toLowerCase() === myEmail;
     const item = document.createElement('div');
     item.className = 'item';
     item.innerHTML = `
@@ -158,9 +162,22 @@ function renderRoleUsers() {
           <strong>${fullName}</strong>
           <div class="muted small">${email}</div>
         </div>
-        <span class="pill">${role}</span>
+        <div class="row gap">
+          <span class="pill">${role}</span>
+          ${isSelf ? '<span class="muted small">(du)</span>' : `<button class="btn small ghost" data-remove-user="${email}">Entfernen</button>`}
+        </div>
       </div>
     `;
+    item.querySelector('[data-remove-user]')?.addEventListener('click', async () => {
+      if (!confirm(`Account ${rawEmail} wirklich entfernen? Der Zugang wird sofort gelöscht.`)) return;
+      try {
+        await adminDeleteStaff(rawEmail);
+        showRoleStatus(`Account ${rawEmail} entfernt.`);
+        await loadRoleUsers();
+      } catch (error) {
+        showRoleStatus(`Entfernen fehlgeschlagen: ${error.message}`, true);
+      }
+    });
     roleUsersTable.appendChild(item);
   });
 }

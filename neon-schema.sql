@@ -547,6 +547,45 @@ begin
 end;
 $$;
 
+-- Team-Account löschen (nur Admin). Löscht auth_users (Cascade: profiles;
+-- bookings.user_id -> null) + die role_email_rule. Selbstlöschung verhindert.
+create or replace function public.admin_delete_user(
+  p_actor_id uuid,
+  p_email text
+)
+returns table(deleted_email text)
+language plpgsql
+as $$
+#variable_conflict use_column
+declare
+  v_email text := lower(trim(coalesce(p_email, '')));
+  v_target uuid;
+begin
+  if p_actor_id is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+  if public.user_role(p_actor_id) <> 'admin' then
+    raise exception 'FORBIDDEN';
+  end if;
+  if v_email = '' then
+    raise exception 'EMAIL_REQUIRED';
+  end if;
+
+  select u.id into v_target from public.auth_users u where lower(u.email) = v_email limit 1;
+  if v_target is null then
+    raise exception 'USER_NOT_FOUND';
+  end if;
+  if v_target = p_actor_id then
+    raise exception 'CANNOT_DELETE_SELF';
+  end if;
+
+  delete from public.role_email_rules where lower(email) = v_email;
+  delete from public.auth_users where id = v_target;
+
+  return query select v_email as deleted_email;
+end;
+$$;
+
 -- Eigene Buchung stornieren.
 create or replace function public.cancel_my_booking(
   p_user_id uuid,
