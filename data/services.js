@@ -10,7 +10,7 @@ export const services = [
     image: "assets/services/dreadlocs_retwist.jpg",
     priceFrom: 55,
     durationMin: 120,
-    deposit: 30,
+    deposit: 27.5,
     description: "Retwist/Interlocking inkl. Styling – Zusatzkosten bei sehr dickem oder ungekämmtem Haar möglich."
   },
   {
@@ -21,7 +21,7 @@ export const services = [
     image: "assets/services/instant_locs.jpg",
     priceFrom: 100,
     durationMin: 180,
-    deposit: 40,
+    deposit: 50,
     description: "Instant Locs per Häkeltechnik."
   },
   {
@@ -32,7 +32,7 @@ export const services = [
     image: "assets/services/starter_locs.jpg",
     priceFrom: 65,
     durationMin: 150,
-    deposit: 35,
+    deposit: 32.5,
     description: "Perfekter Start für permanente Locs – Zusatzkosten bei aufwändigem Haarzustand möglich."
   },
   {
@@ -54,7 +54,7 @@ export const services = [
     image: "assets/services/comb_twist.jpg",
     priceFrom: 45,
     durationMin: 90,
-    deposit: 25,
+    deposit: 22.5,
     description: "Schneller Twist-Look – ideal für Definition."
   },
   {
@@ -76,7 +76,7 @@ export const services = [
     image: "assets/services/ponytail_europe.jpg",
     priceFrom: 65,
     durationMin: 120,
-    deposit: 30,
+    deposit: 32.5,
     description: "Braided Ponytail mit Europe Hair."
   },
   {
@@ -87,7 +87,7 @@ export const services = [
     image: "assets/services/ponytail_afrohair.jpg",
     priceFrom: 65,
     durationMin: 120,
-    deposit: 30,
+    deposit: 32.5,
     description: "Braided Ponytail mit Afrohair."
   },
   {
@@ -109,7 +109,7 @@ export const services = [
     image: "assets/services/braids_feed_in.jpg",
     priceFrom: 90,
     durationMin: 180,
-    deposit: 40,
+    deposit: 45,
     description: "Boho Braids oder Feed‑In Cornrows."
   },
   {
@@ -120,7 +120,7 @@ export const services = [
     image: "assets/services/passion_twist.jpg",
     priceFrom: 110,
     durationMin: 180,
-    deposit: 40,
+    deposit: 55,
     description: "Passion Twists – weicher, voluminöser Look."
   }
 ];
