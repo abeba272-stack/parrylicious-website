@@ -1,5 +1,5 @@
 import { fmtDate, currency, formatMinutes } from './common.js';
-import { isAuthConfigured } from './auth-client.js';
+import { isAuthConfigured, changePassword, signOut } from './auth-client.js';
 import {
   getCurrentUser,
   getCurrentUserRole,
@@ -46,6 +46,13 @@ const staffEmail = document.getElementById('staffEmail');
 const staffPassword = document.getElementById('staffPassword');
 const staffRole = document.getElementById('staffRole');
 const staffStatus = document.getElementById('staffStatus');
+
+const passwordForm = document.getElementById('passwordForm');
+const currentPasswordInput = document.getElementById('currentPassword');
+const newPasswordInput = document.getElementById('newPassword');
+const newPassword2Input = document.getElementById('newPassword2');
+const passwordStatus = document.getElementById('passwordStatus');
+const logoutBtn = document.getElementById('logoutBtn');
 
 let bookingsCache = [];
 let waitlistCache = [];
@@ -95,6 +102,12 @@ function showStaffStatus(message, isError = false) {
   if (!staffStatus) return;
   staffStatus.textContent = message;
   staffStatus.style.color = isError ? '#8f1c1c' : '';
+}
+
+function showPasswordStatus(message, isError = false) {
+  if (!passwordStatus) return;
+  passwordStatus.textContent = message;
+  passwordStatus.style.color = isError ? '#8f1c1c' : '';
 }
 
 function pill(status) {
@@ -431,6 +444,45 @@ staffForm?.addEventListener('submit', async (event) => {
   } catch (error) {
     showStaffStatus(`Account konnte nicht angelegt werden: ${error.message}`, true);
   }
+});
+
+passwordForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  showPasswordStatus('');
+  const current = String(currentPasswordInput?.value || '');
+  const next = String(newPasswordInput?.value || '');
+  const confirmNext = String(newPassword2Input?.value || '');
+
+  if (!current) {
+    showPasswordStatus('Bitte das aktuelle Passwort eingeben.', true);
+    return;
+  }
+  if (next.length < 8) {
+    showPasswordStatus('Das neue Passwort muss mindestens 8 Zeichen lang sein.', true);
+    return;
+  }
+  if (next !== confirmNext) {
+    showPasswordStatus('Die beiden neuen Passwörter stimmen nicht überein.', true);
+    return;
+  }
+
+  try {
+    await changePassword(current, next);
+    passwordForm.reset();
+    showPasswordStatus('Passwort erfolgreich geändert.');
+  } catch (error) {
+    showPasswordStatus(`Passwort konnte nicht geändert werden: ${error.message}`, true);
+  }
+});
+
+logoutBtn?.addEventListener('click', async () => {
+  logoutBtn.disabled = true;
+  try {
+    await signOut();
+  } catch (_error) {
+    // Lokale Session wird ohnehin gelöscht — weiter zum Login.
+  }
+  window.location.href = 'login.html';
 });
 
 async function boot() {

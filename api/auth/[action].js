@@ -15,6 +15,7 @@
  *   POST logout                 (Bearer + { refreshToken })
  *   POST request-password-reset { email }               (immer 200, kein Leak)
  *   POST reset-password         { token, newPassword }
+ *   POST change-password        (Bearer + { currentPassword, newPassword })
  */
 
 const crypto = require('crypto');
@@ -365,6 +366,65 @@ async function handleResetPassword(req, res) {
 }
 
 /* ---------------------------------------------------------------------------
+ * Aktion: Passwort ändern (eingeloggt, mit aktuellem Passwort)
+ * ------------------------------------------------------------------------- */
+
+async function handleChangePassword(req, res) {
+  const authUser = requireAuthUser(req, res);
+  if (!authUser) return;
+
+  const body = bodyFromReq(req) || {};
+  const currentPassword = body.currentPassword;
+  const newPassword = body.newPassword;
+
+  if (typeof currentPassword !== 'string' || !currentPassword) {
+    return sendJson(res, 400, {
+      error: 'CURRENT_PASSWORD_REQUIRED',
+      message: 'Bitte das aktuelle Passwort eingeben.'
+    });
+  }
+  if (!isValidPassword(newPassword)) {
+    return sendJson(res, 400, {
+      error: 'WEAK_PASSWORD',
+      message: 'Das neue Passwort muss mindestens 8 Zeichen lang sein.'
+    });
+  }
+
+  const userRow = await getAuthUserRow(authUser.id);
+  if (!userRow) {
+    return sendJson(res, 404, { error: 'USER_NOT_FOUND', message: 'Benutzer nicht gefunden.' });
+  }
+  if (!userRow.password_hash) {
+    return sendJson(res, 400, {
+      error: 'NO_PASSWORD_SET',
+      message: 'Für dieses Konto ist kein Passwort hinterlegt.'
+    });
+  }
+
+  const ok = await verifyPassword(currentPassword, userRow.password_hash);
+  if (!ok) {
+    return sendJson(res, 400, {
+      error: 'CURRENT_PASSWORD_INVALID',
+      message: 'Das aktuelle Passwort ist falsch.'
+    });
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await sql`
+    update auth_users
+    set password_hash = ${passwordHash}, updated_at = now()
+    where id = ${userRow.id}
+  `;
+
+  // Alle bestehenden Refresh-Tokens invalidieren (andere Geräte/Sitzungen abmelden).
+  await sql`delete from auth_tokens where user_id = ${userRow.id} and purpose = 'refresh'`;
+
+  // Frische Session zurückgeben, damit die aktuelle Sitzung angemeldet bleibt.
+  const session = await buildSession(userRow);
+  return sendJson(res, 200, session);
+}
+
+/* ---------------------------------------------------------------------------
  * Dispatcher
  * ------------------------------------------------------------------------- */
 
@@ -377,7 +437,8 @@ const ROUTES = {
   me: { method: 'GET', handler: handleMe },
   logout: { method: 'POST', handler: handleLogout },
   'request-password-reset': { method: 'POST', handler: handleRequestPasswordReset },
-  'reset-password': { method: 'POST', handler: handleResetPassword }
+  'reset-password': { method: 'POST', handler: handleResetPassword },
+  'change-password': { method: 'POST', handler: handleChangePassword }
 };
 
 function handleError(res, error) {

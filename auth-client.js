@@ -332,6 +332,26 @@ export async function resetPassword(token, newPassword) {
   return true;
 }
 
+// Passwort im eingeloggten Zustand ändern (aktuelles Passwort erforderlich).
+// Der Server gibt eine frische Session zurück -> lokal speichern, Sitzung bleibt aktiv.
+export async function changePassword(currentPassword, newPassword) {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Nicht angemeldet.');
+
+  const response = await postJson(
+    '/api/auth/change-password',
+    { currentPassword, newPassword },
+    token
+  );
+  const data = await parseJsonSafe(response);
+  if (!response.ok || !data || !data.accessToken) {
+    throw makeApiError(data, response);
+  }
+  saveSession(data);
+  emit('TOKEN_REFRESHED');
+  return true;
+}
+
 /* ---------------------------------------------------------------------------
  * OAuth-Redirect-Handoff (login.html#code=... bzw. #error=...)
  * ------------------------------------------------------------------------- */

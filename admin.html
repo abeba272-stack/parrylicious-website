@@ -17,6 +17,7 @@
       <nav class="nav">
         <a href="booking.html">Neue Buchung</a>
         <a class="btn small" href="home.html">Zur Website</a>
+        <button class="btn small ghost" id="logoutBtn" type="button">Abmelden</button>
         <div data-profile-menu></div>
       </nav>
     </div>
@@ -68,6 +69,18 @@
           </div>
           <button class="btn small" id="exportCsv">Termine als CSV exportieren</button>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Passwort ändern</h3>
+        <p class="muted">Ändere dein eigenes Login-Passwort. Du bleibst danach angemeldet; auf anderen Geräten wird die Sitzung beendet.</p>
+        <form class="row gap admin-role-form" id="passwordForm">
+          <input id="currentPassword" type="password" placeholder="Aktuelles Passwort" autocomplete="current-password" required />
+          <input id="newPassword" type="password" placeholder="Neues Passwort (min. 8 Zeichen)" autocomplete="new-password" minlength="8" required />
+          <input id="newPassword2" type="password" placeholder="Neues Passwort wiederholen" autocomplete="new-password" minlength="8" required />
+          <button class="btn small" type="submit">Passwort speichern</button>
+        </form>
+        <div class="fineprint" id="passwordStatus"></div>
       </div>
 
       <div class="card hidden" id="adminRoleCard">
