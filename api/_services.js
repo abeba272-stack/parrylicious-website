@@ -3,19 +3,28 @@
  * Der öffentliche Checkout-Endpoint darf NIEMALS clientseitig gesendete Beträge
  * verwenden — er schlägt hier per serviceId nach. Muss mit data/services.js
  * (Frontend-Anzeige) synchron gehalten werden; Beträge in EUR.
+ * Katalog = 1:1 Spiegel von Salonkee (Preise identisch). deposit = 50 % priceFrom.
  */
 const SERVICES = {
-  dreadlocs_retwist:  { name: 'Dreadlocs – Interlocking / Retwist + Styling', priceFrom: 55,  durationMin: 120, deposit: 27.5 },
-  instant_locs:       { name: 'Häckeln – Instant Locs',                        priceFrom: 100, durationMin: 180, deposit: 50 },
-  starter_locs:       { name: 'Starter-Locs (Unisex) + Barrel / Twist / Open', priceFrom: 65,  durationMin: 150, deposit: 32.5 },
-  plain_twist_braids: { name: 'Plain Twist & Braids',                          priceFrom: 60,  durationMin: 120, deposit: 30 },
-  comb_twist:         { name: 'Comb Twist',                                    priceFrom: 45,  durationMin: 90,  deposit: 22.5 },
-  cornrows:           { name: 'Cornrows / Twistn´Cornrows',                    priceFrom: 60,  durationMin: 120, deposit: 30 },
-  ponytail_europe:    { name: 'Europe Hair Braided Ponytail',                  priceFrom: 65,  durationMin: 120, deposit: 32.5 },
-  ponytail_afrohair:  { name: 'Afrohair Braided Ponytail',                     priceFrom: 65,  durationMin: 120, deposit: 32.5 },
-  half_down_half_up:  { name: 'Half down Half up',                             priceFrom: 70,  durationMin: 150, deposit: 35 },
-  braids_feed_in:     { name: 'Braids (Boho) / Feed‑In Cornrows',              priceFrom: 90,  durationMin: 180, deposit: 45 },
-  passion_twist:      { name: 'Passion Twist',                                 priceFrom: 110, durationMin: 180, deposit: 55 }
+  dreadlocks_retwist:  { name: 'Dreadlocks & Sisterlocs – Re-twist + Styling',              priceFrom: 60,  durationMin: 120, deposit: 30 },
+  starter_locs:        { name: 'Starterlocks + Styling',                                    priceFrom: 65,  durationMin: 150, deposit: 32.5 },
+  instant_locs:        { name: 'Instant Locs – Crochet / Häckeln',                          priceFrom: 70,  durationMin: 180, deposit: 35 },
+  braids_twist_men:    { name: 'Braids & Twist (Men)',                                      priceFrom: 60,  durationMin: 90,  deposit: 30 },
+  cornrows_men:        { name: 'Cornrows & Cornrows into Twist (Men)',                      priceFrom: 60,  durationMin: 90,  deposit: 30 },
+  braids_boohoo_fulani:{ name: 'Braids – Boohoo / Fulani etc.',                             priceFrom: 140, durationMin: 300, deposit: 70 },
+  knotless_braids:     { name: 'Normal Knotless Braids',                                    priceFrom: 130, durationMin: 300, deposit: 65 },
+  feed_in_cornrows:    { name: 'Feed-In Cornrows with Extensions',                          priceFrom: 75,  durationMin: 180, deposit: 37.5 },
+  wig_sew_in:          { name: 'Wig Install – Sew In',                                       priceFrom: 20,  durationMin: 60,  deposit: 10 },
+  sleek_pony:          { name: 'Sleek Pony',                                                priceFrom: 60,  durationMin: 90,  deposit: 30 },
+  half_up_half_down:   { name: 'Half Up, Half Down',                                        priceFrom: 70,  durationMin: 150, deposit: 35 },
+  wash_blowdry_cut:    { name: 'Wash and Blowdry, Cut',                                     priceFrom: 19,  durationMin: 60,  deposit: 9.5 },
+  curly_cut_wash:      { name: 'Curly Cut & Wash',                                          priceFrom: 45,  durationMin: 75,  deposit: 22.5 },
+  wash_cut_european:   { name: 'Wash & Cut – Europäisches Haar',                            priceFrom: 44,  durationMin: 60,  deposit: 22 },
+  microlinks_new:      { name: 'Microlinks – Neuinstallation (Haare nicht inkl.)',          priceFrom: 50,  durationMin: 120, deposit: 25 },
+  microringe_refresh:  { name: 'Microringe Hochsetzen',                                     priceFrom: 35,  durationMin: 90,  deposit: 17.5 },
+  treatment_afro:      { name: 'Deep Conditioning – Afro-Haar Treatment',                   priceFrom: 48,  durationMin: 60,  deposit: 24 },
+  treatment_european:  { name: 'Deep Conditioning – Europäisches Haar Treatment',           priceFrom: 48,  durationMin: 60,  deposit: 24 },
+  kids_natural:        { name: 'Natural Hairstyles for Kids',                               priceFrom: 45,  durationMin: 90,  deposit: 22.5 }
 };
 
 function getService(serviceId) {
