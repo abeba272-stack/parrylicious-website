@@ -32,15 +32,10 @@ function apiUrl(path) {
   return `${base}${String(path).startsWith('/') ? path : `/${path}`}`;
 }
 
-function isLocalHost() {
-  if (typeof window === 'undefined') return false;
-  const host = window.location.hostname;
-  return host === 'localhost' || host === '127.0.0.1';
-}
-
-// Konfiguriert, wenn ein Backend gesetzt ist ODER wir lokal (vercel dev,
-// same-origin /api) laufen.
-export const isAuthConfigured = Boolean(BACKEND_API_BASE_URL) || isLocalHost();
+// Konfiguriert, sobald es ein Backend zu erreichen gibt: entweder eine explizit
+// gesetzte Backend-URL (Split-Setup) ODER wir laufen im Browser — dann ist das
+// /api same-origin verfügbar (Vercel-Deployment oder lokaler Dev-Server).
+export const isAuthConfigured = Boolean(BACKEND_API_BASE_URL) || (typeof window !== 'undefined');
 
 /* ---------------------------------------------------------------------------
  * Storage-Helfer (try/catch für Safari Private Mode, mit Memory-Fallback)
