@@ -159,6 +159,7 @@ a{ color:inherit; transition: color var(--transition), opacity var(--transition)
 
 .nav{ display:flex; align-items:center; gap:22px; }
 .topbar .nav{ margin-left:auto; }
+.nav-toggle{ display:none; }
 .nav a{ text-decoration:none; opacity:.85; font-weight:600; font-size:15px; position:relative; }
 .nav a:not(.btn)::after{
   content:''; position:absolute; left:0; right:0; bottom:-5px; height:1.5px;
@@ -201,14 +202,60 @@ a{ color:inherit; transition: color var(--transition), opacity var(--transition)
 .hero-grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap: 18px; align-items: stretch; }
 @media (max-width: 900px){
   .hero-grid{ grid-template-columns: 1fr; }
-  .nav{ display:none; }
-  .brand{ margin-left:8px; }
-  .logo{
-    width: 138px;
-    height: 56px;
-    border-radius: 14px;
-    transform: none;
+  .brand{ margin-left:0; }
+
+  /* Hamburger-Button */
+  .nav-toggle{
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 46px;
+    height: 40px;
+    margin-left: auto;
+    padding: 0 11px;
+    background: rgba(255,255,255,.5);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    cursor: pointer;
   }
+  .nav-toggle span{
+    display: block;
+    height: 2px;
+    width: 22px;
+    background: var(--char);
+    border-radius: 2px;
+    transition: transform var(--transition), opacity var(--transition);
+  }
+  .nav-toggle.is-open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+  .nav-toggle.is-open span:nth-child(2){ opacity: 0; }
+  .nav-toggle.is-open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+  /* Aufklappbares Menü */
+  .topbar .container{ position: relative; }
+  .topbar .nav{
+    display: none;
+    position: absolute;
+    left: 0; right: 0; top: 100%;
+    margin: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: rgba(246,235,220,.98);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 18px 16px;
+    box-shadow: var(--shadow-soft);
+  }
+  .topbar .nav.open{ display: flex; }
+  .topbar .nav a:not(.btn){
+    padding: 13px 4px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--line);
+    opacity: 1;
+  }
+  .topbar .nav .btn{ margin-top: 10px; justify-content: center; width: 100%; }
 }
 
 .kicker{
@@ -606,6 +653,40 @@ textarea{ min-height: 90px; resize: vertical; }
   justify-content:flex-start;
 }
 
+/* ---- Laufband „In Parry we trust" ---- */
+.marquee{
+  overflow: hidden;
+  background: linear-gradient(180deg, #23140d, var(--ink));
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 16px 0;
+}
+.marquee-track{
+  display: flex;
+  width: max-content;
+  animation: pl-marquee 30s linear infinite;
+}
+.marquee-group{
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding-right: 30px;
+}
+.marquee-item{
+  font-family: var(--font-head);
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 600;
+  letter-spacing: .6px;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.marquee-star{ color: var(--gold); font-size: clamp(15px, 2vw, 21px); }
+.marquee:hover .marquee-track{ animation-play-state: paused; }
+@keyframes pl-marquee{
+  from{ transform: translateX(-50%); }
+  to{ transform: translateX(0); }
+}
+
 /* ---- Modern-Editorial: Einblend-Animationen ---- */
 @media (prefers-reduced-motion: no-preference){
   .reveal{
@@ -643,4 +724,6 @@ textarea{ min-height: 90px; resize: vertical; }
 
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior: auto; }
+  .marquee-track{ animation: none; transform: none; justify-content: center; width: 100%; }
+  .marquee-group:nth-child(2){ display: none; }
 }
