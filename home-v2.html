@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parrylicious — Afro Editorial Luxury · Düsseldorf</title>
+  <meta name="description" content="Parrylicious Studio Düsseldorf — Braids, Locs, Cornrows & Protective Styles. Editorial. Präzise. Termin online buchen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/logo.jpg" />
+  <style>
+    :root{
+      --bg: #0a0a0c;
+      --bg-2: #101014;
+      --panel: #141419;
+      --ink: #f4f1ea;
+      --ink-soft: #a29e97;
+      --ink-faint: #6f6b66;
+      --line: rgba(244,241,234,.14);
+      --line-soft: rgba(244,241,234,.08);
+      --gold: #c9a26a;
+      --blue: #4b47ff;
+      --blue-hover: #635fff;
+
+      --font-display: "Cormorant Garamond", Georgia, serif;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+      --ease: cubic-bezier(.22,.61,.36,1);
+      --max: 1280px;
+    }
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--font-sans);
+      line-height:1.6;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    a{ color:inherit; text-decoration:none; }
+    .wrap{ width:min(var(--max), 92%); margin:0 auto; }
+    .eyebrow{
+      font-size:11px; font-weight:600; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--ink-soft);
+    }
+    .rule{ display:inline-block; width:44px; height:1px; background:var(--gold); vertical-align:middle; margin-right:14px; }
+
+    /* ---------- Topbar ---------- */
+    .topbar{
+      position:fixed; top:0; left:0; right:0; z-index:40;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px clamp(18px,4vw,44px);
+      background:linear-gradient(180deg, rgba(10,10,12,.86), rgba(10,10,12,0));
+      backdrop-filter:blur(6px);
+    }
+    .brand{ font-family:var(--font-display); font-size:26px; font-weight:600; letter-spacing:.3px; }
+    .brand b{ color:var(--gold); font-weight:600; }
+    .nav{ display:flex; align-items:center; gap:30px; }
+    .nav a{ font-size:12.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); transition:color .25s var(--ease); }
+    .nav a:hover{ color:var(--ink); }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      font-family:var(--font-sans); font-size:12.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+      padding:14px 22px; border-radius:2px; cursor:pointer; border:1px solid transparent;
+      transition:background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease);
+    }
+    .btn--blue{ background:var(--blue); color:#fff; }
+    .btn--blue:hover{ background:var(--blue-hover); transform:translateY(-1px); }
+    .btn--ghost{ border-color:var(--line); color:var(--ink); }
+    .btn--ghost:hover{ border-color:var(--ink); }
+    .btn--arrow::after{ content:"→"; font-size:14px; }
+    .nav-toggle{ display:none; }
+
+    /* ---------- Hero ---------- */
+    .hero{ position:relative; min-height:100vh; display:flex; align-items:center; padding:120px 0 60px; overflow:hidden; }
+    .hero__bg{
+      position:absolute; inset:0; z-index:0;
+      background:
+        linear-gradient(90deg, var(--bg) 20%, rgba(10,10,12,.55) 55%, rgba(10,10,12,.75) 100%),
+        linear-gradient(180deg, var(--bg) 0%, rgba(10,10,12,.2) 35%, var(--bg) 100%),
+        url("assets/hero-salon.jpg");
+      background-size:cover; background-position:center 30%;
+      filter:grayscale(.25) contrast(1.02);
+    }
+    .hero__grain{ position:absolute; inset:0; z-index:1; opacity:.5;
+      background:radial-gradient(circle at 78% 42%, rgba(75,71,255,.12), transparent 30%);
+    }
+    .hero .wrap{ position:relative; z-index:2; width:min(var(--max),92%); }
+    .hero__meta{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:clamp(30px,7vh,90px); }
+    .hero__meta .right{ text-align:right; line-height:2; }
+    .hero__kicker{ margin:0 0 18px; }
+    .hero h1{
+      font-family:var(--font-display); font-weight:600;
+      font-size:clamp(58px, 11vw, 150px); line-height:.94; letter-spacing:-.01em;
+      margin:0; text-wrap:balance;
+    }
+    .hero h1 .it{ font-style:italic; color:var(--gold); }
+    .hero h1 .dot{ color:var(--blue); }
+    .hero__lower{ display:flex; justify-content:space-between; align-items:flex-end; gap:30px; margin-top:clamp(28px,5vh,54px); flex-wrap:wrap; }
+    .hero__sub{ max-width:42ch; color:var(--ink-soft); font-size:16px; border-left:2px solid var(--gold); padding-left:18px; }
+    .hero__cta{ display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+    .side-label{
+      position:absolute; top:50%; z-index:3;
+      writing-mode:vertical-rl; text-orientation:mixed;
+      font-size:10.5px; letter-spacing:.32em; text-transform:uppercase; color:var(--ink-faint);
+    }
+    .side-label.left{ left:max(10px, calc((100vw - var(--max))/2 - 30px)); transform:translateY(-50%); }
+    .side-label.right{ right:max(10px, calc((100vw - var(--max))/2 - 30px)); transform:translateY(-50%) rotate(180deg); }
+
+    /* entrance animation */
+    @media (prefers-reduced-motion:no-preference){
+      .anim{ opacity:0; transform:translateY(26px); animation:rise .9s var(--ease) forwards; }
+      .anim.d1{ animation-delay:.08s } .anim.d2{ animation-delay:.18s } .anim.d3{ animation-delay:.28s }
+      .anim.d4{ animation-delay:.40s } .anim.d5{ animation-delay:.52s }
+      @keyframes rise{ to{ opacity:1; transform:none; } }
+    }
+
+    /* ---------- Marquee ---------- */
+    .marquee{ border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); overflow:hidden; padding:26px 0; background:var(--bg-2); }
+    .marquee__track{ display:flex; width:max-content; gap:0; animation:scroll 34s linear infinite; }
+    .marquee__track:hover{ animation-play-state:paused; }
+    .marquee__g{ display:flex; align-items:center; }
+    .marquee__item{
+      font-family:var(--font-display); font-style:italic; font-weight:500;
+      font-size:clamp(34px,5vw,60px); letter-spacing:.01em;
+      color:transparent; -webkit-text-stroke:1px rgba(244,241,234,.32); text-stroke:1px rgba(244,241,234,.32);
+      padding:0 34px; white-space:nowrap;
+    }
+    .marquee__dot{ width:9px; height:9px; border-radius:50%; background:var(--blue); flex:none; }
+    @keyframes scroll{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+
+    /* ---------- Section shell ---------- */
+    section{ padding:clamp(72px,12vh,140px) 0; }
+    .sec-index{ display:flex; align-items:center; gap:16px; margin-bottom:34px; }
+    .sec-index .num{ font-family:var(--font-sans); font-size:12px; font-weight:600; letter-spacing:.24em; color:var(--ink-soft); }
+    .sec-index .line{ flex:0 0 90px; height:1px; background:var(--line); }
+    .sec-index .label{ font-size:12px; font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:var(--blue); }
+    .display{
+      font-family:var(--font-display); font-weight:600;
+      font-size:clamp(40px,6.4vw,86px); line-height:1.0; letter-spacing:-.01em; margin:0; text-wrap:balance;
+    }
+    .display .it{ font-style:italic; color:var(--gold); }
+    .display .dot{ color:var(--blue); }
+
+    .services-head{ display:grid; grid-template-columns:1.5fr 1fr; gap:30px; align-items:end; }
+    .services-head p{ color:var(--ink-soft); border-left:2px solid var(--gold); padding-left:18px; margin:0; font-size:15px; }
+    .chips{ display:flex; flex-wrap:wrap; gap:10px; margin:44px 0 40px; }
+    .chip{ font-size:11.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft);
+      border:1px solid var(--line); padding:11px 18px; border-radius:2px; background:transparent; cursor:pointer; transition:.25s var(--ease); }
+    .chip:hover{ color:var(--ink); border-color:var(--ink); }
+    .chip.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+    .cards{ display:grid; grid-template-columns:repeat(2,1fr); gap:26px; }
+    .card{ border:1px solid var(--line-soft); background:var(--panel); border-radius:3px; overflow:hidden; transition:border-color .3s var(--ease), transform .3s var(--ease); }
+    .card:hover{ border-color:var(--line); transform:translateY(-4px); }
+    .card__img{ position:relative; aspect-ratio:16/10; overflow:hidden; background:#1c1c22; }
+    .card__img img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
+    .card:hover .card__img img{ transform:scale(1.06); }
+    .card__body{ padding:26px 26px 28px; }
+    .card__top{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+    .card__title{ font-family:var(--font-display); font-size:30px; font-weight:600; margin:0; }
+    .card__price{ font-family:var(--font-display); font-size:24px; color:var(--gold); white-space:nowrap; }
+    .card__cat{ font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin:8px 0 14px; }
+    .card__desc{ color:var(--ink-soft); font-size:14.5px; margin:0 0 20px; }
+    .card__meta{ display:flex; justify-content:space-between; align-items:center; gap:14px; border-top:1px solid var(--line-soft); padding-top:18px; }
+    .card__dur{ font-size:12px; color:var(--ink-faint); letter-spacing:.06em; }
+    .link{ font-size:12px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); display:inline-flex; gap:8px; align-items:center; }
+    .link::after{ content:"→"; transition:transform .25s var(--ease); }
+    .link:hover::after{ transform:translateX(4px); }
+
+    /* ---------- Rating strip ---------- */
+    .rating{ background:var(--bg-2); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+    .rating .wrap{ display:grid; grid-template-columns:1.3fr 1fr; gap:40px; align-items:center; }
+    .rating__num{ font-family:var(--font-display); font-size:clamp(90px,13vw,170px); line-height:.9; font-weight:600; }
+    .rating__num small{ font-size:.3em; color:var(--ink-soft); vertical-align:super; }
+    .rating__stars{ color:var(--gold); letter-spacing:4px; font-size:20px; }
+    .rating__note{ color:var(--ink-soft); font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px; }
+
+    /* ---------- Footer ---------- */
+    footer{ padding:70px 0 50px; border-top:1px solid var(--line-soft); }
+    .foot-grid{ display:flex; justify-content:space-between; align-items:flex-end; gap:30px; flex-wrap:wrap; }
+    .foot-brand{ font-family:var(--font-display); font-size:40px; font-weight:600; }
+    .foot-brand b{ color:var(--gold); }
+    .foot-links{ display:flex; gap:22px; flex-wrap:wrap; }
+    .foot-links a{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+    .foot-links a:hover{ color:var(--ink); }
+    .foot-copy{ color:var(--ink-faint); font-size:12px; margin-top:30px; }
+
+    .draft-flag{ position:fixed; bottom:16px; left:16px; z-index:60; background:var(--blue); color:#fff; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:8px 14px; border-radius:2px; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width:860px){
+      .nav{ display:none; }
+      .hero__lower{ flex-direction:column; align-items:stretch; }
+      .services-head{ grid-template-columns:1fr; }
+      .cards{ grid-template-columns:1fr; }
+      .rating .wrap{ grid-template-columns:1fr; text-align:center; }
+      .side-label{ display:none; }
+      .hero__meta .right{ display:none; }
+      .foot-grid{ align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="home-v2.html">Parry<b>licious.</b></a>
+    <nav class="nav">
+      <a href="#services">Styles</a>
+      <a href="#services">Leistungen</a>
+      <a href="#studio">Studio</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#besuch">Besuch</a>
+    </nav>
+    <a class="btn btn--blue" href="booking.html">Termin buchen</a>
+  </header>
+
+  <span class="side-label left">Bahlenstr. 42 · Düsseldorf</span>
+  <span class="side-label right">In Parrylicious we trust</span>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__bg"></div>
+    <div class="hero__grain"></div>
+    <div class="wrap">
+      <div class="hero__meta">
+        <span class="eyebrow anim d1">Ausgabe N° 01</span>
+        <div class="right eyebrow anim d1">
+          AW · 2026<br>Afro Editorial Luxury
+        </div>
+      </div>
+
+      <p class="hero__kicker eyebrow anim d2"><span class="rule"></span>Afro Hair Studio — Düsseldorf</p>
+
+      <h1 class="anim d3">Protective<br><span class="it">Styles.</span> Präzise<br>gestaltet<span class="dot">.</span></h1>
+
+      <div class="hero__lower">
+        <p class="hero__sub anim d4">Braids, Locs, Cornrows und individuelle Styles für unterschiedliche Haarstrukturen — präzise gearbeitet in Düsseldorf.</p>
+        <div class="hero__cta anim d5">
+          <a class="btn btn--blue btn--arrow" href="booking.html">Termin buchen</a>
+          <a class="btn btn--ghost" href="#services">Styles entdecken</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <div class="marquee__g">
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+      </div>
+      <div class="marquee__g">
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-index">
+        <span class="num">N° 03</span><span class="line"></span><span class="label">Services</span>
+      </div>
+      <div class="services-head">
+        <h2 class="display">Services, built<br>around <span class="it">your hair.</span></h2>
+        <p>Alle Preise sind Startpreise. Der finale Preis richtet sich nach Länge, Dichte und Aufwand.</p>
+      </div>
+
+      <div class="chips">
+        <button class="chip active">Alle</button>
+        <button class="chip">Braids &amp; Cornrows</button>
+        <button class="chip">Locs &amp; Dreads</button>
+        <button class="chip">Ponytails</button>
+        <button class="chip">Herren</button>
+        <button class="chip">Wash &amp; Cut</button>
+        <button class="chip">Treatments</button>
+        <button class="chip">Kids</button>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <div class="card__img"><img src="assets/services/braids_feed_in.jpg" alt="Feed-In Cornrows" loading="lazy"></div>
+          <div class="card__body">
+            <div class="card__top">
+              <h3 class="card__title">Feed-In Cornrows</h3>
+              <span class="card__price">ab 75 €</span>
+            </div>
+            <p class="card__cat">Braids &amp; Cornrows</p>
+            <p class="card__desc">Feed-In Cornrows mit Extensions — saubere Linien, präzise gearbeitet.</p>
+            <div class="card__meta">
+              <span class="card__dur">⏱ 3 Std</span>
+              <a class="link" href="booking.html">Termin wählen</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card__img"><img src="assets/services/dreadlocs_retwist.jpg" alt="Dreadlocks Re-twist" loading="lazy"></div>
+          <div class="card__body">
+            <div class="card__top">
+              <h3 class="card__title">Dreadlocks Re-twist</h3>
+              <span class="card__price">ab 60 €</span>
+            </div>
+            <p class="card__cat">Locs &amp; Dreads</p>
+            <p class="card__desc">Re-twist &amp; Styling für Dreadlocks und Sisterlocs — Pflege und cleaner Ansatz.</p>
+            <div class="card__meta">
+              <span class="card__dur">⏱ 2 Std</span>
+              <a class="link" href="booking.html">Termin wählen</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- RATING -->
+  <section class="rating" id="reviews">
+    <div class="wrap">
+      <div>
+        <div class="sec-index">
+          <span class="num">N° 07</span><span class="line"></span><span class="label">Reviews</span>
+        </div>
+        <h2 class="display">The results <span class="it">speak.</span><br>The community <span class="it">confirms<span class="dot">.</span></span></h2>
+      </div>
+      <div>
+        <div class="rating__num">4,9<small>/ 5</small></div>
+        <div class="rating__stars">★★★★★</div>
+        <div class="rating__note">180+ verifizierte Bewertungen</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="besuch">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <div class="foot-brand">Parry<b>licious.</b></div>
+          <div class="foot-copy">Bahlenstraße 42 · 40589 Düsseldorf · Di–Sa 11:00–19:30</div>
+        </div>
+        <div class="foot-links">
+          <a href="impressum.html">Impressum</a>
+          <a href="privacy.html">Datenschutz</a>
+          <a href="https://instagram.com/parrylicious_studio" target="_blank" rel="noreferrer">Instagram</a>
+          <a href="login.html">Team-Login</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <span class="draft-flag">Vorschau · Entwurf</span>
+</body>
+</html>
