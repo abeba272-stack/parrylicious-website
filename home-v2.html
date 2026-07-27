@@ -71,12 +71,11 @@
 
     /* Hero */
     .hero{ position:relative; min-height:100vh; display:flex; align-items:center; padding:120px 0 60px; overflow:hidden; }
-    .hero__bg{ position:absolute; inset:0; z-index:0;
+    .hero__video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:right center; z-index:0; background:#0a0a0c; filter:contrast(1.04); }
+    .hero__overlay{ position:absolute; inset:0; z-index:1;
       background:
         linear-gradient(90deg, var(--bg) 8%, rgba(10,10,12,.35) 46%, rgba(10,10,12,.15) 100%),
-        linear-gradient(180deg, rgba(10,10,12,.2) 0%, transparent 30%, var(--bg) 100%),
-        url("assets/hero-editorial.jpg");
-      background-size:cover; background-position:right center; filter:contrast(1.04); }
+        linear-gradient(180deg, rgba(10,10,12,.2) 0%, transparent 30%, var(--bg) 100%); }
     .hero__grain{ position:absolute; inset:0; z-index:1;
       background:radial-gradient(circle at 78% 42%, rgba(203,164,107,.12), transparent 32%); }
     .hero .wrap{ position:relative; z-index:2; }
@@ -236,7 +235,10 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero__bg" id="heroBg"></div>
+    <video class="hero__video" id="heroVideo" muted loop playsinline autoplay preload="auto" poster="assets/hero-editorial.jpg">
+      <source src="assets/hero-video.mp4" type="video/mp4">
+    </video>
+    <div class="hero__overlay"></div>
     <div class="hero__grain"></div>
     <div class="wrap">
       <div class="hero__meta">
@@ -455,6 +457,32 @@
       toggle.setAttribute('aria-expanded', String(open));
     });
     nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); toggle.classList.remove('open'); } });
+
+    // Hero-Video: Desktop = per Scroll gesteuert (Model bewegt sich beim Scrollen),
+    // Handy/reduzierte Bewegung = sanfter Auto-Loop. Standbild (poster) als Fallback.
+    const heroVideo = document.getElementById('heroVideo');
+    const heroSection = document.querySelector('.hero');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canScrub = window.matchMedia('(min-width: 861px) and (pointer: fine)').matches && !reduceMotion;
+    if (heroVideo) {
+      if (canScrub) {
+        heroVideo.removeAttribute('autoplay');
+        heroVideo.loop = false;
+        heroVideo.pause();
+        const scrub = () => {
+          if (!heroVideo.duration) return;
+          const rect = heroSection.getBoundingClientRect();
+          const total = rect.height || 1;
+          const p = Math.min(Math.max(-rect.top / total, 0), 1);
+          const t = p * (heroVideo.duration - 0.05);
+          if (Math.abs(t - heroVideo.currentTime) > 0.01) heroVideo.currentTime = t;
+        };
+        heroVideo.addEventListener('loadedmetadata', scrub);
+        window.addEventListener('scroll', scrub, { passive: true });
+      } else {
+        heroVideo.play().catch(() => {});
+      }
+    }
 
     // Before/After slider
     const ba = document.getElementById('ba'), after = document.getElementById('baAfter'), handle = document.getElementById('baHandle');
