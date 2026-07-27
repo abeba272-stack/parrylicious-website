@@ -65,7 +65,9 @@ function render(){
   services.filter(matchesFilter).forEach(s => {
     const imageSrc = s.image || 'assets/placeholder-editorial.jpg';
     const card = el('article', { class:'card' }, [
-      el('img', { class:'service-thumb', src:imageSrc, alt:`${s.name} Beispielbild`, loading:'lazy' }),
+      el('div', { class:'thumb-frame' }, [
+        el('img', { class:'service-thumb', src:imageSrc, alt:`${s.name} Beispielbild`, loading:'lazy' })
+      ]),
       el('div', { class:'row between' }, [
         el('h3', {}, [s.name]),
         el('div', { class:'price' }, [s.priceFrom ? `ab ${currency(s.priceFrom)}` : 'Preis auf Anfrage'])
@@ -97,3 +99,16 @@ render();
 document
   .querySelectorAll('.section-head, .filters, .promo-card, #about .card, #contact .card')
   .forEach(reveal);
+
+// Scroll-Fortschrittsbalken oben.
+const progressBar = document.getElementById('scrollProgress');
+if (progressBar) {
+  const updateProgress = () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = scrollable > 0 ? window.scrollY / scrollable : 0;
+    progressBar.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+  };
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress);
+  updateProgress();
+}

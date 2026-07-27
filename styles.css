@@ -382,15 +382,21 @@ h3{
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 }
 .card:hover{ transform: translateY(-4px); box-shadow: var(--shadow); border-color: rgba(169,128,63,.35); }
-.service-thumb{
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
+.thumb-frame{
+  overflow: hidden;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
   margin-bottom: 14px;
-  background: rgba(255,255,255,.5);
 }
+.service-thumb{
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: rgba(255,255,255,.5);
+  transition: transform .6s var(--ease);
+}
+.card:hover .service-thumb{ transform: scale(1.06); }
 .price{ font-weight: 700; color: var(--gold); font-size: 17px; letter-spacing:.2px; }
 .tag{
   display:inline-flex;
@@ -653,38 +659,16 @@ textarea{ min-height: 90px; resize: vertical; }
   justify-content:flex-start;
 }
 
-/* ---- Laufband „In Parry we trust" ---- */
-.marquee{
-  overflow: hidden;
-  background: linear-gradient(180deg, #23140d, var(--ink));
-  border-top: 1px solid rgba(255,255,255,.08);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  padding: 16px 0;
-}
-.marquee-track{
-  display: flex;
-  width: max-content;
-  animation: pl-marquee 30s linear infinite;
-}
-.marquee-group{
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  padding-right: 30px;
-}
-.marquee-item{
-  font-family: var(--font-head);
-  font-size: clamp(20px, 2.6vw, 30px);
-  font-weight: 600;
-  letter-spacing: .6px;
-  color: var(--cream);
-  white-space: nowrap;
-}
-.marquee-star{ color: var(--gold); font-size: clamp(15px, 2vw, 21px); }
-.marquee:hover .marquee-track{ animation-play-state: paused; }
-@keyframes pl-marquee{
-  from{ transform: translateX(-50%); }
-  to{ transform: translateX(0); }
+/* ---- Scroll-Fortschritt (dünne Goldlinie oben) ---- */
+.scroll-progress{
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold));
+  transform: scaleX(0);
+  transform-origin: left;
+  z-index: 50;
+  pointer-events: none;
 }
 
 /* ---- Modern-Editorial: Einblend-Animationen ---- */
@@ -724,6 +708,4 @@ textarea{ min-height: 90px; resize: vertical; }
 
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior: auto; }
-  .marquee-track{ animation: none; transform: none; justify-content: center; width: 100%; }
-  .marquee-group:nth-child(2){ display: none; }
 }
