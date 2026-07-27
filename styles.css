@@ -125,9 +125,28 @@ a{ color:inherit; transition: color var(--transition), opacity var(--transition)
 .topbar .container{
   width: 100%;
   margin: 0;
-  padding: 0 14px 0 0;
+  padding: 15px 22px;
 }
-.brand{ display:flex; align-items:center; gap:12px; text-decoration:none; margin-left:10px; }
+.brand{ display:flex; align-items:baseline; gap:10px; text-decoration:none; margin-left:0; }
+.wordmark{
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 27px;
+  letter-spacing: .4px;
+  line-height: 1;
+  color: var(--char);
+  transition: color var(--transition);
+}
+.wordmark-tag{
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--gold);
+  align-self: center;
+}
+.brand:hover .wordmark{ color: var(--gold); }
 .logo{
   width: 180px;
   height: 70px;
@@ -585,6 +604,41 @@ textarea{ min-height: 90px; resize: vertical; }
 .profile-dropdown button{
   width:100%;
   justify-content:flex-start;
+}
+
+/* ---- Modern-Editorial: Einblend-Animationen ---- */
+@media (prefers-reduced-motion: no-preference){
+  .reveal{
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .7s var(--ease), transform .7s var(--ease);
+  }
+  .reveal.is-visible{ opacity: 1; transform: none; }
+
+  .hero-copy > *{
+    opacity: 0;
+    transform: translateY(24px);
+    animation: pl-fade-up .75s var(--ease) forwards;
+  }
+  .hero-copy > *:nth-child(1){ animation-delay: .05s; }
+  .hero-copy > *:nth-child(2){ animation-delay: .13s; }
+  .hero-copy > *:nth-child(3){ animation-delay: .21s; }
+  .hero-copy > *:nth-child(4){ animation-delay: .29s; }
+  .hero-copy > *:nth-child(5){ animation-delay: .37s; }
+  .hero-copy > *:nth-child(6){ animation-delay: .45s; }
+
+  .hero-card{ opacity: 0; animation: pl-fade-in 1s var(--ease) .30s forwards; }
+
+  .hero-img{ transition: transform 1.4s var(--ease); }
+  .hero-card:hover .hero-img{ transform: scale(1.045); }
+}
+@keyframes pl-fade-up{ to{ opacity: 1; transform: none; } }
+@keyframes pl-fade-in{ to{ opacity: 1; } }
+
+@media (max-width: 640px){
+  .topbar .container{ padding: 12px 16px; }
+  .wordmark{ font-size: 23px; }
+  .wordmark-tag{ letter-spacing: 2.4px; }
 }
 
 @media (prefers-reduced-motion: reduce){

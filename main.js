@@ -27,6 +27,28 @@ function currency(eur){
   return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(eur);
 }
 
+/* ---- Einblend-Animationen (Scroll-Reveal) ---- */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealObserver = (!prefersReducedMotion && 'IntersectionObserver' in window)
+  ? new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const node = entry.target;
+        node.classList.add('is-visible');
+        obs.unobserve(node);
+        // Nach der Einblendung .reveal entfernen, damit Hover-Transitionen normal laufen.
+        setTimeout(() => node.classList.remove('reveal'), 750);
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' })
+  : null;
+
+function reveal(node){
+  if (!node) return;
+  if (!revealObserver){ node.classList.add('is-visible'); return; }
+  node.classList.add('reveal');
+  revealObserver.observe(node);
+}
+
 const grid = document.getElementById('servicesGrid');
 const chips = document.querySelectorAll('.chip');
 
@@ -56,6 +78,7 @@ function render(){
       ])
     ]);
     grid.appendChild(card);
+    reveal(card);
   });
 }
 
@@ -69,3 +92,8 @@ chips?.forEach(btn => {
 });
 
 render();
+
+// Statische Abschnitte beim Scrollen sanft einblenden.
+document
+  .querySelectorAll('.section-head, .filters, .promo-card, #about .card, #contact .card')
+  .forEach(reveal);
