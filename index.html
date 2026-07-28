@@ -3,36 +3,522 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Willkommen – Parrylicious Studio</title>
-  <meta name="description" content="Willkommen bei Parrylicious Studio. Starte von hier und gehe mit einem Klick zur Hauptseite." />
+  <title>Parrylicious Studio — Afro Editorial Luxury · Düsseldorf</title>
+  <meta name="description" content="Parrylicious Studio Düsseldorf — Braids, Locs, Cornrows & Protective Styles. Editorial. Präzise. Termin online buchen." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="assets/logo.jpg" />
-</head>
-<body class="welcome-page">
-  <main class="welcome-main">
-    <div class="welcome-bg-shape welcome-bg-shape-a" aria-hidden="true"></div>
-    <div class="welcome-bg-shape welcome-bg-shape-b" aria-hidden="true"></div>
+  <style>
+    :root{
+      --bg: #0a0a0c;
+      --bg-2: #101014;
+      --panel: #141419;
+      --ink: #f4f1ea;
+      --ink-soft: #a29e97;
+      --ink-faint: #6f6b66;
+      --line: rgba(244,241,234,.14);
+      --line-soft: rgba(244,241,234,.08);
+      --gold: #c9a26a;
+      --accent: #cba46b;      /* Logo-Gold/Sand — ersetzt das Blau */
+      --accent-2: #dcc09a;    /* helleres Sand für Hover */
 
-    <section class="welcome-card" aria-label="Willkommensbereich">
-      <img src="assets/logo.jpg" alt="Parrylicious Studio Logo" class="welcome-logo" />
-      <p class="kicker">Afro Hair Studio · Düsseldorf</p>
-      <h1>Willkommen bei Parrylicious</h1>
-      <p class="lead">
-        Schön, dass du da bist. Klicke auf den Button und gehe weiter zur Hauptseite mit Services,
-        Buchung und allen Studio-Infos.
-      </p>
-      <div class="row gap welcome-actions">
-        <a class="btn" href="home.html">Zur Hauptseite</a>
-        <a class="btn ghost" href="booking.html">Direkt Termin buchen</a>
+      --font-display: "Cormorant Garamond", Georgia, serif;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+      --ease: cubic-bezier(.22,.61,.36,1);
+      --max: 1280px;
+    }
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--font-sans); line-height:1.6;
+      -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    }
+    a{ color:inherit; text-decoration:none; }
+    img{ max-width:100%; display:block; }
+    .wrap{ width:min(var(--max), 92%); margin:0 auto; }
+    .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-soft); }
+    .rule{ display:inline-block; width:44px; height:1px; background:var(--accent); vertical-align:middle; margin-right:14px; }
+
+    /* Topbar */
+    .topbar{ position:fixed; top:0; left:0; right:0; z-index:40;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px clamp(18px,4vw,44px);
+      background:linear-gradient(180deg, rgba(10,10,12,.9), rgba(10,10,12,0)); backdrop-filter:blur(8px); }
+    .brand{ font-family:var(--font-display); font-size:26px; font-weight:600; letter-spacing:.3px; }
+    .brand b{ color:var(--accent); font-weight:600; }
+    .nav{ display:flex; align-items:center; gap:30px; }
+    .nav a{ font-size:12.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); transition:color .25s var(--ease); }
+    .nav a:hover{ color:var(--ink); }
+    .nav .cta-mobile{ display:none; }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      font-family:var(--font-sans); font-size:12.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+      padding:14px 22px; border-radius:2px; cursor:pointer; border:1px solid transparent;
+      transition:background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease); }
+    .btn--accent{ background:var(--accent); color:#0a0a0c; }
+    .btn--accent:hover{ background:var(--accent-2); transform:translateY(-1px); }
+    .btn--ghost{ border-color:var(--line); color:var(--ink); }
+    .btn--ghost:hover{ border-color:var(--ink); }
+    .btn--arrow::after{ content:"→"; font-size:14px; }
+    .nav-toggle{ display:none; flex-direction:column; gap:5px; width:44px; height:40px; padding:0 10px;
+      background:transparent; border:1px solid var(--line); border-radius:2px; cursor:pointer; }
+    .nav-toggle span{ display:block; height:2px; width:22px; background:var(--ink); transition:.25s var(--ease); }
+    .nav-toggle.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2){ opacity:0; }
+    .nav-toggle.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+    /* Hero */
+    .hero{ position:relative; min-height:100vh; display:flex; align-items:center; padding:120px 0 60px; overflow:hidden; }
+    .hero__video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:right center; z-index:0; background:#0a0a0c; filter:contrast(1.04); pointer-events:none; }
+    .hero__video::-webkit-media-controls,
+    .hero__video::-webkit-media-controls-enclosure,
+    .hero__video::-webkit-media-controls-panel,
+    .hero__video::-webkit-media-controls-start-playback-button,
+    .hero__video::-webkit-media-controls-overlay-play-button{ display:none !important; -webkit-appearance:none !important; opacity:0 !important; }
+    .hero__overlay{ position:absolute; inset:0; z-index:1;
+      background:
+        linear-gradient(90deg, var(--bg) 8%, rgba(10,10,12,.35) 46%, rgba(10,10,12,.15) 100%),
+        linear-gradient(180deg, rgba(10,10,12,.2) 0%, transparent 30%, var(--bg) 100%); }
+    .hero__grain{ position:absolute; inset:0; z-index:1;
+      background:radial-gradient(circle at 78% 42%, rgba(203,164,107,.12), transparent 32%); }
+    .hero .wrap{ position:relative; z-index:2; }
+    .hero__meta{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:clamp(30px,7vh,90px); }
+    .hero__meta .right{ text-align:right; line-height:2; }
+    .hero__kicker{ margin:0 0 18px; }
+    .hero h1{ font-family:var(--font-display); font-weight:600;
+      font-size:clamp(56px, 11vw, 150px); line-height:.94; letter-spacing:-.01em; margin:0; text-wrap:balance; }
+    .hero h1 .it{ font-style:italic; color:var(--gold); }
+    .hero h1 .dot{ color:var(--accent); }
+    .hero__lower{ display:flex; justify-content:space-between; align-items:flex-end; gap:30px; margin-top:clamp(28px,5vh,54px); flex-wrap:wrap; }
+    .hero__sub{ max-width:42ch; color:var(--ink-soft); font-size:16px; border-left:2px solid var(--accent); padding-left:18px; }
+    .hero__cta{ display:flex; flex-direction:column; gap:12px; align-items:stretch; min-width:220px; }
+    .side-label{ position:absolute; top:50%; z-index:3; writing-mode:vertical-rl; text-orientation:mixed;
+      font-size:10.5px; letter-spacing:.32em; text-transform:uppercase; color:var(--ink-faint); }
+    .side-label.left{ left:max(10px, calc((100vw - var(--max))/2 - 30px)); transform:translateY(-50%); }
+    .side-label.right{ right:max(10px, calc((100vw - var(--max))/2 - 30px)); transform:translateY(-50%) rotate(180deg); }
+
+    @media (prefers-reduced-motion:no-preference){
+      .anim{ opacity:0; transform:translateY(26px); animation:rise .9s var(--ease) forwards; }
+      .anim.d1{ animation-delay:.06s } .anim.d2{ animation-delay:.16s } .anim.d3{ animation-delay:.26s }
+      .anim.d4{ animation-delay:.4s } .anim.d5{ animation-delay:.52s }
+      @keyframes rise{ to{ opacity:1; transform:none; } }
+      .reveal{ opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+      .reveal.vis{ opacity:1; transform:none; }
+    }
+
+    /* Marquee */
+    .marquee{ border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); overflow:hidden; padding:26px 0; background:var(--bg-2); }
+    .marquee__track{ display:flex; width:max-content; animation:scroll 34s linear infinite; }
+    .marquee__track:hover{ animation-play-state:paused; }
+    .marquee__g{ display:flex; align-items:center; }
+    .marquee__item{ font-family:var(--font-display); font-style:italic; font-weight:500;
+      font-size:clamp(34px,5vw,60px); color:transparent; -webkit-text-stroke:1px rgba(244,241,234,.3); text-stroke:1px rgba(244,241,234,.3);
+      padding:0 34px; white-space:nowrap; }
+    .marquee__dot{ width:9px; height:9px; border-radius:50%; background:var(--accent); flex:none; }
+    @keyframes scroll{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+
+    /* Section shell */
+    section{ padding:clamp(72px,12vh,130px) 0; }
+    .sec-index{ display:flex; align-items:center; gap:16px; margin-bottom:34px; }
+    .sec-index .num{ font-size:12px; font-weight:600; letter-spacing:.24em; color:var(--ink-soft); }
+    .sec-index .line{ flex:0 0 90px; height:1px; background:var(--line); }
+    .sec-index .label{ font-size:12px; font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:var(--accent); }
+    .display{ font-family:var(--font-display); font-weight:600; font-size:clamp(40px,6.4vw,84px); line-height:1.0; letter-spacing:-.01em; margin:0; text-wrap:balance; }
+    .display .it{ font-style:italic; color:var(--gold); }
+    .display .dot{ color:var(--accent); }
+
+    .split-head{ display:grid; grid-template-columns:1.5fr 1fr; gap:30px; align-items:end; }
+    .split-head p{ color:var(--ink-soft); border-left:2px solid var(--accent); padding-left:18px; margin:0; font-size:15px; }
+
+    /* Filters + service cards */
+    .chips{ display:flex; flex-wrap:wrap; gap:10px; margin:44px 0 40px; }
+    .chip{ font-size:11.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft);
+      border:1px solid var(--line); padding:11px 18px; border-radius:2px; background:transparent; cursor:pointer; transition:.25s var(--ease); }
+    .chip:hover{ color:var(--ink); border-color:var(--ink); }
+    .chip.active{ background:var(--accent); color:#0a0a0c; border-color:var(--accent); }
+    .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+    .card{ border:1px solid var(--line-soft); background:var(--panel); border-radius:3px; overflow:hidden; transition:border-color .3s var(--ease), transform .3s var(--ease); }
+    .card:hover{ border-color:var(--line); transform:translateY(-4px); }
+    .card__img{ position:relative; aspect-ratio:4/3; overflow:hidden; background:#1c1c22; }
+    .card__img img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
+    .card:hover .card__img img{ transform:scale(1.06); }
+    .card__body{ padding:22px 22px 24px; }
+    .card__top{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+    .card__title{ font-family:var(--font-display); font-size:26px; font-weight:600; margin:0; line-height:1.1; }
+    .card__price{ font-family:var(--font-display); font-size:22px; color:var(--gold); white-space:nowrap; }
+    .card__cat{ font-size:10.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); margin:8px 0 12px; }
+    .card__desc{ color:var(--ink-soft); font-size:14px; margin:0 0 18px; }
+    .card__meta{ display:flex; justify-content:space-between; align-items:center; gap:14px; border-top:1px solid var(--line-soft); padding-top:16px; }
+    .card__dur{ font-size:12px; color:var(--ink-faint); letter-spacing:.05em; }
+    .link{ font-size:11.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); display:inline-flex; gap:8px; align-items:center; }
+    .link::after{ content:"→"; transition:transform .25s var(--ease); }
+    .link:hover::after{ transform:translateX(4px); }
+
+    /* Before / After slider */
+    .studio{ background:var(--bg-2); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+    .ba{ position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:3px; margin-top:44px; user-select:none; border:1px solid var(--line-soft); }
+    .ba img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .ba__after{ clip-path:inset(0 0 0 50%); }
+    .ba__tag{ position:absolute; top:14px; font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; background:rgba(10,10,12,.7); color:var(--ink); padding:6px 12px; border-radius:2px; }
+    .ba__tag.b{ left:14px; } .ba__tag.a{ right:14px; }
+    .ba__handle{ position:absolute; top:0; bottom:0; left:50%; width:2px; background:var(--accent); transform:translateX(-50%); }
+    .ba__grip{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:44px; height:44px; border-radius:50%; background:var(--accent); color:#0a0a0c; display:grid; place-items:center; font-size:18px; cursor:ew-resize; box-shadow:0 6px 20px rgba(0,0,0,.5); }
+
+    /* Team */
+    .team-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:44px; }
+    .member__img{ aspect-ratio:3/4; overflow:hidden; background:#1c1c22; border:1px solid var(--line-soft); border-radius:3px; }
+    .member__img img{ width:100%; height:100%; object-fit:cover; filter:grayscale(.2); }
+    .member__name{ font-family:var(--font-display); font-size:26px; margin:18px 0 4px; }
+    .member__role{ font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+    .member__quote{ color:var(--ink-soft); font-size:14px; margin:12px 0 0; font-style:italic; font-family:var(--font-display); }
+
+    /* Rating */
+    .rating .wrap{ display:grid; grid-template-columns:1.3fr 1fr; gap:40px; align-items:center; }
+    .rating__num{ font-family:var(--font-display); font-size:clamp(90px,13vw,160px); line-height:.9; font-weight:600; }
+    .rating__num small{ font-size:.28em; color:var(--ink-soft); vertical-align:super; }
+    .rating__stars{ color:var(--gold); letter-spacing:4px; font-size:20px; }
+    .rating__note{ color:var(--ink-soft); font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px; }
+
+    /* Besuch */
+    .besuch-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; margin-top:44px; }
+    .kv{ display:grid; gap:18px; }
+    .kv h4{ font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 6px; }
+    .kv p{ margin:0; color:var(--ink-soft); font-size:15px; }
+    .hours{ display:grid; grid-template-columns:auto 1fr; gap:4px 24px; font-size:14px; color:var(--ink-soft); }
+    .besuch-cta{ display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; }
+    .map{ aspect-ratio:4/3; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; }
+    .map iframe{ width:100%; height:100%; border:0; filter:grayscale(.4) invert(.9) hue-rotate(180deg) contrast(.9); }
+
+    /* Footer */
+    footer{ padding:70px 0 50px; border-top:1px solid var(--line-soft); }
+    .foot-grid{ display:flex; justify-content:space-between; align-items:flex-end; gap:30px; flex-wrap:wrap; }
+    .foot-brand{ font-family:var(--font-display); font-size:40px; font-weight:600; }
+    .foot-brand b{ color:var(--accent); }
+    .foot-links{ display:flex; gap:22px; flex-wrap:wrap; }
+    .foot-links a{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+    .foot-links a:hover{ color:var(--ink); }
+    .foot-copy{ color:var(--ink-faint); font-size:12px; margin-top:30px; }
+
+    .draft-flag{ position:fixed; bottom:16px; left:16px; z-index:60; background:var(--accent); color:#0a0a0c; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:8px 14px; border-radius:2px; }
+
+    @media (max-width:960px){ .cards{ grid-template-columns:repeat(2,1fr); } .team-grid{ grid-template-columns:1fr; } }
+    @media (max-width:860px){
+      .nav-toggle{ display:flex; }
+      .nav{ position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0;
+        background:rgba(10,10,12,.98); border-bottom:1px solid var(--line); padding:8px 24px 20px; display:none; }
+      .nav.open{ display:flex; }
+      .nav a{ padding:14px 0; border-bottom:1px solid var(--line-soft); font-size:14px; }
+      .nav .cta-mobile{ display:block; color:var(--accent); }
+      .topbar .btn--accent{ display:none; }
+      .split-head, .besuch-grid, .rating .wrap{ grid-template-columns:1fr; }
+      .cards{ grid-template-columns:1fr; }
+      .side-label{ display:none; } .hero__meta .right{ display:none; }
+      .hero__lower{ flex-direction:column; align-items:stretch; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="/">Parry<b>licious.</b></a>
+    <nav class="nav" id="nav">
+      <a href="#services">Styles</a>
+      <a href="#services">Leistungen</a>
+      <a href="#studio">Studio</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#besuch">Besuch</a>
+      <a href="booking.html" class="cta-mobile">Termin buchen</a>
+    </nav>
+    <a class="btn btn--accent" href="booking.html">Termin buchen</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false"><span></span><span></span><span></span></button>
+  </header>
+
+  <span class="side-label left">Bahlenstr. 42 · Düsseldorf</span>
+  <span class="side-label right">In Parrylicious we trust</span>
+
+  <!-- HERO -->
+  <section class="hero">
+    <video class="hero__video" id="heroVideo" muted loop playsinline autoplay preload="auto" disablepictureinpicture controlslist="nodownload nofullscreen noremoteplayback" poster="assets/hero-editorial.jpg">
+      <source src="assets/hero-video.mp4" type="video/mp4">
+    </video>
+    <div class="hero__overlay"></div>
+    <div class="hero__grain"></div>
+    <div class="wrap">
+      <div class="hero__meta">
+        <span class="eyebrow anim d1">Ausgabe N° 01</span>
+        <div class="right eyebrow anim d1">AW · 2026<br>Afro Editorial Luxury</div>
       </div>
-      <div class="footer-links" style="margin-top:18px; justify-content:center;">
-        <a href="impressum.html">Impressum</a>
-        <a href="privacy.html">Datenschutz</a>
+      <p class="hero__kicker eyebrow anim d2"><span class="rule"></span>Afro Hair Studio — Düsseldorf</p>
+      <h1 class="anim d3">Protective<br><span class="it">Styles.</span> Präzise<br>gestaltet<span class="dot">.</span></h1>
+      <div class="hero__lower">
+        <p class="hero__sub anim d4">Braids, Locs, Cornrows und individuelle Styles für unterschiedliche Haarstrukturen — präzise gearbeitet in Düsseldorf.</p>
+        <div class="hero__cta anim d5">
+          <a class="btn btn--accent btn--arrow" href="booking.html">Termin buchen</a>
+          <a class="btn btn--ghost" href="#services">Styles entdecken</a>
+        </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <div class="marquee__g">
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+      </div>
+      <div class="marquee__g">
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 03</span><span class="line"></span><span class="label">Services</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Services, built<br>around <span class="it">your hair.</span></h2>
+        <p>Alle Preise sind Startpreise. Der finale Preis richtet sich nach Länge, Dichte und Aufwand.</p>
+      </div>
+      <div class="chips reveal" id="chips"></div>
+      <div class="cards" id="servicesGrid"></div>
+    </div>
+  </section>
+
+  <!-- STUDIO / BEFORE-AFTER -->
+  <section class="studio" id="studio">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 05</span><span class="line"></span><span class="label">Studio</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Die Ergebnisse<br>sprechen <span class="it">für sich.</span></h2>
+        <p>Ziehe den Regler, um Ansatz und Ergebnis zu vergleichen. Echte Arbeiten aus dem Studio.</p>
+      </div>
+      <div class="ba reveal" id="ba">
+        <img class="ba__before" src="assets/services/plain_twist_braids.jpg" alt="Vorher">
+        <img class="ba__after" id="baAfter" src="assets/services/dreadlocs_retwist.jpg" alt="Nachher">
+        <span class="ba__tag b">Vorher</span>
+        <span class="ba__tag a">Nachher</span>
+        <div class="ba__handle" id="baHandle"><div class="ba__grip">⇄</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section id="team">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Team</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Die Hände hinter<br><span class="it">jedem Style.</span></h2>
+        <p>Unser Team arbeitet spezialisiert — mit klaren Techniken für unterschiedliche Haarstrukturen.</p>
+      </div>
+      <div class="team-grid">
+        <article class="member reveal">
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
+          <div class="member__name">Heike Louise</div>
+          <div class="member__role">Founder · Locs &amp; Braids</div>
+          <p class="member__quote">„Jeder Style beginnt mit einem Gespräch — nicht mit einer Schablone."</p>
+        </article>
+        <article class="member reveal">
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
+          <div class="member__name">Platzhalter</div>
+          <div class="member__role">Cornrows &amp; Sleek Styles</div>
+          <p class="member__quote">„Saubere Linien, klare Struktur, kein Schnellverfahren."</p>
+        </article>
+        <article class="member reveal">
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
+          <div class="member__name">Platzhalter</div>
+          <div class="member__role">Twists &amp; Wigs</div>
+          <p class="member__quote">„Der beste Style ist der, mit dem du das Studio selbstbewusst verlässt."</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- RATING -->
+  <section class="rating studio" id="reviews">
+    <div class="wrap">
+      <div>
+        <div class="sec-index reveal"><span class="num">N° 07</span><span class="line"></span><span class="label">Reviews</span></div>
+        <h2 class="display reveal">The results <span class="it">speak.</span><br>The community <span class="it">confirms<span class="dot">.</span></span></h2>
+      </div>
+      <div class="reveal">
+        <div class="rating__num">4,9<small>/ 5</small></div>
+        <div class="rating__stars">★★★★★</div>
+        <div class="rating__note">180+ verifizierte Bewertungen</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BESUCH -->
+  <section id="besuch">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 09</span><span class="line"></span><span class="label">Besuch</span></div>
+      <h2 class="display reveal">Your next look<br>starts in <span class="it">Düsseldorf.</span></h2>
+      <div class="besuch-grid">
+        <div class="kv reveal">
+          <div><h4>Adresse</h4><p>Bahlenstraße 42<br>40589 Düsseldorf — Wersten</p></div>
+          <div><h4>Öffnungszeiten</h4>
+            <div class="hours">
+              <span>Mo</span><span>geschlossen</span>
+              <span>Di–Sa</span><span>11:00 – 19:30</span>
+              <span>So</span><span>geschlossen</span>
+            </div>
+          </div>
+          <div><h4>Kontakt</h4><p>0151 70588497 · @parrylicious_studio</p></div>
+          <div class="besuch-cta">
+            <a class="btn btn--accent" href="booking.html">Termin buchen</a>
+            <a class="btn btn--ghost" href="https://wa.me/4915170588497" target="_blank" rel="noreferrer">WhatsApp</a>
+          </div>
+        </div>
+        <div class="map reveal">
+          <iframe loading="lazy" title="Karte Parrylicious" src="https://www.google.com/maps?q=Bahlenstra%C3%9Fe%2042%2C%2040589%20D%C3%BCsseldorf&output=embed"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <div class="foot-brand">Parry<b>licious.</b></div>
+          <div class="foot-copy">Bahlenstraße 42 · 40589 Düsseldorf · Di–Sa 11:00–19:30</div>
+        </div>
+        <div class="foot-links">
+          <a href="impressum.html">Impressum</a>
+          <a href="privacy.html">Datenschutz</a>
+          <a href="https://instagram.com/parrylicious_studio" target="_blank" rel="noreferrer">Instagram</a>
+          <a href="login.html">Team-Login</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  
+
+  <script type="module">
+    import { services } from './data/services.js';
+
+    const eur = (n) => new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n);
+    const dur = (m) => { const h=Math.floor(m/60), r=m%60; return h&&r?`${h} Std ${r} Min`:h?`${h} Std`:`${r} Min`; };
+
+    // Filter chips
+    const FILTERS = [
+      ['all','Alle'], ['braids','Braids & Cornrows'], ['locs','Locs & Dreads'], ['ponytails','Ponytails'],
+      ['men','Herren'], ['wash','Wash & Cut'], ['treatment','Treatments'], ['extensions','Extensions'], ['kids','Kids']
+    ];
+    const chipsEl = document.getElementById('chips');
+    const grid = document.getElementById('servicesGrid');
+    let active = 'all';
+
+    FILTERS.forEach(([f,label],i) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (i===0?' active':'');
+      b.textContent = label; b.dataset.filter = f;
+      b.addEventListener('click', () => {
+        active = f;
+        chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
+        render();
+      });
+      chipsEl.appendChild(b);
+    });
+
+    function render(){
+      grid.innerHTML = '';
+      services.filter(s => active==='all' || (s.tags||[]).includes(active)).forEach(s => {
+        const el = document.createElement('article');
+        el.className = 'card';
+        el.innerHTML = `
+          <div class="card__img"><img src="${s.image||'assets/placeholder-editorial.jpg'}" alt="${s.name}" loading="lazy"></div>
+          <div class="card__body">
+            <div class="card__top">
+              <h3 class="card__title">${s.name}</h3>
+              <span class="card__price">ab ${eur(s.priceFrom)}</span>
+            </div>
+            <p class="card__cat">${s.category||''}</p>
+            <p class="card__desc">${s.description||''}</p>
+            <div class="card__meta">
+              <span class="card__dur">⏱ ${dur(s.durationMin)}</span>
+              <a class="link" href="booking.html?service=${encodeURIComponent(s.id)}">Termin wählen</a>
+            </div>
+          </div>`;
+        grid.appendChild(el);
+      });
+    }
+    render();
+
+    // Mobile nav
+    const nav = document.getElementById('nav'), toggle = document.getElementById('navToggle');
+    toggle.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      toggle.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); toggle.classList.remove('open'); } });
+
+    // Hero-Video: Desktop = per Scroll gesteuert (Model bewegt sich beim Scrollen),
+    // Handy/reduzierte Bewegung = sanfter Auto-Loop. Standbild (poster) als Fallback.
+    const heroVideo = document.getElementById('heroVideo');
+    const heroSection = document.querySelector('.hero');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canScrub = window.matchMedia('(min-width: 861px) and (pointer: fine)').matches && !reduceMotion;
+    if (heroVideo) {
+      if (canScrub) {
+        heroVideo.removeAttribute('autoplay');
+        heroVideo.loop = false;
+        heroVideo.pause();
+        const scrub = () => {
+          if (!heroVideo.duration) return;
+          const rect = heroSection.getBoundingClientRect();
+          const total = rect.height || 1;
+          const p = Math.min(Math.max(-rect.top / total, 0), 1);
+          const t = p * (heroVideo.duration - 0.05);
+          if (Math.abs(t - heroVideo.currentTime) > 0.01) heroVideo.currentTime = t;
+        };
+        heroVideo.addEventListener('loadedmetadata', scrub);
+        window.addEventListener('scroll', scrub, { passive: true });
+      } else {
+        heroVideo.play().catch(() => {});
+      }
+    }
+
+    // Before/After slider
+    const ba = document.getElementById('ba'), after = document.getElementById('baAfter'), handle = document.getElementById('baHandle');
+    let dragging = false;
+    const setPos = (clientX) => {
+      const r = ba.getBoundingClientRect();
+      let p = ((clientX - r.left) / r.width) * 100;
+      p = Math.max(2, Math.min(98, p));
+      after.style.clipPath = `inset(0 0 0 ${p}%)`;
+      handle.style.left = p + '%';
+    };
+    const start = () => dragging = true;
+    const end = () => dragging = false;
+    const move = (e) => { if (!dragging) return; const x = e.touches ? e.touches[0].clientX : e.clientX; setPos(x); };
+    handle.addEventListener('mousedown', start);
+    handle.addEventListener('touchstart', start, { passive:true });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive:true });
+    ba.addEventListener('click', (e) => setPos(e.clientX));
+
+    // Scroll reveal
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+      const obs = new IntersectionObserver((entries, o) => {
+        entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('vis'); o.unobserve(en.target); } });
+      }, { threshold:0.1, rootMargin:'0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach(n => obs.observe(n));
+    } else {
+      document.querySelectorAll('.reveal').forEach(n => n.classList.add('vis'));
+    }
+  </script>
 </body>
 </html>
