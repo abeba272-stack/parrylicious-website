@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenschutz – Parrylicious Studio</title>
+  <title>Datenschutz – Parrylicious</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,57 +24,81 @@
   <main class="section">
     <div class="container legal">
       <h2>Datenschutzerklärung</h2>
-      <p class="muted">Stand: 21. Februar 2026</p>
+      <p class="muted">Stand: 28. Juli 2026</p>
 
-      <h3>1. Verantwortlicher</h3>
+      <h3>1. Verantwortliche Stelle</h3>
       <p>
-        <strong>Parrylicious Studio</strong><br/>
-        Inhaberin: Abeba Sundermann<br/>
+        <strong>Parrylicious</strong> – Inhaberin: Heike Louise Parry<br/>
         Bahlenstraße 42, 40589 Düsseldorf, Deutschland<br/>
-        E‑Mail: <a href="mailto:sundermannabeba@gmail.com">sundermannabeba@gmail.com</a><br/>
+        E‑Mail: <a href="mailto:parrylicious.h@gmail.com">parrylicious.h@gmail.com</a><br/>
         Telefon: <a href="tel:+4915170588497">+49 151 70588497</a>
       </p>
 
-      <h3>2. Zwecke und Rechtsgrundlagen</h3>
+      <h3>2. Datenschutzbeauftragte / Datenschutzbeauftragter</h3>
+      <p>
+        Ein Datenschutzbeauftragter ist nicht bestellt, da die gesetzlichen Voraussetzungen
+        hierfür nicht vorliegen. Für Datenschutzanfragen erreichst du uns unter den oben
+        genannten Kontaktdaten.
+      </p>
+
+      <h3>3. Zwecke und Rechtsgrundlagen der Verarbeitung</h3>
       <ul>
-        <li>Terminverwaltung, Kontaktaufnahme und Durchführung der gebuchten Leistung (Art. 6 Abs. 1 lit. b DSGVO).</li>
-        <li>Abwicklung von Anzahlungen und Zahlungsnachweisen (Art. 6 Abs. 1 lit. b DSGVO).</li>
+        <li>Terminbuchung, Kontaktaufnahme und Durchführung der gebuchten Leistung (Art. 6 Abs. 1 lit. b DSGVO).</li>
+        <li>Abwicklung der Online-Anzahlung und der Zahlungsnachweise (Art. 6 Abs. 1 lit. b DSGVO).</li>
+        <li>Versand der Buchungsbestätigung per E‑Mail (Art. 6 Abs. 1 lit. b DSGVO).</li>
         <li>Betriebssicherheit, Missbrauchsvermeidung und technische Stabilität (Art. 6 Abs. 1 lit. f DSGVO).</li>
       </ul>
 
-      <h3>3. Verarbeitete Daten</h3>
+      <h3>4. Welche Daten wir verarbeiten</h3>
       <ul>
-        <li>Stammdaten: Vorname, Nachname, Telefonnummer, E‑Mail, Adresse.</li>
-        <li>Buchungsdaten: gebuchter Service, Datum, Uhrzeit, Stylist, Status, optionale Hinweise.</li>
-        <li>Zahlungsdaten: Anzahlungsstatus, Stripe-Transaktionsreferenzen und Zahlungsbeleg-URL.</li>
-        <li>Technische Daten: Logdaten, Browser-/Geräteinformationen und IP-Adresse beim Aufruf.</li>
+        <li>Kontakt- und Buchungsdaten: <strong>Name, E‑Mail-Adresse, Telefonnummer, gewählte Leistung, Datum und Uhrzeit des Termins</strong>, optionale Hinweise.</li>
+        <li>Zahlungsbezug: Status der Anzahlung sowie Transaktionsreferenzen des Zahlungsdienstleisters (die eigentlichen Zahlungsdaten wie Kartennummern verarbeiten wir nicht – siehe Stripe unten).</li>
+        <li>Technische Daten: Server-Logdaten, Browser-/Geräteinformationen und IP-Adresse beim Aufruf der Website.</li>
       </ul>
 
-      <h3>4. Empfänger und Auftragsverarbeiter</h3>
+      <h3>5. Empfänger und Auftragsverarbeiter</h3>
+      <p>Zum Betrieb der Website und zur Terminabwicklung setzen wir sorgfältig ausgewählte Dienstleister ein, mit denen Verträge zur Auftragsverarbeitung nach Art. 28 DSGVO bestehen:</p>
       <ul>
-        <li>Supabase (Datenbank, Authentifizierung und Storage).</li>
-        <li>Stripe (Checkout und Zahlungsabwicklung).</li>
-        <li>Twilio (SMS-Benachrichtigungen, sofern aktiviert).</li>
-        <li>Resend (E‑Mail-Benachrichtigungen, sofern aktiviert).</li>
-        <li>Vercel bzw. Hosting-Provider für API- und Serverfunktionen.</li>
+        <li><strong>Vercel Inc.</strong> (USA) – Hosting der Website und der Server-Funktionen.</li>
+        <li><strong>Neon Inc.</strong> – Datenbank-Hosting (Speicherung der Buchungs- und Kontodaten).</li>
+        <li><strong>Cloudflare, Inc.</strong> (USA) – Verwaltung der Domain-Namensauflösung (DNS).</li>
+        <li><strong>Stripe Payments Europe, Ltd.</strong> – Abwicklung der Online-Anzahlung. Die Zahlungsdaten werden direkt bei Stripe eingegeben und verarbeitet; Datenschutzhinweise: <a href="https://stripe.com/de/privacy" target="_blank" rel="noreferrer">stripe.com/de/privacy</a>.</li>
+        <li><strong>Resend</strong> (Region EU/Irland) – Versand der Bestätigungs- und System-E‑Mails.</li>
       </ul>
-
-      <h3>5. Speicherdauer</h3>
       <p>
-        Personenbezogene Daten werden nur so lange gespeichert, wie sie für Terminabwicklung,
-        Support und gesetzliche Nachweis-/Aufbewahrungspflichten erforderlich sind.
+        Soweit hierbei Daten in ein Drittland (z. B. USA) übermittelt werden, erfolgt dies auf
+        Grundlage geeigneter Garantien im Sinne der Art. 44 ff. DSGVO, insbesondere der
+        EU-Standardvertragsklauseln.
       </p>
 
-      <h3>6. Deine Rechte</h3>
+      <h3>6. Speicherdauer</h3>
+      <p>
+        Personenbezogene Daten werden nur so lange gespeichert, wie es für die Terminabwicklung
+        und Rückfragen erforderlich ist. Buchungsdaten werden spätestens 24 Monate nach dem Termin
+        gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Zahlungs- und
+        steuerrelevante Unterlagen bewahren wir gemäß den gesetzlichen Fristen (z. B. § 147 AO,
+        § 257 HGB, bis zu 10 Jahre) auf.
+      </p>
+
+      <h3>7. Datensicherheit</h3>
+      <p>
+        Die Website wird ausschließlich verschlüsselt über HTTPS (SSL/TLS) ausgeliefert. Wir setzen
+        nur technisch notwendige Cookies bzw. lokale Speicher ein, die für den Betrieb und den
+        Team-Login erforderlich sind. Es findet kein Tracking und keine werbliche Analyse statt.
+      </p>
+
+      <h3>8. Deine Rechte</h3>
       <p>
         Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
-        Datenübertragbarkeit, Widerspruch sowie Beschwerde bei einer Aufsichtsbehörde.
+        Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung. Außerdem hast du das Recht,
+        dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren – zuständig ist die
+        Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen (LDI NRW).
       </p>
 
-      <h3>7. Kontakt für Datenschutzanfragen</h3>
+      <h3>9. Kontakt für Datenschutzanfragen</h3>
       <p>
-        Datenschutzanfragen bitte an
-        <a href="mailto:sundermannabeba@gmail.com">sundermannabeba@gmail.com</a>.
+        Für Auskunft, Löschung und alle weiteren Anliegen zum Datenschutz erreichst du uns unter
+        <a href="mailto:parrylicious.h@gmail.com">parrylicious.h@gmail.com</a>.
       </p>
     </div>
   </main>
