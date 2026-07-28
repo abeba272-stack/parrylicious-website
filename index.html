@@ -278,6 +278,55 @@
     </div>
   </div>
 
+  <style>
+    .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:44px; }
+    .about-grid .card{ padding:28px; }
+    .about-grid h3{ font-family:var(--font-display); font-size:26px; font-weight:600; margin:0 0 14px; }
+    .ulist{ margin:0; padding:0; list-style:none; }
+    .ulist li{ padding:11px 0; border-top:1px solid var(--line-soft); color:var(--ink-soft); font-size:15px; }
+    .ulist li:first-child{ border-top:none; }
+    .muted-p{ color:var(--ink-soft); font-size:15px; margin:0 0 18px; }
+    .parallax{ position:relative; height:56vh; min-height:340px; overflow:hidden; display:grid; place-items:center;
+      border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
+    .parallax__bg{ position:absolute; left:0; right:0; top:-16%; height:132%;
+      background:url("assets/hero-editorial.jpg") center 30%/cover; will-change:transform; }
+    .parallax::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,12,.74), rgba(10,10,12,.6)); }
+    .parallax__inner{ position:relative; z-index:2; text-align:center; padding:0 20px; }
+    .parallax__quote{ font-family:var(--font-display); font-weight:600; font-size:clamp(40px,6.4vw,80px); line-height:1; margin:10px 0 0; color:var(--ink); }
+    .parallax__quote .it{ font-style:italic; color:var(--gold); }
+    .promo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:44px; }
+    .promo{ margin:0; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; aspect-ratio:4/3; }
+    .promo img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
+    .promo:hover img{ transform:scale(1.05); }
+    @media (max-width:860px){ .about-grid, .promo-grid{ grid-template-columns:1fr; } .parallax__bg{ transform:none !important; } }
+  </style>
+
+  <!-- UEBER UNS -->
+  <section id="ueber-uns">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 02</span><span class="line"></span><span class="label">Philosophie</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Handwerk, das dein<br><span class="it">Haar respektiert.</span></h2>
+        <p>Willkommen in unserem Afro-Salon, wo Flechtkunst zur Kunstform wird — von Cornrows über Dreadlocks bis Braids, individuell auf dich abgestimmt.</p>
+      </div>
+      <div class="about-grid">
+        <article class="card reveal">
+          <h3>Über Parrylicious</h3>
+          <ul class="ulist">
+            <li>Spezialisiertes Team · optionaler Stylist-Choice</li>
+            <li>Termingenaue, ruhige Abläufe</li>
+            <li>Anzahlung online, Restzahlung bequem im Salon</li>
+          </ul>
+        </article>
+        <article class="card reveal">
+          <h3>Storno-Regel</h3>
+          <p class="muted-p">Bis <strong>7 Tage</strong> vor dem Termin kostenlos stornierbar. Danach wird eine bereits bezahlte Anzahlung nicht erstattet.</p>
+          <a class="link" href="privacy.html">Datenschutz &amp; Bedingungen</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- SERVICES -->
   <section id="services">
     <div class="wrap">
@@ -309,6 +358,15 @@
     </div>
   </section>
 
+  <!-- PARALLAX (Scroll-Animation) -->
+  <div class="parallax" id="parallax" aria-hidden="true">
+    <div class="parallax__bg" id="parallaxBg"></div>
+    <div class="parallax__inner">
+      <p class="eyebrow" style="color:var(--accent)">Afro Editorial Luxury</p>
+      <p class="parallax__quote">In Parrylicious<br>we <span class="it">trust.</span></p>
+    </div>
+  </div>
+
   <!-- TEAM -->
   <section id="team">
     <div class="wrap">
@@ -336,6 +394,21 @@
           <div class="member__role">Twists &amp; Wigs</div>
           <p class="member__quote">„Der beste Style ist der, mit dem du das Studio selbstbewusst verlässt."</p>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="community">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 08</span><span class="line"></span><span class="label">Community</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Bekannt aus<br>dem <span class="it">Studio.</span></h2>
+        <p>Unsere Arbeiten erreichen auch bekannte Gesichter aus Sport und Social Media.</p>
+      </div>
+      <div class="promo-grid">
+        <figure class="promo reveal"><img src="assets/promo/prominent_bayer04.jpg" alt="Prominenter Besuch im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="promo reveal"><img src="assets/promo/prominent_group.jpg" alt="Community im Parrylicious Studio" loading="lazy"></figure>
       </div>
     </div>
   </section>
@@ -463,30 +536,22 @@
     });
     nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); toggle.classList.remove('open'); } });
 
-    // Hero-Video: Desktop = per Scroll gesteuert (Model bewegt sich beim Scrollen),
-    // Handy/reduzierte Bewegung = sanfter Auto-Loop. Standbild (poster) als Fallback.
+    // Hero-Video: laeuft immer als sanfter Endlos-Loop (jederzeit sichtbar).
     const heroVideo = document.getElementById('heroVideo');
-    const heroSection = document.querySelector('.hero');
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const canScrub = window.matchMedia('(min-width: 861px) and (pointer: fine)').matches && !reduceMotion;
-    if (heroVideo) {
-      if (canScrub) {
-        heroVideo.removeAttribute('autoplay');
-        heroVideo.loop = false;
-        heroVideo.pause();
-        const scrub = () => {
-          if (!heroVideo.duration) return;
-          const rect = heroSection.getBoundingClientRect();
-          const total = rect.height || 1;
-          const p = Math.min(Math.max(-rect.top / total, 0), 1);
-          const t = p * (heroVideo.duration - 0.05);
-          if (Math.abs(t - heroVideo.currentTime) > 0.01) heroVideo.currentTime = t;
-        };
-        heroVideo.addEventListener('loadedmetadata', scrub);
-        window.addEventListener('scroll', scrub, { passive: true });
-      } else {
-        heroVideo.play().catch(() => {});
-      }
+    if (heroVideo) { heroVideo.play().catch(() => {}); }
+
+    // Zweite Scroll-Animation: Parallax-Band (Hintergrund bewegt sich beim Scrollen).
+    const parallaxBg = document.getElementById('parallaxBg');
+    const parallaxWrap = document.getElementById('parallax');
+    if (parallaxBg && parallaxWrap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const onParallax = () => {
+        const rect = parallaxWrap.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+        const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+        parallaxBg.style.transform = `translateY(${(progress - 0.5) * 26}%)`;
+      };
+      window.addEventListener('scroll', onParallax, { passive: true });
+      onParallax();
     }
 
     // Before/After slider
