@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 
 const { setCors, sendJson, sql } = require('./_lib');
+const { sendBookingConfirmationEmail } = require('./_email');
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
 async function readRawBody(req) {
@@ -106,96 +107,6 @@ async function fetchCheckoutSession(sessionId, stripeSecret) {
     throw new Error(json?.error?.message || 'Checkout Session konnte nicht geladen werden.');
   }
   return json;
-}
-
-function formatDateDE(dateISO) {
-  const m = String(dateISO || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(dateISO || '');
-}
-
-function euro(value) {
-  return `${Number(value || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-}
-
-// Bestätigungs-Mail an den Gast via Resend. Best effort: Fehler blockieren den Webhook nie.
-async function sendBookingConfirmationEmail(booking) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from || !booking) return;
-
-  const customer = booking.customer || {};
-  const to = String(customer.email || '').trim();
-  if (!to) return;
-
-  const firstName = String(customer.firstName || '').trim();
-  const service = String(booking.service_name || 'Termin');
-  const dateStr = formatDateDE(booking.date_iso);
-  const timeStr = String(booking.time || '');
-  const price = Number(booking.price_from || 0);
-  const deposit = Number(booking.deposit || 0);
-  const rest = Math.max(0, price - deposit);
-  const greeting = firstName ? `Hallo ${firstName},` : 'Hallo,';
-
-  const text =
-    `${greeting}\n\n` +
-    `deine Buchung bei Parrylicious ist bestätigt – wir freuen uns auf dich!\n\n` +
-    `DEIN TERMIN\n` +
-    `Leistung: ${service}\n` +
-    `Datum: ${dateStr}\n` +
-    `Uhrzeit: ${timeStr} Uhr\n\n` +
-    `ZAHLUNG\n` +
-    `Anzahlung (online bezahlt): ${euro(deposit)}\n` +
-    `Restbetrag im Salon (bar): ab ${euro(rest)}\n\n` +
-    `SALON\n` +
-    `Parrylicious – Bahlenstraße 42, 40589 Düsseldorf\n\n` +
-    `Fragen oder Umbuchung? Schreib uns per WhatsApp: 0151 70588497.\n\n` +
-    `Bis bald!\nDein Parrylicious-Team`;
-
-  const html =
-    `<div style="margin:0;padding:24px;background:#f4ece0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#2b1e24;">` +
-    `<div style="max-width:540px;margin:0 auto;background:#fbf6ee;border:1px solid #e4d6c4;border-radius:14px;overflow:hidden;">` +
-    `<div style="background:#4a2e3e;padding:24px 28px;">` +
-    `<div style="color:#e6c888;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Parrylicious</div>` +
-    `<div style="color:#fbf6ee;font-family:Georgia,serif;font-size:24px;margin-top:6px;">Termin best&auml;tigt &#10024;</div></div>` +
-    `<div style="padding:24px 28px;">` +
-    `<p style="margin:0 0 16px;font-size:15px;">${escapeHtml(greeting)}<br>deine Buchung ist best&auml;tigt &ndash; wir freuen uns auf dich!</p>` +
-    `<table role="presentation" width="100%" style="border-collapse:collapse;font-size:15px;margin:0 0 18px;">` +
-    `<tr><td style="padding:6px 0;color:#6e5c60;">Leistung</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escapeHtml(service)}</td></tr>` +
-    `<tr><td style="padding:6px 0;color:#6e5c60;">Datum</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escapeHtml(dateStr)}</td></tr>` +
-    `<tr><td style="padding:6px 0;color:#6e5c60;">Uhrzeit</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escapeHtml(timeStr)} Uhr</td></tr>` +
-    `</table>` +
-    `<table role="presentation" width="100%" style="border-collapse:collapse;background:#efe4d3;border-radius:10px;font-size:15px;">` +
-    `<tr><td style="padding:12px 16px 4px;color:#6e5c60;">Anzahlung (online bezahlt)</td><td style="padding:12px 16px 4px;text-align:right;"><strong>${euro(deposit)}</strong></td></tr>` +
-    `<tr><td style="padding:4px 16px 12px;color:#6e5c60;">Restbetrag im Salon (bar)</td><td style="padding:4px 16px 12px;text-align:right;"><strong>ab ${euro(rest)}</strong></td></tr>` +
-    `</table>` +
-    `<p style="margin:20px 0 2px;font-size:13px;color:#94858a;text-transform:uppercase;letter-spacing:1px;">Salon</p>` +
-    `<p style="margin:0;font-size:15px;">Parrylicious &middot; Bahlenstra&szlig;e 42, 40589 D&uuml;sseldorf</p>` +
-    `<p style="margin:18px 0 0;font-size:14px;color:#6e5c60;">Fragen oder Umbuchung? Schreib uns per WhatsApp: <strong style="color:#2b1e24;">0151 70588497</strong>.</p>` +
-    `</div>` +
-    `<div style="background:#efe4d3;padding:16px 28px;font-size:12px;color:#94858a;text-align:center;">Bis bald &ndash; dein Parrylicious-Team</div>` +
-    `</div></div>`;
-
-  const payload = { from, to: [to], subject: 'Termin bestätigt – Parrylicious ✨', text, html };
-  const replyTo = process.env.RESEND_REPLY_TO;
-  if (replyTo) payload.reply_to = replyTo;
-  const bcc = process.env.RESEND_BCC;
-  if (bcc) payload.bcc = bcc.split(',').map((s) => s.trim()).filter(Boolean);
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!response.ok) {
-    const j = await response.json().catch(() => ({}));
-    throw new Error(j?.message || `Resend HTTP ${response.status}`);
-  }
 }
 
 module.exports = async function handler(req, res) {
