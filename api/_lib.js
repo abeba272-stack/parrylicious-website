@@ -351,6 +351,9 @@ function pgErrorStatus(error) {
     { code: 'BOOKING_NOT_FOUND_OR_FORBIDDEN', status: 404 },
     { code: 'BOOKING_NOT_FOUND', status: 404 },
     { code: 'SLOT_UNAVAILABLE', status: 409 },
+    { code: 'CANCEL_WINDOW_PASSED', status: 409 },
+    { code: 'NOT_CANCELABLE', status: 409 },
+    { code: 'NOT_RESCHEDULABLE', status: 409 },
     { code: 'INVALID_DURATION', status: 400 },
     { code: 'INVALID_STATUS', status: 400 },
     { code: 'INVALID_ROLE', status: 400 }

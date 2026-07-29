@@ -6,7 +6,7 @@
  * Beträge kommen ausschließlich aus der serverseitigen Service-Liste (_services).
  */
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
-const { setCors, sendJson, bodyFromReq, sql, isAllowedReturnUrl, pgErrorStatus } = require('../_lib');
+const { setCors, sendJson, bodyFromReq, sql, isAllowedReturnUrl, pgErrorStatus, getAuthUser } = require('../_lib');
 const { getService } = require('../_services');
 
 function toStripeAmount(amount) {
@@ -66,13 +66,17 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 400, { error: 'EMAIL_INVALID', message: 'Bitte gib eine gültige E-Mail an (für die Bestätigung).' });
   }
 
+  // Optional eingeloggter Kunde -> Buchung mit user_id verknüpfen (sonst Gast = null).
+  const authUser = getAuthUser(req);
+  const userId = authUser ? authUser.id : null;
+
   try {
     // 1) Slot-Hold anlegen (reserviert den Slot; wirft SLOT_UNAVAILABLE bei Kollision).
     const holdRows = await sql`
       select * from create_booking_hold(
         ${service.id}, ${service.name}, ${service.durationMin},
         ${service.priceFrom}, ${service.deposit}, ${stylistId}, ${stylistName},
-        ${dateISO}, ${time}, ${JSON.stringify(customer)}::jsonb, ${35}, ${null}
+        ${dateISO}, ${time}, ${JSON.stringify(customer)}::jsonb, ${35}, ${userId}
       )
     `;
     const booking = Array.isArray(holdRows) ? holdRows[0] : null;

@@ -113,4 +113,43 @@ async function sendBookingConfirmationEmail(booking) {
   return { id: json?.id || null, to: built.to };
 }
 
-module.exports = { buildBookingConfirmationEmail, sendBookingConfirmationEmail };
+// E-Mail-Verifizierung (Kunden-Registrierung). Best effort; wirft nur bei API-Fehler.
+async function sendVerificationEmail(to, verifyUrl) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  if (!apiKey || !from || !to) return { skipped: true };
+
+  const text =
+    'Hallo,\n\n' +
+    'bitte bestätige deine E-Mail-Adresse für dein Parrylicious-Konto:\n\n' +
+    `${verifyUrl}\n\n` +
+    'Der Link ist 24 Stunden gültig. Falls du dich nicht registriert hast, ' +
+    'kannst du diese E-Mail ignorieren.\n\nDein Parrylicious-Team';
+
+  const html =
+    `<div style="margin:0;padding:24px;background:#f4ece0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#2b1e24;">` +
+    `<div style="max-width:540px;margin:0 auto;background:#fbf6ee;border:1px solid #e4d6c4;border-radius:14px;overflow:hidden;">` +
+    `<div style="background:#4a2e3e;padding:24px 28px;">` +
+    `<div style="color:#e6c888;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Parrylicious</div>` +
+    `<div style="color:#fbf6ee;font-family:Georgia,serif;font-size:22px;margin-top:6px;">E-Mail best&auml;tigen</div></div>` +
+    `<div style="padding:24px 28px;font-size:15px;">` +
+    `<p style="margin:0 0 16px;">Hallo,<br>bitte best&auml;tige deine E-Mail-Adresse f&uuml;r dein Parrylicious-Konto.</p>` +
+    `<p style="margin:0 0 20px;"><a href="${verifyUrl}" style="display:inline-block;background:#4a2e3e;color:#fbf6ee;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;">E-Mail best&auml;tigen</a></p>` +
+    `<p style="margin:0;font-size:13px;color:#6e5c60;">Der Link ist 24 Stunden g&uuml;ltig. Falls du dich nicht registriert hast, ignoriere diese E-Mail.</p>` +
+    `</div></div></div>`;
+
+  const payload = { from, to: [to], subject: 'Bitte bestätige deine E-Mail – Parrylicious', text, html };
+  const replyTo = process.env.RESEND_REPLY_TO;
+  if (replyTo) payload.reply_to = replyTo;
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json?.message || `Resend HTTP ${response.status}`);
+  return { id: json?.id || null };
+}
+
+module.exports = { buildBookingConfirmationEmail, sendBookingConfirmationEmail, sendVerificationEmail };

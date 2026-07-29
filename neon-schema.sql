@@ -51,7 +51,7 @@ create table if not exists public.auth_tokens (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.auth_users(id) on delete cascade,
   token_hash text not null,
-  purpose text not null check (purpose in ('refresh', 'login_code', 'password_reset')),
+  purpose text not null check (purpose in ('refresh', 'login_code', 'password_reset', 'email_verify')),
   expires_at timestamptz not null,
   used_at timestamptz,
   created_at timestamptz not null default now()
@@ -146,6 +146,11 @@ alter table public.waitlist alter column user_id drop not null;
 alter table public.bookings drop constraint if exists bookings_status_check;
 alter table public.bookings add constraint bookings_status_check
   check (status in ('pending_payment', 'requested', 'confirmed', 'canceled'));
+
+-- auth_tokens: Zweck 'email_verify' erlauben (Kunden-E-Mail-Verifizierung).
+alter table public.auth_tokens drop constraint if exists auth_tokens_purpose_check;
+alter table public.auth_tokens add constraint auth_tokens_purpose_check
+  check (purpose in ('refresh', 'login_code', 'password_reset', 'email_verify'));
 
 update public.bookings
 set payment_status = case when deposit_paid then 'paid' else 'unpaid' end
@@ -494,6 +499,91 @@ begin
   if v_booking.id is null then
     raise exception 'BOOKING_NOT_FOUND';
   end if;
+  return v_booking;
+end;
+$$;
+
+-- Kunde: eigene Buchung stornieren (nur >= 48 h vor dem Termin). Setzt status='canceled'
+-- (Slot wird frei) und gibt die Buchung zurück (payment_intent für den Refund im API-Layer).
+create or replace function public.cancel_booking_by_user(
+  p_booking_id uuid,
+  p_user_id uuid
+)
+returns public.bookings
+language plpgsql
+as $$
+declare
+  v_booking public.bookings;
+  v_appt timestamptz;
+begin
+  if p_user_id is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+
+  select * into v_booking from public.bookings where id = p_booking_id for update;
+  if v_booking.id is null or v_booking.user_id is distinct from p_user_id then
+    raise exception 'BOOKING_NOT_FOUND_OR_FORBIDDEN';
+  end if;
+  if v_booking.status <> 'confirmed' then
+    raise exception 'NOT_CANCELABLE';
+  end if;
+
+  v_appt := ((v_booking.date_iso::text || ' ' || v_booking.time || ':00')::timestamp
+             at time zone 'Europe/Berlin');
+  if v_appt <= now() + interval '48 hours' then
+    raise exception 'CANCEL_WINDOW_PASSED';
+  end if;
+
+  update public.bookings set status = 'canceled'
+   where id = p_booking_id
+   returning * into v_booking;
+  return v_booking;
+end;
+$$;
+
+-- Kunde: eigene Buchung verschieben (nur >= 48 h vor dem AKTUELLEN Termin). Prüft den
+-- neuen Slot (Advisory-Lock + slot_is_available, sich selbst ausgenommen); Zahlung bleibt.
+create or replace function public.reschedule_booking_by_user(
+  p_booking_id uuid,
+  p_user_id uuid,
+  p_date_iso date,
+  p_time text
+)
+returns public.bookings
+language plpgsql
+as $$
+declare
+  v_booking public.bookings;
+  v_appt timestamptz;
+begin
+  if p_user_id is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+
+  select * into v_booking from public.bookings where id = p_booking_id for update;
+  if v_booking.id is null or v_booking.user_id is distinct from p_user_id then
+    raise exception 'BOOKING_NOT_FOUND_OR_FORBIDDEN';
+  end if;
+  if v_booking.status <> 'confirmed' then
+    raise exception 'NOT_RESCHEDULABLE';
+  end if;
+
+  v_appt := ((v_booking.date_iso::text || ' ' || v_booking.time || ':00')::timestamp
+             at time zone 'Europe/Berlin');
+  if v_appt <= now() + interval '48 hours' then
+    raise exception 'CANCEL_WINDOW_PASSED';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext(p_date_iso::text || '|' || coalesce(v_booking.stylist_id, 'auto')));
+  if not public.slot_is_available(
+    p_date_iso, p_time, v_booking.duration_min, coalesce(v_booking.stylist_id, 'auto'), p_booking_id
+  ) then
+    raise exception 'SLOT_UNAVAILABLE';
+  end if;
+
+  update public.bookings set date_iso = p_date_iso, time = p_time
+   where id = p_booking_id
+   returning * into v_booking;
   return v_booking;
 end;
 $$;

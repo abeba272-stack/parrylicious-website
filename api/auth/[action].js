@@ -5,7 +5,8 @@
  * Konventionen siehe ../_lib.js. Session-Erzeugung zentral über buildSession().
  *
  * Aktionen:
- *   POST signup                 { email, password }
+ *   POST signup                 { email, password, fullName }   (Kunden-Registrierung)
+ *   POST verify-email           { token }                        (E-Mail bestätigen)
  *   POST login                  { email, password }
  *   GET  google                 ?next=<pfad>
  *   GET  callback               ?code=&state=          (Google OAuth Redirect)
@@ -36,6 +37,7 @@ const {
   getUserRole,
   pgErrorStatus
 } = require('../_lib');
+const { sendVerificationEmail } = require('../_email');
 
 const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 Tage
 const LOGIN_CODE_TTL_SECONDS = 60;             // 1 Minute
@@ -154,6 +156,53 @@ async function buildSession(userRow) {
 /* ---------------------------------------------------------------------------
  * Aktionen: E-Mail/Passwort
  * ------------------------------------------------------------------------- */
+
+// Kunden-Selbstregistrierung. Rolle setzt der handle_new_user()-Trigger
+// (Standard 'customer', außer eine role_email_rule hebt sie an).
+async function handleSignup(req, res) {
+  const body = bodyFromReq(req) || {};
+  const email = normalizeEmail(body.email);
+  const password = body.password;
+  const fullName = String(body.fullName || '').trim().slice(0, 120);
+
+  if (!email || !EMAIL_RE.test(email)) {
+    return sendJson(res, 400, { error: 'EMAIL_INVALID', message: 'Bitte eine gültige E-Mail angeben.' });
+  }
+  if (!isValidPassword(password)) {
+    return sendJson(res, 400, { error: 'WEAK_PASSWORD', message: 'Das Passwort muss mindestens 8 Zeichen lang sein.' });
+  }
+
+  const passwordHash = await hashPassword(password);
+  let userRow;
+  try {
+    const rows = await sql`
+      insert into auth_users (email, password_hash, full_name)
+      values (${email}, ${passwordHash}, ${fullName || null})
+      returning *
+    `;
+    userRow = Array.isArray(rows) ? rows[0] : null;
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return sendJson(res, 409, { error: 'EMAIL_EXISTS', message: 'Für diese E-Mail gibt es bereits ein Konto. Bitte einloggen.' });
+    }
+    throw error;
+  }
+  if (!userRow) {
+    return sendJson(res, 500, { error: 'INTERNAL', message: 'Konto konnte nicht angelegt werden.' });
+  }
+
+  // E-Mail-Verifizierung anstoßen (best effort — Registrierung gelingt auch ohne Mailversand).
+  try {
+    const token = await createAuthToken(userRow.id, 'email_verify', 24 * 60 * 60);
+    const base = (process.env.FRONTEND_URL || `https://${req.headers.host || 'parrylicious.store'}`).replace(/\/$/, '');
+    await sendVerificationEmail(userRow.email, `${base}/verify.html?token=${token}`);
+  } catch (_error) {
+    // Mailversand-/Token-Fehler blockiert die Registrierung nicht.
+  }
+
+  const session = await buildSession(userRow);
+  return sendJson(res, 201, session);
+}
 
 async function handleLogin(req, res) {
   const body = bodyFromReq(req) || {};
@@ -425,6 +474,26 @@ async function handleChangePassword(req, res) {
 }
 
 /* ---------------------------------------------------------------------------
+ * Aktion: E-Mail verifizieren
+ * ------------------------------------------------------------------------- */
+
+async function handleVerifyEmail(req, res) {
+  const body = bodyFromReq(req) || {};
+  const token = body.token;
+  const invalid = () => sendJson(res, 400, {
+    error: 'TOKEN_INVALID',
+    message: 'Der Bestätigungslink ist ungültig oder abgelaufen.'
+  });
+  if (!token) return invalid();
+
+  const consumed = await consumeAuthToken(String(token), 'email_verify');
+  if (!consumed) return invalid();
+
+  await sql`update auth_users set email_verified = true, updated_at = now() where id = ${consumed.userId}`;
+  return sendJson(res, 200, { ok: true, emailVerified: true });
+}
+
+/* ---------------------------------------------------------------------------
  * Dispatcher
  * ------------------------------------------------------------------------- */
 
@@ -432,6 +501,8 @@ async function handleChangePassword(req, res) {
 // Selbst-Registrierung, kein Google-Login. Daher sind signup/google/callback/
 // exchange NICHT geroutet (Staff nutzen login + optionalen Passwort-Reset).
 const ROUTES = {
+  signup: { method: 'POST', handler: handleSignup },
+  'verify-email': { method: 'POST', handler: handleVerifyEmail },
   login: { method: 'POST', handler: handleLogin },
   refresh: { method: 'POST', handler: handleRefresh },
   me: { method: 'GET', handler: handleMe },
