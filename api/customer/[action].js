@@ -17,8 +17,10 @@ const {
   bodyFromReq,
   requireAuthUser,
   mapBookingRow,
-  pgErrorStatus
+  pgErrorStatus,
+  getNewCustomerEligibility
 } = require('../_lib');
+const { NEW_CUSTOMER_DISCOUNT_PERCENT } = require('../_services');
 
 const CANCEL_WINDOW_HOURS = 48;
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
@@ -128,6 +130,19 @@ async function handleBookings(req, res, user) {
   return sendJson(res, 405, { error: 'METHOD_NOT_ALLOWED', message: 'Nur GET oder PATCH.' });
 }
 
+// Neukundenrabatt-Status für den eingeloggten Kunden (Frontend zeigt das Banner).
+async function handleEligibility(req, res, user) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return sendJson(res, 405, { error: 'METHOD_NOT_ALLOWED', message: 'Nur GET.' });
+  }
+  const e = await getNewCustomerEligibility(user.id);
+  return sendJson(res, 200, {
+    newCustomerDiscount: e.eligible,
+    discountPercent: NEW_CUSTOMER_DISCOUNT_PERCENT
+  });
+}
+
 module.exports = async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
@@ -138,6 +153,7 @@ module.exports = async function handler(req, res) {
   const action = resolveAction(req);
   try {
     if (action === 'bookings') return await handleBookings(req, res, user);
+    if (action === 'eligibility') return await handleEligibility(req, res, user);
     return sendJson(res, 404, { error: 'UNKNOWN_ACTION', message: 'Unbekannte Aktion.' });
   } catch (error) {
     const { status, code } = pgErrorStatus(error);

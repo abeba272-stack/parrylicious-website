@@ -32,4 +32,7 @@ function getService(serviceId) {
   return s ? { id: String(serviceId), ...s } : null;
 }
 
-module.exports = { SERVICES, getService };
+// Neukundenrabatt in Prozent (auf den Gesamtpreis der ersten Buchung).
+const NEW_CUSTOMER_DISCOUNT_PERCENT = 10;
+
+module.exports = { SERVICES, getService, NEW_CUSTOMER_DISCOUNT_PERCENT };

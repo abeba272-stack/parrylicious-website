@@ -6,8 +6,8 @@
  * Beträge kommen ausschließlich aus der serverseitigen Service-Liste (_services).
  */
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
-const { setCors, sendJson, bodyFromReq, sql, isAllowedReturnUrl, pgErrorStatus, getAuthUser } = require('../_lib');
-const { getService } = require('../_services');
+const { setCors, sendJson, bodyFromReq, sql, isAllowedReturnUrl, pgErrorStatus, getAuthUser, getNewCustomerEligibility } = require('../_lib');
+const { getService, NEW_CUSTOMER_DISCOUNT_PERCENT } = require('../_services');
 
 function toStripeAmount(amount) {
   return Math.max(0, Math.round(Number(amount || 0) * 100));
@@ -70,12 +70,25 @@ module.exports = async function handler(req, res) {
   const authUser = getAuthUser(req);
   const userId = authUser ? authUser.id : null;
 
+  // Neukundenrabatt (nur eingeloggte, verifizierte Erstkunden) — serverseitig berechnet.
+  let priceFrom = service.priceFrom;
+  let deposit = service.deposit;
+  if (userId) {
+    const elig = await getNewCustomerEligibility(userId);
+    if (elig.eligible) {
+      const factor = (100 - NEW_CUSTOMER_DISCOUNT_PERCENT) / 100;
+      priceFrom = Math.round(service.priceFrom * factor * 100) / 100;
+      deposit = Math.round(service.deposit * factor * 100) / 100;
+      customer.discount = { type: 'new_customer', percent: NEW_CUSTOMER_DISCOUNT_PERCENT };
+    }
+  }
+
   try {
     // 1) Slot-Hold anlegen (reserviert den Slot; wirft SLOT_UNAVAILABLE bei Kollision).
     const holdRows = await sql`
       select * from create_booking_hold(
         ${service.id}, ${service.name}, ${service.durationMin},
-        ${service.priceFrom}, ${service.deposit}, ${stylistId}, ${stylistName},
+        ${priceFrom}, ${deposit}, ${stylistId}, ${stylistName},
         ${dateISO}, ${time}, ${JSON.stringify(customer)}::jsonb, ${35}, ${userId}
       )
     `;
@@ -104,7 +117,7 @@ module.exports = async function handler(req, res) {
     params.append('client_reference_id', booking.id);
     params.append('expires_at', String(Math.floor(Date.now() / 1000) + 1800)); // 30 min (Stripe-Minimum)
     params.append('line_items[0][price_data][currency]', 'eur');
-    params.append('line_items[0][price_data][unit_amount]', String(toStripeAmount(service.deposit)));
+    params.append('line_items[0][price_data][unit_amount]', String(toStripeAmount(deposit)));
     params.append('line_items[0][price_data][product_data][name]', `Anzahlung: ${service.name}`);
     params.append('line_items[0][price_data][product_data][description]', 'Restbetrag wird vor Ort im Salon bezahlt.');
     params.append('line_items[0][quantity]', '1');

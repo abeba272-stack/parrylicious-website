@@ -242,6 +242,25 @@ async function getBookingById(bookingId) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
+// Neukunden-Rabatt-Berechtigung: verifiziertes Konto + keine vorherige (bestätigte
+// oder abgeschlossene) Buchung. Basis für Feature 3 (10 % auf die erste Buchung).
+async function getNewCustomerEligibility(userId) {
+  if (!userId) return { verified: false, priorCount: 0, eligible: false };
+  const rows = await sql`
+    select
+      u.email_verified as verified,
+      (select count(*)::int from public.bookings b
+        where b.user_id = u.id and b.status in ('confirmed', 'completed')) as prior
+    from public.auth_users u
+    where u.id = ${userId}
+    limit 1
+  `;
+  const r = Array.isArray(rows) ? rows[0] : null;
+  const verified = Boolean(r && r.verified);
+  const priorCount = r ? Number(r.prior) || 0 : 0;
+  return { verified, priorCount, eligible: verified && priorCount === 0 };
+}
+
 /* ---------------------------------------------------------------------------
  * Row mappers (snake_case DB -> camelCase client)
  * ------------------------------------------------------------------------- */
@@ -408,6 +427,7 @@ module.exports = {
   isStaffRole,
   getUserRole,
   getBookingById,
+  getNewCustomerEligibility,
   mapBookingRow,
   mapBookingRowToClient,
   mapWaitlistRow,
