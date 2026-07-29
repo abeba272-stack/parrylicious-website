@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mein Konto – Parrylicious Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-v2.css" />
+  <link rel="icon" href="assets/logo.jpg" />
+  <style>
+    .booking-item{ display:grid; gap:6px; }
+    .booking-item .b-head{ display:flex; justify-content:space-between; align-items:baseline; gap:14px; flex-wrap:wrap; }
+    .booking-item .b-title{ font-family:var(--font-head); font-size:22px; font-weight:600; }
+    .booking-item .b-when{ font-weight:600; }
+    .booking-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .reschedule-box{ margin-top:14px; padding:14px; border:1px solid var(--line-soft); border-radius:var(--radius-sm); background:var(--panel-2); display:grid; gap:12px; }
+    .reschedule-box .rs-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+    .reschedule-box label{ min-width:150px; }
+    .empty{ color:var(--ink-soft); padding:8px 0; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container row">
+      <a class="brand" href="/"><span class="wordmark">Parrylicious</span><span class="wordmark-tag">Studio</span></a>
+      <nav class="nav">
+        <a href="booking.html">Termin buchen</a>
+        <a href="/">Zur Website</a>
+        <button class="btn small ghost" id="logoutBtn" type="button">Abmelden</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">Mein Konto</p>
+        <h2>Hallo <span id="greetName">…</span></h2>
+        <p class="muted" id="accountHint">Deine Termine und dein Profil auf einen Blick.</p>
+      </div>
+
+      <div class="card">
+        <h3>Meine Termine</h3>
+        <div class="divider"></div>
+        <div id="bookingsList" class="table" aria-live="polite"><div class="empty">Lädt…</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Profil</h3>
+        <p class="muted small">Deine Kontaktdaten werden bei künftigen Buchungen vorausgefüllt.</p>
+        <form id="profileForm" class="form">
+          <label>Name
+            <input id="pfName" type="text" placeholder="Vor- und Nachname" autocomplete="name" />
+          </label>
+          <label>Telefon
+            <input id="pfPhone" type="tel" placeholder="0151 …" autocomplete="tel" />
+          </label>
+          <label>E‑Mail
+            <input id="pfEmail" type="email" disabled />
+          </label>
+          <div class="row gap">
+            <button class="btn small" type="submit">Speichern</button>
+          </div>
+          <div class="fineprint" id="profileStatus"></div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-links">
+        <a href="impressum.html">Impressum</a>
+        <a href="privacy.html">Datenschutz</a>
+      </div>
+      <div class="muted">© <span id="year"></span> Parrylicious</div>
+    </div>
+  </footer>
+
+  <script type="module" src="konto.js"></script>
+  <script type="module" src="nav.js"></script>
+</body>
+</html>

@@ -1,183 +1,191 @@
 import {
   isAuthConfigured,
-  getSession,
+  getCurrentUser,
   signInWithPassword,
-  signOut,
+  signUp,
   requestPasswordReset,
-  resetPassword,
-  onAuthStateChange
+  resetPassword
 } from './auth-client.js';
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
-const statusEl = document.getElementById('loginStatus');
-const form = document.getElementById('loginForm');
-const logoutBtn = document.getElementById('logoutBtn');
-const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
-const loginActions = document.getElementById('loginActions');
-const sessionHint = document.getElementById('sessionHint');
-const searchParams = new URLSearchParams(window.location.search);
-const nextParam = searchParams.get('next');
-const resetToken = searchParams.get('reset_token');
+const params = new URLSearchParams(window.location.search);
+const nextParam = params.get('next');
+const resetToken = params.get('reset_token');
 
-function show(msg){ statusEl.textContent = msg; }
-function clear(){ statusEl.textContent = ''; }
+const authTabs = document.getElementById('authTabs');
+const panelKunde = document.getElementById('panel-kunde');
+const panelTeam = document.getElementById('panel-team');
+const panelReset = document.getElementById('panel-reset');
+const kundeLogin = document.getElementById('kundeLogin');
+const kundeRegister = document.getElementById('kundeRegister');
+
+const custLoginForm = document.getElementById('custLoginForm');
+const custRegisterForm = document.getElementById('custRegisterForm');
+const teamLoginForm = document.getElementById('teamLoginForm');
+const resetForm = document.getElementById('resetForm');
+const custStatus = document.getElementById('custStatus');
+const teamStatus = document.getElementById('teamStatus');
+const resetStatus = document.getElementById('resetStatus');
+
+function setStatus(el, msg, isError = false) {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? '#d6807b' : '';
+}
 
 function mapAuthError(error) {
   const code = String(error?.code || '').toUpperCase();
   if (code === 'INVALID_CREDENTIALS') return 'E-Mail oder Passwort ist falsch.';
+  if (code === 'EMAIL_EXISTS') return 'Für diese E-Mail gibt es bereits ein Konto. Bitte einloggen.';
+  if (code === 'WEAK_PASSWORD') return 'Das Passwort muss mindestens 8 Zeichen lang sein.';
+  if (code === 'EMAIL_INVALID') return 'Bitte eine gültige E-Mail angeben.';
   const message = String(error?.message || '').toLowerCase();
-  if (message.includes('network') || message.includes('fetch')) return 'Netzwerkfehler. Bitte versuche es erneut.';
+  if (message.includes('network') || message.includes('fetch')) return 'Netzwerkfehler. Bitte erneut versuchen.';
   return error?.message || 'Unbekannter Fehler.';
-}
-
-function showError(prefix, error) {
-  show(`${prefix}: ${mapAuthError(error)}`);
 }
 
 function sanitizeNextPath(path) {
   if (!path) return null;
-  if (path.includes('://')) return null;
-  if (path.startsWith('//')) return null;
+  if (path.includes('://') || path.startsWith('//')) return null;
   if (!path.endsWith('.html')) return null;
   return path;
 }
 
-// Standardziel nach Staff-Login ist das Dashboard.
-function getSafeNextPath() {
-  return sanitizeNextPath(nextParam) || 'admin.html';
+// Nach erfolgreicher Auth: next-Ziel oder rollenbasiert (Team → Dashboard, Kunde → Konto).
+async function redirectAfterAuth() {
+  const safe = sanitizeNextPath(nextParam);
+  if (safe) { window.location.href = safe; return; }
+  let user = null;
+  try { user = await getCurrentUser(); } catch (_error) { /* ignore */ }
+  const role = user?.role;
+  window.location.href = (role === 'staff' || role === 'admin') ? 'admin.html' : 'konto.html';
 }
 
-function setLoggedInUI(email){
-  loginActions.classList.add('hidden');
-  logoutBtn.classList.remove('hidden');
-  sessionHint.textContent = `Angemeldet als ${email}`;
-}
+/* ---------------------------------------------------------------------------
+ * Tabs Kunde/Team
+ * ------------------------------------------------------------------------- */
+authTabs?.addEventListener('click', (event) => {
+  const btn = event.target.closest('.auth-tab');
+  if (!btn) return;
+  authTabs.querySelectorAll('.auth-tab').forEach((b) => b.classList.toggle('active', b === btn));
+  const mode = btn.dataset.mode;
+  panelKunde.classList.toggle('hidden', mode !== 'kunde');
+  panelTeam.classList.toggle('hidden', mode !== 'team');
+});
 
-function setLoggedOutUI(){
-  loginActions.classList.remove('hidden');
-  logoutBtn.classList.add('hidden');
-  sessionHint.textContent = 'Noch nicht eingeloggt.';
-}
+document.getElementById('toRegister')?.addEventListener('click', () => {
+  kundeLogin.classList.add('hidden');
+  kundeRegister.classList.remove('hidden');
+  setStatus(custStatus, '');
+});
+document.getElementById('toLogin')?.addEventListener('click', () => {
+  kundeRegister.classList.add('hidden');
+  kundeLogin.classList.remove('hidden');
+  setStatus(custStatus, '');
+});
 
-async function refreshSession() {
-  let session = null;
+/* ---------------------------------------------------------------------------
+ * Kunden-Login / Registrierung
+ * ------------------------------------------------------------------------- */
+custLoginForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus(custStatus, 'Anmeldung läuft…');
+  const fd = new FormData(custLoginForm);
   try {
-    session = await getSession();
+    await signInWithPassword(String(fd.get('email') || '').trim(), String(fd.get('password') || ''));
   } catch (error) {
-    setLoggedOutUI();
-    showError('Fehler beim Laden der Session', error);
+    setStatus(custStatus, mapAuthError(error), true);
     return;
   }
-  const email = session?.user?.email;
-  if (email) {
-    setLoggedInUI(email);
-    show('Login erfolgreich.');
-    const nextPath = getSafeNextPath();
-    if (nextPath) {
-      window.location.href = nextPath;
-      return;
-    }
+  await redirectAfterAuth();
+});
+
+custRegisterForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus(custStatus, 'Konto wird erstellt…');
+  const fd = new FormData(custRegisterForm);
+  try {
+    await signUp(
+      String(fd.get('email') || '').trim(),
+      String(fd.get('password') || ''),
+      String(fd.get('fullName') || '').trim()
+    );
+  } catch (error) {
+    setStatus(custStatus, mapAuthError(error), true);
     return;
   }
-  setLoggedOutUI();
-  clear();
-}
+  await redirectAfterAuth();
+});
 
-// Passwort-Reset-Modus: bestehendes Formular wiederverwenden — das Passwort-Feld
-// wird zum "neues Passwort"-Feld, E-Mail-Feld und Zweit-Aktionen werden versteckt.
-function enterResetMode() {
-  show('Neues Passwort setzen: Bitte gib dein neues Passwort ein.');
+document.getElementById('custForgotBtn')?.addEventListener('click', async () => {
+  const email = String(new FormData(custLoginForm).get('email') || '').trim();
+  if (!email) { setStatus(custStatus, 'Bitte zuerst deine E-Mail eintragen.', true); return; }
+  try { await requestPasswordReset(email); } catch (_error) { /* immer neutral antworten */ }
+  setStatus(custStatus, 'Falls ein Konto existiert, wurde ein Reset-Link per E-Mail versendet.');
+});
 
-  const emailInput = form.querySelector('input[name="email"]');
-  if (emailInput) {
-    emailInput.required = false;
-    const emailLabel = emailInput.closest('label');
-    if (emailLabel) emailLabel.classList.add('hidden');
+/* ---------------------------------------------------------------------------
+ * Team-Login
+ * ------------------------------------------------------------------------- */
+teamLoginForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus(teamStatus, 'Anmeldung läuft…');
+  const fd = new FormData(teamLoginForm);
+  try {
+    await signInWithPassword(String(fd.get('email') || '').trim(), String(fd.get('password') || ''));
+  } catch (error) {
+    setStatus(teamStatus, mapAuthError(error), true);
+    return;
   }
-  const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.textContent = 'Neues Passwort setzen';
-  forgotPasswordBtn.classList.add('hidden');
+  await redirectAfterAuth();
+});
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clear();
-    const fd = new FormData(form);
-    const password = String(fd.get('password') || '');
-    if (!password) {
-      show('Bitte gib ein neues Passwort ein.');
-      return;
-    }
-    try {
-      await resetPassword(resetToken, password);
-    } catch (error) {
-      showError('Passwort zuruecksetzen fehlgeschlagen', error);
-      return;
-    }
-    show('Passwort wurde geaendert. Du kannst dich jetzt einloggen.');
-    setTimeout(() => { window.location.href = 'login.html'; }, 1500);
-  });
+document.getElementById('teamForgotBtn')?.addEventListener('click', async () => {
+  const email = String(new FormData(teamLoginForm).get('email') || '').trim();
+  if (!email) { setStatus(teamStatus, 'Bitte zuerst deine E-Mail eintragen.', true); return; }
+  try { await requestPasswordReset(email); } catch (_error) { /* neutral */ }
+  setStatus(teamStatus, 'Falls ein Konto existiert, wurde ein Reset-Link per E-Mail versendet.');
+});
+
+/* ---------------------------------------------------------------------------
+ * Passwort-Reset (?reset_token=)
+ * ------------------------------------------------------------------------- */
+resetForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const password = String(new FormData(resetForm).get('password') || '');
+  if (password.length < 8) { setStatus(resetStatus, 'Mindestens 8 Zeichen.', true); return; }
+  setStatus(resetStatus, 'Wird gespeichert…');
+  try {
+    await resetPassword(resetToken, password);
+  } catch (error) {
+    setStatus(resetStatus, mapAuthError(error), true);
+    return;
+  }
+  setStatus(resetStatus, 'Passwort geändert. Du kannst dich jetzt anmelden.');
+  setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+});
+
+/* ---------------------------------------------------------------------------
+ * Boot
+ * ------------------------------------------------------------------------- */
+async function boot() {
+  if (!isAuthConfigured) {
+    setStatus(custStatus, 'Backend nicht konfiguriert.', true);
+    return;
+  }
+  if (resetToken) {
+    authTabs.classList.add('hidden');
+    panelKunde.classList.add('hidden');
+    panelTeam.classList.add('hidden');
+    panelReset.classList.remove('hidden');
+    return;
+  }
+  // Schon eingeloggt? Direkt weiterleiten.
+  try {
+    const user = await getCurrentUser();
+    if (user) { await redirectAfterAuth(); }
+  } catch (_error) { /* nicht eingeloggt — Formulare zeigen */ }
 }
 
-function initAuthPage() {
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clear();
-    const fd = new FormData(form);
-    const email = String(fd.get('email') || '').trim();
-    const password = String(fd.get('password') || '');
-    try {
-      await signInWithPassword(email, password);
-    } catch (error) {
-      showError('Login fehlgeschlagen', error);
-      return;
-    }
-    await refreshSession();
-  });
-
-  forgotPasswordBtn.addEventListener('click', async () => {
-    clear();
-    const fd = new FormData(form);
-    const email = String(fd.get('email') || '').trim();
-    if (!email) {
-      show('Bitte zuerst deine E-Mail ins Feld eintragen.');
-      return;
-    }
-    try {
-      await requestPasswordReset(email);
-    } catch (error) {
-      showError('Passwort-Reset fehlgeschlagen', error);
-      return;
-    }
-    show('Falls ein Konto existiert, wurde ein Reset-Link per E-Mail versendet.');
-  });
-
-  logoutBtn.addEventListener('click', async () => {
-    clear();
-    try {
-      await signOut();
-    } catch (error) {
-      showError('Logout fehlgeschlagen', error);
-      return;
-    }
-    setLoggedOutUI();
-    show('Erfolgreich abgemeldet.');
-    window.location.href = 'home.html';
-  });
-
-  onAuthStateChange(() => {
-    refreshSession();
-  });
-
-  refreshSession();
-}
-
-if (!isAuthConfigured) {
-  show('Das Backend ist noch nicht konfiguriert. Bitte BACKEND_API_BASE_URL in backend-config.js setzen.');
-  form.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
-  forgotPasswordBtn.disabled = true;
-} else if (resetToken) {
-  enterResetMode();
-} else {
-  initAuthPage();
-}
+boot();

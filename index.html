@@ -298,6 +298,21 @@
     .promo{ margin:0; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; aspect-ratio:4/3; }
     .promo img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
     .promo:hover img{ transform:scale(1.05); }
+    .cat-tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:44px; }
+    .cat-tile{ position:relative; aspect-ratio:4/5; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; cursor:pointer; background:#1c1c22; text-align:left; padding:0; font-family:inherit; }
+    .cat-tile img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .7s var(--ease), filter .4s var(--ease); filter:brightness(.72); }
+    .cat-tile:hover img{ transform:scale(1.06); filter:brightness(.9); }
+    .cat-tile::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 42%, rgba(10,10,12,.9)); pointer-events:none; }
+    .cat-tile__label{ position:absolute; left:16px; right:16px; bottom:16px; z-index:2; display:block; }
+    .cat-tile__name{ display:block; font-family:var(--font-display); font-size:23px; font-weight:600; color:var(--ink); line-height:1.1; }
+    .cat-tile__count{ display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-top:5px; }
+    .cat-tile__arrow{ position:absolute; top:13px; right:15px; z-index:2; color:var(--ink); font-size:16px; opacity:.75; }
+    .cat-bar{ display:flex; align-items:center; gap:20px; margin:44px 0 26px; flex-wrap:wrap; }
+    .cat-back{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); padding:10px 18px; border-radius:3px; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:.25s var(--ease); font-family:inherit; }
+    .cat-back:hover{ border-color:var(--ink); color:var(--ink); }
+    .cat-current{ font-family:var(--font-display); font-size:30px; font-weight:600; margin:0; }
+    @media (max-width:960px){ .cat-tiles{ grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:520px){ .cat-tiles{ grid-template-columns:1fr; } }
     @media (max-width:860px){ .about-grid, .promo-grid{ grid-template-columns:1fr; } .parallax__bg{ transform:none !important; } }
   </style>
 
@@ -332,11 +347,17 @@
     <div class="wrap">
       <div class="sec-index reveal"><span class="num">N° 03</span><span class="line"></span><span class="label">Services</span></div>
       <div class="split-head reveal">
-        <h2 class="display">Services, built<br>around <span class="it">your hair.</span></h2>
-        <p>Alle Preise sind Startpreise. Der finale Preis richtet sich nach Länge, Dichte und Aufwand.</p>
+        <h2 class="display">Wähle deine<br><span class="it">Kategorie.</span></h2>
+        <p>Alle Preise sind Startpreise. Wähle eine Kategorie, um die passenden Styles zu sehen.</p>
       </div>
-      <div class="chips reveal" id="chips"></div>
-      <div class="cards" id="servicesGrid"></div>
+      <div class="cat-tiles reveal" id="catTiles"></div>
+      <div id="catServices" class="hidden">
+        <div class="cat-bar">
+          <button class="cat-back" id="catBack">← Alle Kategorien</button>
+          <h3 class="cat-current" id="catCurrent"></h3>
+        </div>
+        <div class="cards" id="servicesGrid"></div>
+      </div>
     </div>
   </section>
 
@@ -346,7 +367,7 @@
       <div class="sec-index reveal"><span class="num">N° 05</span><span class="line"></span><span class="label">Studio</span></div>
       <div class="split-head reveal">
         <h2 class="display">Die Ergebnisse<br>sprechen <span class="it">für sich.</span></h2>
-        <p>Ziehe den Regler, um Ansatz und Ergebnis zu vergleichen. Echte Arbeiten aus dem Studio.</p>
+        <p>Scrolle durch die Sektion — der Regler wandert mit und zeigt Ansatz und Ergebnis. Echte Arbeiten aus dem Studio.</p>
       </div>
       <div class="ba reveal" id="ba">
         <img class="ba__before" src="assets/services/plain_twist_braids.jpg" alt="Vorher">
@@ -478,45 +499,63 @@
 
   <script type="module">
     import { services } from './data/services.js';
+    import { getCurrentUser } from './auth-client.js';
 
     const eur = (n) => new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n);
     const dur = (m) => { const h=Math.floor(m/60), r=m%60; return h&&r?`${h} Std ${r} Min`:h?`${h} Std`:`${r} Min`; };
 
-    // Filter chips
-    const FILTERS = [
-      ['all','Alle'], ['braids','Braids & Cornrows'], ['locs','Locs & Dreads'], ['ponytails','Ponytails'],
-      ['men','Herren'], ['wash','Wash & Cut'], ['treatment','Treatments'], ['extensions','Extensions'], ['kids','Kids']
+    // Oberkategorien: erst Kachel-Auswahl, dann die Frisuren der Kategorie.
+    const CATS = [
+      { key:'locs',       label:'Locs & Dreads',     img:'assets/categories/locs.jpg' },
+      { key:'braids',     label:'Braids & Cornrows', img:'assets/categories/braids.jpg' },
+      { key:'ponytails',  label:'Ponytails',         img:'assets/categories/ponytails.jpg' },
+      { key:'men',        label:'Herren',            img:'assets/categories/men.jpg' },
+      { key:'wash',       label:'Wash & Cut',        img:'assets/categories/wash.jpg' },
+      { key:'treatment',  label:'Treatments',        img:'assets/categories/treatment.jpg' },
+      { key:'extensions', label:'Extensions',        img:'assets/categories/extensions.jpg' },
+      { key:'kids',       label:'Kids',              img:'assets/categories/kids.jpg' }
     ];
-    const chipsEl = document.getElementById('chips');
     const grid = document.getElementById('servicesGrid');
-    let active = 'all';
+    const catTiles = document.getElementById('catTiles');
+    const catServices = document.getElementById('catServices');
+    const catCurrent = document.getElementById('catCurrent');
+    const catBack = document.getElementById('catBack');
+    const servicesSection = document.getElementById('services');
+    const inCat = (s, key) => (s.tags || []).includes(key);
 
-    FILTERS.forEach(([f,label],i) => {
-      const b = document.createElement('button');
-      b.className = 'chip' + (i===0?' active':'');
-      b.textContent = label; b.dataset.filter = f;
-      b.addEventListener('click', () => {
-        active = f;
-        chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
-        render();
+    function renderTiles(){
+      catTiles.innerHTML = '';
+      CATS.forEach(c => {
+        const count = services.filter(s => inCat(s, c.key)).length;
+        if (!count) return;
+        const t = document.createElement('button');
+        t.className = 'cat-tile';
+        t.innerHTML = `
+          <img src="${c.img}" alt="${c.label}" loading="lazy">
+          <span class="cat-tile__arrow">↗</span>
+          <span class="cat-tile__label">
+            <span class="cat-tile__name">${c.label}</span>
+            <span class="cat-tile__count">${count} ${count === 1 ? 'Style' : 'Styles'}</span>
+          </span>`;
+        t.addEventListener('click', () => openCat(c));
+        catTiles.appendChild(t);
       });
-      chipsEl.appendChild(b);
-    });
+    }
 
-    function render(){
+    function openCat(c){
       grid.innerHTML = '';
-      services.filter(s => active==='all' || (s.tags||[]).includes(active)).forEach(s => {
+      services.filter(s => inCat(s, c.key)).forEach(s => {
         const el = document.createElement('article');
         el.className = 'card';
         el.innerHTML = `
-          <div class="card__img"><img src="${s.image||'assets/placeholder-editorial.jpg'}" alt="${s.name}" loading="lazy"></div>
+          <div class="card__img"><img src="${s.image || 'assets/placeholder-editorial.jpg'}" alt="${s.name}" loading="lazy"></div>
           <div class="card__body">
             <div class="card__top">
               <h3 class="card__title">${s.name}</h3>
               <span class="card__price">ab ${eur(s.priceFrom)}</span>
             </div>
-            <p class="card__cat">${s.category||''}</p>
-            <p class="card__desc">${s.description||''}</p>
+            <p class="card__cat">${s.category || ''}</p>
+            <p class="card__desc">${s.description || ''}</p>
             <div class="card__meta">
               <span class="card__dur">⏱ ${dur(s.durationMin)}</span>
               <a class="link" href="booking.html?service=${encodeURIComponent(s.id)}">Termin wählen</a>
@@ -524,8 +563,19 @@
           </div>`;
         grid.appendChild(el);
       });
+      catCurrent.textContent = c.label;
+      catTiles.classList.add('hidden');
+      catServices.classList.remove('hidden');
+      servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    render();
+
+    catBack.addEventListener('click', () => {
+      catServices.classList.add('hidden');
+      catTiles.classList.remove('hidden');
+      servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    renderTiles();
 
     // Mobile nav
     const nav = document.getElementById('nav'), toggle = document.getElementById('navToggle');
@@ -535,6 +585,18 @@
       toggle.setAttribute('aria-expanded', String(open));
     });
     nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); toggle.classList.remove('open'); } });
+
+    // Konto-/Anmelden-Link im Header (rollenabhängig).
+    (async () => {
+      let user = null;
+      try { user = await getCurrentUser(); } catch (_e) { /* nicht eingeloggt */ }
+      const a = document.createElement('a');
+      if (user && (user.role === 'staff' || user.role === 'admin')) { a.href = 'admin.html'; a.textContent = 'Dashboard'; }
+      else if (user) { a.href = 'konto.html'; a.textContent = 'Mein Konto'; }
+      else { a.href = 'login.html'; a.textContent = 'Anmelden'; }
+      const cta = nav.querySelector('.cta-mobile');
+      if (cta) nav.insertBefore(a, cta); else nav.appendChild(a);
+    })();
 
     // Hero-Video: laeuft immer als sanfter Endlos-Loop (jederzeit sichtbar).
     const heroVideo = document.getElementById('heroVideo');
@@ -554,26 +616,27 @@
       onParallax();
     }
 
-    // Before/After slider
+    // Vorher/Nachher: scroll-gesteuert (Regler wandert mit dem Scrollen, kein Ziehen mehr).
     const ba = document.getElementById('ba'), after = document.getElementById('baAfter'), handle = document.getElementById('baHandle');
-    let dragging = false;
-    const setPos = (clientX) => {
-      const r = ba.getBoundingClientRect();
-      let p = ((clientX - r.left) / r.width) * 100;
-      p = Math.max(2, Math.min(98, p));
-      after.style.clipPath = `inset(0 0 0 ${p}%)`;
-      handle.style.left = p + '%';
-    };
-    const start = () => dragging = true;
-    const end = () => dragging = false;
-    const move = (e) => { if (!dragging) return; const x = e.touches ? e.touches[0].clientX : e.clientX; setPos(x); };
-    handle.addEventListener('mousedown', start);
-    handle.addEventListener('touchstart', start, { passive:true });
-    window.addEventListener('mouseup', end);
-    window.addEventListener('touchend', end);
-    window.addEventListener('mousemove', move);
-    window.addEventListener('touchmove', move, { passive:true });
-    ba.addEventListener('click', (e) => setPos(e.clientX));
+    if (ba && after && handle) {
+      const setP = (p) => {
+        p = Math.max(0, Math.min(100, p));
+        after.style.clipPath = `inset(0 0 0 ${p}%)`;
+        handle.style.left = p + '%';
+      };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setP(50);
+      } else {
+        const onBaScroll = () => {
+          const rect = ba.getBoundingClientRect();
+          const vh = window.innerHeight || 1;
+          const progress = (vh - rect.top) / (vh + rect.height); // 0 = kommt rein, 1 = geht raus
+          setP(Math.max(0, Math.min(1, progress)) * 100);
+        };
+        window.addEventListener('scroll', onBaScroll, { passive: true });
+        onBaScroll();
+      }
+    }
 
     // Scroll reveal
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {

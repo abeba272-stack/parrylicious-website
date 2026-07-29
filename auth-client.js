@@ -273,8 +273,20 @@ async function passwordAuth(path, email, password) {
   return data.user || null;
 }
 
-export async function signUp(email, password) {
-  return passwordAuth('/api/auth/signup', email, password);
+// Kunden-Selbstregistrierung: sendet zusätzlich fullName (API-Vertrag).
+export async function signUp(email, password, fullName) {
+  const response = await postJson('/api/auth/signup', {
+    email,
+    password,
+    fullName: String(fullName || '').trim()
+  });
+  const data = await parseJsonSafe(response);
+  if (!response.ok || !data || !data.accessToken) {
+    throw makeApiError(data, response);
+  }
+  saveSession(data);
+  emit('SIGNED_IN');
+  return data.user || null;
 }
 
 export async function signInWithPassword(email, password) {

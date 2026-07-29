@@ -325,3 +325,58 @@ export async function checkSlotAvailability({
   });
   return Boolean(data && data.available);
 }
+
+/* ---------------------------------------------------------------------------
+ * Kunden-Konto  ->  /api/customer/*   (API-Vertrag „Parry Neu")
+ * ------------------------------------------------------------------------- */
+
+// Eigene Buchungen des eingeloggten Kunden.
+export async function getCustomerBookings() {
+  const list = await apiFetch('/api/customer/bookings', { method: 'GET' });
+  return Array.isArray(list) ? list : [];
+}
+
+// Profil aktualisieren (Name/Telefon).
+export async function saveCustomerProfile(profile) {
+  return apiFetch('/api/customer/profile', {
+    method: 'PATCH',
+    body: {
+      fullName: String(profile?.fullName || ''),
+      phone: String(profile?.phone || '')
+    }
+  });
+}
+
+// Termin stornieren (nur wenn canCancel; Server erzwingt 48h-Regel + Erstattung).
+export async function cancelCustomerBooking(id) {
+  return apiFetch('/api/customer/bookings', {
+    method: 'PATCH',
+    body: { id, action: 'cancel' }
+  });
+}
+
+// Termin verschieben (neuer Slot; Server erzwingt 48h-Regel, Anzahlung wandert mit).
+export async function rescheduleCustomerBooking(id, dateISO, time) {
+  return apiFetch('/api/customer/bookings', {
+    method: 'PATCH',
+    body: { id, action: 'reschedule', dateISO, time }
+  });
+}
+
+// Neukunden-Rabatt-Berechtigung (Feature 3).
+export async function getCustomerEligibility() {
+  try {
+    return await apiFetch('/api/customer/eligibility', { method: 'GET' });
+  } catch (_error) {
+    return { newCustomerDiscount: false, discountPercent: 0 };
+  }
+}
+
+// Treuepunkte-Stand + Historie (Feature 4).
+export async function getCustomerPoints() {
+  try {
+    return await apiFetch('/api/customer/points', { method: 'GET' });
+  } catch (_error) {
+    return { balance: 0, history: [] };
+  }
+}
