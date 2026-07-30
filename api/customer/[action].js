@@ -7,8 +7,9 @@
  *   PATCH bookings { id, action:'cancel' }          -> stornieren (>=48h) + Stripe-Refund
  *   PATCH bookings { id, action:'reschedule',
  *                    dateISO, time }                -> verschieben (>=48h), Anzahlung bleibt
- *
- * Erweiterbar (spätere Phasen): points (GET), eligibility (GET) — hier andocken.
+ *   GET   eligibility                               -> Neukundenrabatt-Status
+ *   GET   points                                    -> Treuepunkte-Saldo + Historie
+ *   GET/PATCH profile                               -> delegiert an /api/profile (Name/Telefon)
  */
 const {
   setCors,
@@ -178,6 +179,8 @@ module.exports = async function handler(req, res) {
     if (action === 'bookings') return await handleBookings(req, res, user);
     if (action === 'eligibility') return await handleEligibility(req, res, user);
     if (action === 'points') return await handlePoints(req, res, user);
+    // Profil: identische Logik wie /api/profile (Name/Telefon) — delegieren, nicht duplizieren.
+    if (action === 'profile') return await require('../profile')(req, res);
     return sendJson(res, 404, { error: 'UNKNOWN_ACTION', message: 'Unbekannte Aktion.' });
   } catch (error) {
     const { status, code } = pgErrorStatus(error);

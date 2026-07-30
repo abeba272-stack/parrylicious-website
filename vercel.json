@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/reviews/summary", "destination": "/api/reviews?summary=1" }
+  ]
+}
