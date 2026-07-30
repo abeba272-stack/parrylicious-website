@@ -2,12 +2,13 @@
  * /api/admin/[action] — EIN Dispatcher für Admin-Endpunkte (spart Vercel-Funktionen).
  *   roles:   GET (?limit) Liste  |  POST { email, role }
  *   staff:   POST { email, password, role }  |  DELETE { email }
- *   reviews: PATCH { id, status }  |  DELETE ?id=
+ *   reviews: GET ?status=pending|approved|hidden|all  |  PATCH { id, status }  |  DELETE ?id=
  * Auth: requireAuthUser (actor-id) + Admin/Staff-Check in den SQL-Funktionen.
  * URLs bleiben identisch zu den früheren Einzeldateien (admin/roles, admin/staff).
  */
 const {
-  sql, setCors, sendJson, bodyFromReq, requireAuthUser, hashPassword, pgErrorStatus
+  sql, setCors, sendJson, bodyFromReq, requireAuthUser, hashPassword, pgErrorStatus,
+  getUserRole, isStaffRole
 } = require('../_lib');
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -77,6 +78,20 @@ async function staffDelete(req, res, actorId) {
 }
 
 /* ---- reviews (Moderation) ---- */
+// Liste zum Moderieren (Staff/Admin). ?status=pending|approved|hidden|all (Default pending).
+async function reviewsGet(req, res, actorId) {
+  const role = await getUserRole(actorId);
+  if (!isStaffRole(role)) return sendJson(res, 403, { error: 'FORBIDDEN', message: MSG.FORBIDDEN });
+  const raw = String(getQuery(req).status || 'pending').toLowerCase();
+  const status = ['pending', 'approved', 'hidden', 'all'].includes(raw) ? raw : 'pending';
+  const rows = status === 'all'
+    ? await sql`select id, rating, text, first_name, service_name, service_id, status, created_at from reviews order by created_at desc limit 200`
+    : await sql`select id, rating, text, first_name, service_name, service_id, status, created_at from reviews where status = ${status} order by created_at desc limit 200`;
+  return sendJson(res, 200, (Array.isArray(rows) ? rows : []).map((r) => ({
+    id: r.id, rating: Number(r.rating), text: r.text || '', firstName: r.first_name || '',
+    serviceName: r.service_name || '', serviceId: r.service_id || '', status: r.status, createdAt: r.created_at
+  })));
+}
 async function reviewsPatch(req, res, actorId) {
   const body = bodyFromReq(req) || {};
   const id = String(body.id || '').trim();
@@ -109,6 +124,7 @@ module.exports = async function handler(req, res) {
       if (req.method === 'POST') return await staffPost(req, res, user.id);
       if (req.method === 'DELETE') return await staffDelete(req, res, user.id);
     } else if (action === 'reviews') {
+      if (req.method === 'GET') return await reviewsGet(req, res, user.id);
       if (req.method === 'PATCH') return await reviewsPatch(req, res, user.id);
       if (req.method === 'DELETE') return await reviewsDelete(req, res, user.id);
     } else {
