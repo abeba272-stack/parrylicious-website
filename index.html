@@ -313,6 +313,11 @@
     .cat-current{ font-family:var(--font-display); font-size:30px; font-weight:600; margin:0; }
     @media (max-width:960px){ .cat-tiles{ grid-template-columns:repeat(2,1fr); } }
     @media (max-width:520px){ .cat-tiles{ grid-template-columns:1fr; } }
+    .home-reviews{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-top:44px; }
+    .hr-card{ margin:0; border:1px solid var(--line-soft); background:var(--panel); border-radius:3px; padding:22px; }
+    .hr-stars{ color:var(--gold); letter-spacing:2px; margin-bottom:12px; }
+    .hr-card blockquote{ margin:0 0 14px; font-family:var(--font-display); font-size:19px; line-height:1.35; color:var(--ink); }
+    .hr-card figcaption{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
     @media (max-width:860px){ .about-grid, .promo-grid{ grid-template-columns:1fr; } .parallax__bg{ transform:none !important; } }
   </style>
 
@@ -444,8 +449,9 @@
       <div class="reveal">
         <div class="rating__num">4,9<small>/ 5</small></div>
         <div class="rating__stars">★★★★★</div>
-        <div class="rating__note">180+ verifizierte Bewertungen</div>
+        <div class="rating__note" id="ratingNote">180+ verifizierte Bewertungen</div>
       </div>
+      <div class="home-reviews" id="homeReviews" style="grid-column:1/-1"></div>
     </div>
   </section>
 
@@ -499,6 +505,31 @@
 
   <script type="module">
     import { services } from './data/services.js';
+    import { getReviews, getReviewsSummary } from './data-client.js';
+
+    // Feature 2: echte Reviews laden (graceful — bleibt beim statischen Stand, wenn Backend fehlt/leer).
+    (async () => {
+      const host = document.getElementById('homeReviews');
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+      try {
+        const summary = await getReviewsSummary();
+        if (summary && Number(summary.count) > 0) {
+          const num = document.querySelector('.rating__num');
+          const note = document.getElementById('ratingNote');
+          if (num) num.innerHTML = `${String(summary.avg).replace('.', ',')}<small>/ 5</small>`;
+          if (note) note.textContent = `${summary.count}+ verifizierte Bewertungen`;
+        }
+        const list = await getReviews(null, 4);
+        if (host && Array.isArray(list) && list.length) {
+          host.innerHTML = list.map((r) => `
+            <figure class="hr-card">
+              <div class="hr-stars">${'★'.repeat(Math.max(1, Math.min(5, Number(r.rating) || 5)))}</div>
+              <blockquote>${esc(r.text || '')}</blockquote>
+              <figcaption>${esc(r.firstName || 'Gast')}${r.serviceName ? ` · ${esc(r.serviceName)}` : ''}</figcaption>
+            </figure>`).join('');
+        }
+      } catch (_e) { /* Reviews-Backend noch nicht da */ }
+    })();
     import { getCurrentUser } from './auth-client.js';
 
     const eur = (n) => new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n);

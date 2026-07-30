@@ -1,6 +1,6 @@
 import { services } from './data/services.js';
 import { storage, fmtDate, currency, formatMinutes } from './common.js';
-import { checkSlotAvailability, getMyProfile, getCustomerEligibility } from './data-client.js';
+import { checkSlotAvailability, getMyProfile, getCustomerEligibility, getCustomerPoints } from './data-client.js';
 import { getCurrentUser } from './auth-client.js';
 import {
   startBookingCheckout,
@@ -20,6 +20,10 @@ const BOOKING_CATS = [
   { key: 'kids',       label: 'Kids',              img: 'assets/categories/kids.jpg' }
 ];
 const inCat = (s, key) => (s.tags || []).includes(key);
+
+// Feature 4: Treuepunkte-Einlösen (nur eingeloggte Kunden). 100 Punkte = 5 € (Server rechnet final).
+let pointsBalance = 0;
+let redeemPoints = 0;
 
 const YEAR = document.getElementById('year');
 if (YEAR) YEAR.textContent = new Date().getFullYear();
@@ -458,6 +462,29 @@ function renderSummary() {
     <div class="row"><strong>Anzahlung (jetzt online)</strong><div>${currency(service.deposit)}</div></div>
     <div class="row"><strong>Restbetrag (im Salon)</strong><div>ab ${currency(rest)}</div></div>
   `;
+
+  // Feature 4: Treuepunkte einlösen (Server rechnet den finalen Rabatt).
+  if (pointsBalance >= 100) {
+    const maxRedeem = Math.floor(pointsBalance / 100) * 100;
+    const opts = [];
+    for (let p = 0; p <= maxRedeem; p += 100) {
+      const label = p === 0 ? 'Keine' : `${p} Punkte (−${currency(p / 20)})`;
+      opts.push(`<option value="${p}" ${p === redeemPoints ? 'selected' : ''}>${label}</option>`);
+    }
+    const box = document.createElement('div');
+    box.className = 'points-redeem';
+    box.innerHTML = `
+      <div class="divider"></div>
+      <label style="display:grid; gap:6px">
+        <span>Treuepunkte einlösen <span class="muted small">(du hast ${pointsBalance} · 100 = 5 €)</span></span>
+        <select id="redeemSelect">${opts.join('')}</select>
+      </label>
+      <div class="fineprint">Der genaue Rabatt wird beim Bezahlen vom Server abgezogen.</div>
+    `;
+    summary.appendChild(box);
+    const sel = box.querySelector('#redeemSelect');
+    sel.addEventListener('change', (e) => { redeemPoints = Number(e.target.value) || 0; });
+  }
 }
 
 function buildCustomerPayload() {
@@ -495,7 +522,8 @@ payDeposit.addEventListener('click', async () => {
       stylistName: getStylistName(state.stylistId),
       dateISO: state.dateISO,
       time: state.time,
-      customer: buildCustomerPayload()
+      customer: buildCustomerPayload(),
+      redeemPoints: redeemPoints || 0
     });
 
     if (!checkout.ok || !checkout.url) {
@@ -623,6 +651,11 @@ async function prefillFromAccount() {
     state.customer = c;
     saveState();
     applyCustomerDraftToForm();
+    try {
+      const pts = await getCustomerPoints();
+      pointsBalance = Number(pts?.balance || 0);
+      renderSummary();
+    } catch (_e) { /* Punkte optional */ }
   } catch (_e) { /* nicht eingeloggt */ }
 }
 
