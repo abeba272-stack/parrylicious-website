@@ -90,7 +90,7 @@ create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
   -- user_id ist nullable: Gast-Buchungen ohne Konto (Kontakt steht in customer jsonb).
   user_id uuid references public.auth_users(id) on delete set null,
-  status text not null default 'requested' check (status in ('pending_payment', 'requested', 'confirmed', 'canceled')),
+  status text not null default 'requested' check (status in ('pending_payment', 'requested', 'confirmed', 'canceled', 'completed')),
   -- Für pending_payment-Holds: Ablauf der Slot-Reservierung während des Checkouts.
   hold_expires_at timestamptz,
   created_at timestamptz not null default now(),
@@ -145,7 +145,7 @@ alter table public.bookings alter column user_id drop not null;
 alter table public.waitlist alter column user_id drop not null;
 alter table public.bookings drop constraint if exists bookings_status_check;
 alter table public.bookings add constraint bookings_status_check
-  check (status in ('pending_payment', 'requested', 'confirmed', 'canceled'));
+  check (status in ('pending_payment', 'requested', 'confirmed', 'canceled', 'completed'));
 
 -- auth_tokens: Zweck 'email_verify' erlauben (Kunden-E-Mail-Verifizierung).
 alter table public.auth_tokens drop constraint if exists auth_tokens_purpose_check;
@@ -725,7 +725,7 @@ begin
     raise exception 'FORBIDDEN';
   end if;
 
-  if p_status not in ('requested', 'confirmed', 'canceled') then
+  if p_status not in ('requested', 'confirmed', 'canceled', 'completed') then
     raise exception 'INVALID_STATUS';
   end if;
 
@@ -736,6 +736,11 @@ begin
 
   if v_booking.id is null then
     raise exception 'BOOKING_NOT_FOUND';
+  end if;
+
+  -- Beim Abschließen Treuepunkte gutschreiben (idempotent).
+  if p_status = 'completed' then
+    perform public.grant_booking_points(v_booking.id);
   end if;
 
   return v_booking;
@@ -844,6 +849,70 @@ begin
   left join public.profiles p on p.id = u.id
   order by u.created_at desc
   limit v_limit;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Feature 4: Treuepunkte (loyalty_points) + Termin-Abschluss
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.loyalty_points (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.auth_users(id) on delete cascade,
+  delta integer not null,
+  reason text not null check (reason in ('earn', 'redeem')),
+  booking_id uuid references public.bookings(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists loyalty_points_user_idx on public.loyalty_points(user_id, created_at desc);
+-- Pro Buchung nur EINE 'earn'-Gutschrift (Idempotenz gegen Doppelvergabe).
+create unique index if not exists loyalty_points_earn_booking_uidx
+  on public.loyalty_points(booking_id) where reason = 'earn';
+
+-- Punkte für eine abgeschlossene Buchung gutschreiben (1 Punkt je 1 EUR price_from).
+-- Idempotent: nur bei status='completed' + gesetztem user_id, pro Buchung einmal.
+create or replace function public.grant_booking_points(p_booking_id uuid)
+returns void
+language plpgsql
+as $$
+declare
+  v_b public.bookings;
+begin
+  select * into v_b from public.bookings where id = p_booking_id;
+  if v_b.id is null or v_b.user_id is null or v_b.status <> 'completed' then
+    return;
+  end if;
+  if floor(coalesce(v_b.price_from, 0))::int <= 0 then
+    return;
+  end if;
+  insert into public.loyalty_points (user_id, delta, reason, booking_id)
+  values (v_b.user_id, floor(v_b.price_from)::int, 'earn', v_b.id)
+  on conflict (booking_id) where reason = 'earn' do nothing;
+end;
+$$;
+
+-- Fällige Termine (Termin in der Vergangenheit, Europe/Berlin) automatisch
+-- abschließen und Punkte gutschreiben. Optional auf einen Nutzer beschränkt.
+create or replace function public.complete_due_bookings(p_user_id uuid default null)
+returns integer
+language plpgsql
+as $$
+declare
+  v_count integer := 0;
+  r record;
+begin
+  for r in
+    update public.bookings b
+    set status = 'completed'
+    where b.status = 'confirmed'
+      and (p_user_id is null or b.user_id = p_user_id)
+      and (((b.date_iso::text || ' ' || b.time || ':00')::timestamp at time zone 'Europe/Berlin') < now())
+    returning b.id
+  loop
+    perform public.grant_booking_points(r.id);
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
 end;
 $$;
 

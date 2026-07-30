@@ -71,6 +71,8 @@ async function stripeRefund(paymentIntentId) {
 }
 
 async function listBookings(res, user) {
+  // Fällige eigene Termine automatisch abschließen (Status + Punkte aktuell halten).
+  await sql`select public.complete_due_bookings(${user.id})`;
   const rows = await sql`
     select * from bookings
     where user_id = ${user.id} and status <> 'pending_payment'
@@ -143,6 +145,27 @@ async function handleEligibility(req, res, user) {
   });
 }
 
+// Treuepunkte-Saldo + Historie. Schließt vorher fällige eigene Termine automatisch ab
+// (auto-complete -> Punkte-Gutschrift), damit der Saldo aktuell ist.
+async function handlePoints(req, res, user) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return sendJson(res, 405, { error: 'METHOD_NOT_ALLOWED', message: 'Nur GET.' });
+  }
+  await sql`select public.complete_due_bookings(${user.id})`;
+  const balRows = await sql`select coalesce(sum(delta), 0)::int as balance from loyalty_points where user_id = ${user.id}`;
+  const histRows = await sql`
+    select delta, reason, created_at from loyalty_points
+    where user_id = ${user.id} order by created_at desc limit 50
+  `;
+  return sendJson(res, 200, {
+    balance: balRows[0] ? Number(balRows[0].balance) : 0,
+    history: (Array.isArray(histRows) ? histRows : []).map((r) => ({
+      delta: Number(r.delta), reason: r.reason, createdAt: r.created_at
+    }))
+  });
+}
+
 module.exports = async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
@@ -154,6 +177,7 @@ module.exports = async function handler(req, res) {
   try {
     if (action === 'bookings') return await handleBookings(req, res, user);
     if (action === 'eligibility') return await handleEligibility(req, res, user);
+    if (action === 'points') return await handlePoints(req, res, user);
     return sendJson(res, 404, { error: 'UNKNOWN_ACTION', message: 'Unbekannte Aktion.' });
   } catch (error) {
     const { status, code } = pgErrorStatus(error);

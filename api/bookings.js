@@ -65,6 +65,9 @@ async function handleGet(req, res) {
     return sendJson(res, 403, { error: 'FORBIDDEN', message: 'Nur für Mitarbeiter.' });
   }
 
+  // Auto-Abschluss fälliger Termine (+ Treuepunkte) beim Laden des Dashboards.
+  await sql`select public.complete_due_bookings()`;
+
   const query = getQuery(req);
   const id = query.id ? String(query.id).trim() : '';
 
