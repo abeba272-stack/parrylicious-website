@@ -54,6 +54,14 @@ const newPassword2Input = document.getElementById('newPassword2');
 const passwordStatus = document.getElementById('passwordStatus');
 const logoutBtn = document.getElementById('logoutBtn');
 
+// Feature 8: Terminkalender
+const calGrid = document.getElementById('calGrid');
+const calLabel = document.getElementById('calLabel');
+const calPrev = document.getElementById('calPrev');
+const calNext = document.getElementById('calNext');
+const calDay = document.getElementById('calDay');
+let calMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+
 let bookingsCache = [];
 let waitlistCache = [];
 let roleUsersCache = [];
@@ -253,6 +261,7 @@ function render() {
 
   renderWaitlist();
   renderKpis();
+  renderStaffCalendar();
 }
 
 function renderWaitlist() {
@@ -381,6 +390,73 @@ async function loadRoleUsers() {
     showRoleStatus(`Benutzerliste konnte nicht geladen werden: ${error.message}`, true);
   }
 }
+
+/* ---------- Feature 8: Terminkalender ---------- */
+function bookingsByDay() {
+  const map = {};
+  bookings().forEach((b) => {
+    if (b.status === 'canceled') return;
+    const iso = b.dateISO;
+    if (!iso) return;
+    (map[iso] = map[iso] || []).push(b);
+  });
+  return map;
+}
+
+function renderCalDay(iso, list) {
+  if (!calDay) return;
+  if (!list.length) {
+    calDay.innerHTML = `<div class="muted small">${escapeHtml(fmtDate(iso))}: keine Termine.</div>`;
+    return;
+  }
+  const rows = list.slice().sort((a, b) => (a.time || '').localeCompare(b.time || '')).map((b) => `
+    <div class="cal-appt">
+      <strong>${escapeHtml(b.time || '')}</strong> · ${escapeHtml(b.serviceName || '')}
+      <span class="muted small">${escapeHtml(`${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim())}</span>
+      ${pill(b.status)}
+    </div>`).join('');
+  calDay.innerHTML = `<div class="muted small" style="margin-bottom:8px">${escapeHtml(fmtDate(iso))} · ${list.length} Termin(e)</div>${rows}`;
+}
+
+function renderStaffCalendar() {
+  if (!calGrid) return;
+  const byDay = bookingsByDay();
+  const y = calMonth.getFullYear();
+  const m = calMonth.getMonth();
+  if (calLabel) calLabel.textContent = calMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  calGrid.innerHTML = '';
+  ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].forEach((l) => {
+    const d = document.createElement('div');
+    d.className = 'cal-dow';
+    d.textContent = l;
+    calGrid.appendChild(d);
+  });
+  const first = new Date(y, m, 1);
+  const pad = (first.getDay() + 6) % 7;
+  for (let i = 0; i < pad; i++) {
+    const e = document.createElement('div');
+    e.className = 'cal-cell empty';
+    calGrid.appendChild(e);
+  }
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const now = new Date();
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const list = byDay[iso] || [];
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'cal-cell';
+    if (iso === todayIso) cell.classList.add('today');
+    if (list.length) cell.classList.add('has');
+    cell.innerHTML = `<span class="cal-num">${d}</span>${list.length ? `<span class="cal-count">${list.length}</span>` : ''}`;
+    cell.addEventListener('click', () => renderCalDay(iso, list));
+    calGrid.appendChild(cell);
+  }
+}
+
+calPrev?.addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderStaffCalendar(); });
+calNext?.addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderStaffCalendar(); });
 
 async function loadData() {
   bookingsCache = await getMyBookings();

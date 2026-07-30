@@ -222,4 +222,30 @@ textarea{ min-height:90px; resize:vertical; }
   .topbar .nav a:not(.btn){ padding:13px 4px; font-size:14px; border-bottom:1px solid var(--line-soft); }
   .topbar .nav .btn{ margin-top:10px; justify-content:center; width:100%; }
 }
+/* Booking: Oberkategorie-Kacheln (Feature 1) + Rabatt-Banner (Feature 3) */
+.booking-cats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; }
+.booking-cat{ position:relative; aspect-ratio:4/5; border:1px solid var(--line-soft); border-radius:var(--radius-sm); overflow:hidden; cursor:pointer; background:#1c1c22; padding:0; font-family:inherit; }
+.booking-cat img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.72); transition:transform .6s var(--ease), filter .4s var(--ease); }
+.booking-cat:hover img{ transform:scale(1.05); filter:brightness(.9); }
+.booking-cat::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 45%, rgba(10,10,12,.9)); }
+.booking-cat__label{ position:absolute; left:12px; right:12px; bottom:12px; z-index:2; text-align:left; }
+.booking-cat__name{ display:block; font-family:var(--font-head); font-size:19px; font-weight:600; color:var(--ink); line-height:1.1; }
+.booking-cat__count{ display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-top:3px; }
+.discount-banner{ margin:0 0 18px; padding:14px 18px; border:1px solid rgba(203,164,107,.4); background:rgba(203,164,107,.12); border-radius:var(--radius-sm); color:var(--ink); font-size:14.5px; }
+.discount-banner strong{ color:var(--accent-2); }
+
+/* Feature 8: Staff-Terminkalender */
+.cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-dow{ text-align:center; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); padding:4px 0; }
+.cal-cell{ position:relative; aspect-ratio:1/1; border:1px solid var(--line-soft); border-radius:var(--radius-sm); background:var(--panel-2); color:var(--ink); cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; padding:8px; font-family:inherit; transition:border-color var(--transition); }
+.cal-cell:hover{ border-color:var(--accent); }
+.cal-cell.empty{ border:none; background:transparent; cursor:default; }
+.cal-cell.today{ border-color:var(--accent); }
+.cal-cell.has{ background:linear-gradient(180deg, var(--panel), rgba(203,164,107,.1)); }
+.cal-num{ font-size:13px; font-weight:600; }
+.cal-count{ align-self:flex-end; font-size:11px; font-weight:700; color:#0a0a0c; background:var(--accent); border-radius:999px; min-width:18px; height:18px; display:grid; place-items:center; padding:0 5px; }
+.cal-day{ margin-top:16px; display:grid; gap:8px; }
+.cal-appt{ border:1px solid var(--line-soft); background:var(--panel); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; }
+@media (max-width:560px){ .cal-cell{ padding:5px; } .cal-num{ font-size:12px; } }
+
 @media (prefers-reduced-motion:reduce){ html{ scroll-behavior:auto; } }

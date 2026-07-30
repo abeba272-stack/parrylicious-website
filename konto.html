@@ -19,6 +19,13 @@
     .reschedule-box .rs-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
     .reschedule-box label{ min-width:150px; }
     .empty{ color:var(--ink-soft); padding:8px 0; }
+    .points-head{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .points-balance{ font-family:var(--font-head); font-size:44px; font-weight:600; color:var(--accent-2); line-height:1; }
+    .points-balance small{ font-size:.32em; color:var(--ink-soft); }
+    .review-box{ margin-top:12px; padding:14px; border:1px solid var(--line-soft); border-radius:var(--radius-sm); background:var(--panel-2); display:grid; gap:10px; }
+    .review-box .stars{ display:flex; gap:4px; }
+    .review-box .star{ cursor:pointer; font-size:22px; color:var(--ink-faint); background:none; border:none; padding:0; line-height:1; }
+    .review-box .star.on{ color:var(--accent); }
   </style>
 </head>
 <body>
@@ -45,6 +52,15 @@
         <h3>Meine Termine</h3>
         <div class="divider"></div>
         <div id="bookingsList" class="table" aria-live="polite"><div class="empty">Lädt…</div></div>
+      </div>
+
+      <div class="card" id="pointsCard" hidden>
+        <h3>Treuepunkte</h3>
+        <div class="points-head">
+          <div class="points-balance"><span id="pointsBalance">0</span> <small>Punkte</small></div>
+          <p class="muted small">1 Punkt je 1 € · 100 Punkte = 5 € Rabatt. Gutschrift nach abgeschlossenem Termin, kein Verfall.</p>
+        </div>
+        <div id="pointsHistory" class="table" style="margin-top:12px"></div>
       </div>
 
       <div class="card">

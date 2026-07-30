@@ -380,3 +380,36 @@ export async function getCustomerPoints() {
     return { balance: 0, history: [] };
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Reviews  ->  /api/reviews   (Feature 2; Backend ggf. noch nicht live -> graceful)
+ * ------------------------------------------------------------------------- */
+
+export async function getReviews(serviceId, limit) {
+  try {
+    const params = new URLSearchParams();
+    if (serviceId) params.set('serviceId', serviceId);
+    if (limit) params.set('limit', String(limit));
+    const q = params.toString();
+    const list = await apiFetch(`/api/reviews${q ? `?${q}` : ''}`, { method: 'GET', auth: false });
+    return Array.isArray(list) ? list : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+export async function getReviewsSummary(serviceId) {
+  try {
+    const q = serviceId ? `?serviceId=${encodeURIComponent(serviceId)}` : '';
+    return await apiFetch(`/api/reviews/summary${q}`, { method: 'GET', auth: false });
+  } catch (_error) {
+    return null;
+  }
+}
+
+export async function submitReview(bookingId, rating, text) {
+  return apiFetch('/api/reviews', {
+    method: 'POST',
+    body: { bookingId, rating: Number(rating), text: String(text || '') }
+  });
+}

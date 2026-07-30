@@ -1,11 +1,25 @@
 import { services } from './data/services.js';
 import { storage, fmtDate, currency, formatMinutes } from './common.js';
-import { checkSlotAvailability } from './data-client.js';
+import { checkSlotAvailability, getMyProfile, getCustomerEligibility } from './data-client.js';
+import { getCurrentUser } from './auth-client.js';
 import {
   startBookingCheckout,
   submitWaitlist,
   verifyCheckoutSession
 } from './backend-client.js';
+
+// Oberkategorien für die Service-Auswahl (Feature 1).
+const BOOKING_CATS = [
+  { key: 'locs',       label: 'Locs & Dreads',     img: 'assets/categories/locs.jpg' },
+  { key: 'braids',     label: 'Braids & Cornrows', img: 'assets/categories/braids.jpg' },
+  { key: 'ponytails',  label: 'Ponytails',         img: 'assets/categories/ponytails.jpg' },
+  { key: 'men',        label: 'Herren',            img: 'assets/categories/men.jpg' },
+  { key: 'wash',       label: 'Wash & Cut',        img: 'assets/categories/wash.jpg' },
+  { key: 'treatment',  label: 'Treatments',        img: 'assets/categories/treatment.jpg' },
+  { key: 'extensions', label: 'Extensions',        img: 'assets/categories/extensions.jpg' },
+  { key: 'kids',       label: 'Kids',              img: 'assets/categories/kids.jpg' }
+];
+const inCat = (s, key) => (s.tags || []).includes(key);
 
 const YEAR = document.getElementById('year');
 if (YEAR) YEAR.textContent = new Date().getFullYear();
@@ -110,36 +124,77 @@ function card(html) {
 const servicePicker = document.getElementById('servicePicker');
 const toStep2 = document.getElementById('toStep2');
 
-function renderServicePicker() {
-  servicePicker.innerHTML = '';
-  services.forEach((s) => {
-    const selected = state.serviceId === s.id;
-    const imageSrc = s.image || 'assets/placeholder-editorial.jpg';
-    const c = card(`
-      <img class="service-thumb" src="${imageSrc}" alt="${s.name} Beispielbild" loading="lazy" />
-      <div class="row between">
-        <h3>${s.name}</h3>
-        <div class="price">ab ${currency(s.priceFrom)}</div>
-      </div>
-      <div class="muted small">${s.category}</div>
-      <p class="muted">${s.description}</p>
-      <div class="row between">
-        <div class="tag">⏱ ${formatMinutes(s.durationMin)}</div>
-        <button class="btn small ${selected ? 'ghost' : ''}" data-service="${s.id}">
-          ${selected ? 'Ausgewählt' : 'Auswählen'}
-        </button>
-      </div>
-    `);
-    c.querySelector('[data-service]').addEventListener('click', () => {
-      state.serviceId = s.id;
-      saveState();
-      renderServicePicker();
-      toStep2.disabled = false;
-    });
-    servicePicker.appendChild(c);
-  });
+let activeBookingCat = null;
 
+function serviceCardEl(s) {
+  const selected = state.serviceId === s.id;
+  const imageSrc = s.image || 'assets/placeholder-editorial.jpg';
+  const c = card(`
+    <img class="service-thumb" src="${imageSrc}" alt="${s.name} Beispielbild" loading="lazy" />
+    <div class="row between">
+      <h3>${s.name}</h3>
+      <div class="price">ab ${currency(s.priceFrom)}</div>
+    </div>
+    <div class="muted small">${s.category}</div>
+    <p class="muted">${s.description}</p>
+    <div class="row between">
+      <div class="tag">⏱ ${formatMinutes(s.durationMin)}</div>
+      <button class="btn small ${selected ? 'ghost' : ''}" data-service="${s.id}">
+        ${selected ? 'Ausgewählt' : 'Auswählen'}
+      </button>
+    </div>
+  `);
+  c.querySelector('[data-service]').addEventListener('click', () => {
+    state.serviceId = s.id;
+    saveState();
+    renderServicesOfCat();
+    toStep2.disabled = false;
+  });
+  return c;
+}
+
+function renderCategoryTiles() {
+  servicePicker.classList.remove('grid');
+  servicePicker.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'booking-cats';
+  BOOKING_CATS.forEach((cat) => {
+    const count = services.filter((s) => inCat(s, cat.key)).length;
+    if (!count) return;
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'booking-cat';
+    t.innerHTML = `<img src="${cat.img}" alt="${cat.label}" loading="lazy"><span class="booking-cat__label"><span class="booking-cat__name">${cat.label}</span><span class="booking-cat__count">${count} Styles</span></span>`;
+    t.addEventListener('click', () => { activeBookingCat = cat; renderServicesOfCat(); });
+    wrap.appendChild(t);
+  });
+  servicePicker.appendChild(wrap);
   toStep2.disabled = !getServiceById(state.serviceId);
+}
+
+function renderServicesOfCat() {
+  if (!activeBookingCat) return renderCategoryTiles();
+  servicePicker.classList.remove('grid');
+  servicePicker.innerHTML = '';
+  const back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'btn small ghost';
+  back.textContent = '← Alle Kategorien';
+  back.style.marginBottom = '16px';
+  back.addEventListener('click', () => { activeBookingCat = null; renderCategoryTiles(); });
+  servicePicker.appendChild(back);
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  services.filter((s) => inCat(s, activeBookingCat.key)).forEach((s) => grid.appendChild(serviceCardEl(s)));
+  servicePicker.appendChild(grid);
+  toStep2.disabled = !getServiceById(state.serviceId);
+}
+
+function renderServicePicker() {
+  const sel = getServiceById(state.serviceId);
+  activeBookingCat = sel ? (BOOKING_CATS.find((c) => inCat(sel, c.key)) || null) : null;
+  if (activeBookingCat) renderServicesOfCat();
+  else renderCategoryTiles();
 }
 renderServicePicker();
 toStep2.addEventListener('click', () => showStep(2));
@@ -547,9 +602,50 @@ async function handlePaymentReturn() {
 }
 
 /* init */
+
+// Phase 0: Kontaktfelder für eingeloggte Kunden vorbefüllen.
+async function prefillFromAccount() {
+  try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== 'customer') return;
+    const c = { ...(state.customer || {}) };
+    if (!c.email && user.email) c.email = user.email;
+    const fullName = String(user.fullName || '').trim();
+    if (fullName && !c.firstName && !c.lastName) {
+      const parts = fullName.split(/\s+/);
+      c.firstName = parts.shift() || '';
+      c.lastName = parts.join(' ');
+    }
+    try {
+      const p = await getMyProfile();
+      if (p && p.phone && !c.phone) c.phone = p.phone;
+    } catch (_e) { /* Profil optional */ }
+    state.customer = c;
+    saveState();
+    applyCustomerDraftToForm();
+  } catch (_e) { /* nicht eingeloggt */ }
+}
+
+// Feature 3: Neukunden-Rabatt-Banner (Endbetrag rechnet der Server im Checkout).
+async function showDiscountBanner() {
+  try {
+    const el = await getCustomerEligibility();
+    if (!el || !el.newCustomerDiscount) return;
+    const wiz = document.querySelector('.wizard');
+    if (!wiz || !wiz.parentNode || document.getElementById('discountBanner')) return;
+    const b = document.createElement('div');
+    b.id = 'discountBanner';
+    b.className = 'discount-banner';
+    b.innerHTML = `✨ <strong>&minus;${el.discountPercent || 10}%</strong> auf deine erste Buchung &ndash; wird beim Bezahlen automatisch abgezogen.`;
+    wiz.parentNode.insertBefore(b, wiz);
+  } catch (_e) { /* nicht eingeloggt / kein Anspruch */ }
+}
+
 async function boot() {
   const handledPayment = await handlePaymentReturn();
   if (!handledPayment) showStep(state.step || 1);
+  prefillFromAccount();
+  showDiscountBanner();
 }
 
 boot();

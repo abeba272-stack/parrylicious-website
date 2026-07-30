@@ -117,6 +117,20 @@
 
       <div class="card">
         <div class="row between">
+          <h3>Terminkalender</h3>
+          <div class="row gap">
+            <button class="btn small ghost" id="calPrev" type="button" aria-label="Vorheriger Monat">‹</button>
+            <span class="muted" id="calLabel"></span>
+            <button class="btn small ghost" id="calNext" type="button" aria-label="Nächster Monat">›</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-day" id="calDay"><div class="muted small">Klicke auf einen Tag, um die Termine zu sehen.</div></div>
+      </div>
+
+      <div class="card">
+        <div class="row between">
           <h3>Anfragen & Termine</h3>
           <div class="row gap">
             <select id="statusFilter">

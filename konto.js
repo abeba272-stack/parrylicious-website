@@ -3,7 +3,9 @@ import {
   getCustomerBookings,
   saveCustomerProfile,
   cancelCustomerBooking,
-  rescheduleCustomerBooking
+  rescheduleCustomerBooking,
+  getCustomerPoints,
+  submitReview
 } from './data-client.js';
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -86,10 +88,12 @@ function renderBookings(list) {
           <div class="muted small">Anzahlung: ${euro(b.deposit)}${b.priceFrom ? ` · Gesamt ab ${euro(b.priceFrom)}` : ''}</div>
         </div>
       </div>
-      ${(canCancel || canReschedule) ? `<div class="booking-actions">
+      ${(canCancel || canReschedule || b.status === 'confirmed') ? `<div class="booking-actions">
         ${canReschedule ? '<button class="btn small ghost" data-reschedule>Verschieben</button>' : ''}
         ${canCancel ? '<button class="btn small ghost" data-cancel>Stornieren</button>' : ''}
-      </div>` : (b.status === 'confirmed' ? '<div class="fineprint">Änderungen sind bis 48 h vor dem Termin möglich.</div>' : '')}
+        ${b.status === 'confirmed' ? '<button class="btn small ghost" data-review>Bewerten</button>' : ''}
+      </div>` : ''}
+      ${(!canCancel && !canReschedule && b.status === 'confirmed') ? '<div class="fineprint">Änderungen sind bis 48 h vor dem Termin möglich.</div>' : ''}
     `;
 
     const cancelBtn = item.querySelector('[data-cancel]');
@@ -97,6 +101,9 @@ function renderBookings(list) {
 
     const rescheduleBtn = item.querySelector('[data-reschedule]');
     if (rescheduleBtn) rescheduleBtn.addEventListener('click', () => toggleReschedule(b, item, rescheduleBtn));
+
+    const reviewBtn = item.querySelector('[data-review]');
+    if (reviewBtn) reviewBtn.addEventListener('click', () => toggleReview(b, item));
 
     bookingsList.appendChild(item);
   });
@@ -162,6 +169,65 @@ function toggleReschedule(b, item, btn) {
   });
 }
 
+// Feature 2: Bewertung zu einem abgeschlossenen Termin (graceful, falls Backend fehlt).
+function toggleReview(b, item) {
+  const existing = item.querySelector('.review-box');
+  if (existing) { existing.remove(); return; }
+  const box = document.createElement('div');
+  box.className = 'review-box';
+  box.innerHTML = `
+    <div class="fineprint">Wie war dein Termin? Deine Bewertung wird nach Prüfung sichtbar.</div>
+    <div class="stars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="star" data-star="${n}">★</button>`).join('')}</div>
+    <textarea class="rv-text" rows="3" placeholder="Erzähl kurz, wie es war (optional)…"></textarea>
+    <div class="row gap"><button class="btn small rv-go" type="button">Bewertung senden</button></div>
+    <div class="fineprint rv-status"></div>
+  `;
+  item.appendChild(box);
+  let rating = 5;
+  const stars = [...box.querySelectorAll('.star')];
+  const paint = () => stars.forEach((s) => s.classList.toggle('on', Number(s.dataset.star) <= rating));
+  stars.forEach((s) => s.addEventListener('click', () => { rating = Number(s.dataset.star); paint(); }));
+  paint();
+  const rvStatus = box.querySelector('.rv-status');
+  box.querySelector('.rv-go').addEventListener('click', async () => {
+    rvStatus.style.color = '';
+    rvStatus.textContent = 'Sende…';
+    try {
+      await submitReview(b.id, rating, box.querySelector('.rv-text').value);
+    } catch (error) {
+      rvStatus.textContent = String(error?.status || '') === '404'
+        ? 'Bewertungen sind bald verfügbar — danke für deine Geduld.'
+        : `Konnte nicht gesendet werden: ${error.message}`;
+      rvStatus.style.color = '#d6807b';
+      return;
+    }
+    box.innerHTML = '<div class="fineprint">Danke! Deine Bewertung wird nach Prüfung sichtbar.</div>';
+  });
+}
+
+// Feature 4: Treuepunkte anzeigen (Karte bleibt versteckt, wenn nichts vorhanden).
+async function loadPoints() {
+  let data;
+  try {
+    data = await getCustomerPoints();
+  } catch (_error) { return; }
+  const balance = Number(data?.balance || 0);
+  const history = Array.isArray(data?.history) ? data.history : [];
+  if (!balance && !history.length) return;
+  const card = document.getElementById('pointsCard');
+  const balEl = document.getElementById('pointsBalance');
+  const histEl = document.getElementById('pointsHistory');
+  if (balEl) balEl.textContent = String(balance);
+  if (histEl) {
+    histEl.innerHTML = history.slice(0, 8).map((h) => `
+      <div class="item" style="display:flex; justify-content:space-between; gap:12px">
+        <span>${escapeHtml(h.reason || '')}</span>
+        <strong style="color:${Number(h.delta) >= 0 ? 'var(--accent-2)' : 'var(--ink-soft)'}">${Number(h.delta) >= 0 ? '+' : ''}${escapeHtml(String(h.delta))}</strong>
+      </div>`).join('');
+  }
+  if (card) card.hidden = false;
+}
+
 profileForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   profileStatus.style.color = '';
@@ -210,6 +276,7 @@ async function boot() {
   pfPhone.value = currentUser.profile?.phone || '';
   pfEmail.value = currentUser.email || '';
   await loadBookings();
+  loadPoints();
 }
 
 boot();
