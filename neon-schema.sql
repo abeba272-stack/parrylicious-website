@@ -917,6 +917,102 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Feature 2: Reviews (Bewertungen) mit Moderation
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.auth_users(id) on delete set null,
+  booking_id uuid unique references public.bookings(id) on delete set null,
+  service_id text,
+  service_name text,
+  first_name text,
+  rating integer not null check (rating between 1 and 5),
+  text text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'hidden')),
+  created_at timestamptz not null default now()
+);
+create index if not exists reviews_status_service_idx on public.reviews(status, service_id, created_at desc);
+
+-- Kunde legt eine Bewertung zu einer eigenen, ABGESCHLOSSENEN Buchung an (1 pro Buchung).
+create or replace function public.create_review(
+  p_user_id uuid,
+  p_booking_id uuid,
+  p_rating integer,
+  p_text text
+)
+returns public.reviews
+language plpgsql
+as $$
+declare
+  v_b public.bookings;
+  v_r public.reviews;
+begin
+  if p_user_id is null then raise exception 'AUTH_REQUIRED'; end if;
+  if p_rating is null or p_rating < 1 or p_rating > 5 then raise exception 'INVALID_RATING'; end if;
+
+  select * into v_b from public.bookings where id = p_booking_id;
+  if v_b.id is null or v_b.user_id is distinct from p_user_id then
+    raise exception 'BOOKING_NOT_FOUND_OR_FORBIDDEN';
+  end if;
+  if v_b.status <> 'completed' then
+    raise exception 'NOT_COMPLETED';
+  end if;
+
+  begin
+    insert into public.reviews (user_id, booking_id, service_id, service_name, first_name, rating, text, status)
+    values (
+      p_user_id, p_booking_id, v_b.service_id, v_b.service_name,
+      coalesce(nullif(trim(v_b.customer->>'firstName'), ''), 'Gast'),
+      p_rating, nullif(trim(coalesce(p_text, '')), ''), 'pending'
+    )
+    returning * into v_r;
+  exception when unique_violation then
+    raise exception 'REVIEW_EXISTS';
+  end;
+
+  return v_r;
+end;
+$$;
+
+-- Admin/Staff: Bewertung freischalten/ausblenden.
+create or replace function public.admin_set_review_status(
+  p_actor_id uuid,
+  p_review_id uuid,
+  p_status text
+)
+returns public.reviews
+language plpgsql
+as $$
+declare
+  v_r public.reviews;
+begin
+  if p_actor_id is null then raise exception 'AUTH_REQUIRED'; end if;
+  if not public.is_staff_role(p_actor_id) then raise exception 'FORBIDDEN'; end if;
+  if p_status not in ('pending', 'approved', 'hidden') then raise exception 'INVALID_STATUS'; end if;
+
+  update public.reviews set status = p_status where id = p_review_id returning * into v_r;
+  if v_r.id is null then raise exception 'BOOKING_NOT_FOUND_OR_FORBIDDEN'; end if;
+  return v_r;
+end;
+$$;
+
+-- Admin/Staff: Bewertung löschen.
+create or replace function public.admin_delete_review(
+  p_actor_id uuid,
+  p_review_id uuid
+)
+returns void
+language plpgsql
+as $$
+begin
+  if p_actor_id is null then raise exception 'AUTH_REQUIRED'; end if;
+  if not public.is_staff_role(p_actor_id) then raise exception 'FORBIDDEN'; end if;
+  delete from public.reviews where id = p_review_id;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 6) handle_new_user() — legt profiles-Zeile bei neuem auth_users an
 -- ---------------------------------------------------------------------------
 
