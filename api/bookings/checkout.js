@@ -9,6 +9,9 @@ const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const { setCors, sendJson, bodyFromReq, sql, isAllowedReturnUrl, pgErrorStatus, getAuthUser, getNewCustomerEligibility } = require('../_lib');
 const { getService, NEW_CUSTOMER_DISCOUNT_PERCENT } = require('../_services');
 
+// Treuepunkte-Einlösewert: 100 Punkte = 5 € (nur volle 100er-Schritte).
+const POINTS_REDEEM_VALUE_EUR_PER_100 = 5;
+
 function toStripeAmount(amount) {
   return Math.max(0, Math.round(Number(amount || 0) * 100));
 }
@@ -83,6 +86,13 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // Optional: Treuepunkte einlösen (nur eingeloggte Kunden, volle 100er-Schritte).
+  let redeemPoints = Number.parseInt(body.redeemPoints, 10);
+  if (!Number.isFinite(redeemPoints) || redeemPoints < 100) redeemPoints = 0;
+  redeemPoints = Math.floor(redeemPoints / 100) * 100;
+  let pointsRedeemed = 0;
+  let discountValue = 0;
+
   try {
     // 1) Slot-Hold anlegen (reserviert den Slot; wirft SLOT_UNAVAILABLE bei Kollision).
     const holdRows = await sql`
@@ -95,6 +105,34 @@ module.exports = async function handler(req, res) {
     const booking = Array.isArray(holdRows) ? holdRows[0] : null;
     if (!booking) {
       return sendJson(res, 500, { error: 'INTERNAL', message: 'Buchung konnte nicht angelegt werden.' });
+    }
+
+    // 1b) Optional Treuepunkte einlösen -> Anzahlung reduzieren (100 Punkte = 5 €).
+    // An den Hold gebunden: bei Nichtzahlung wird der Hold gelöscht und die
+    // Einlösung per ON DELETE CASCADE rückgängig gemacht (Punkte kommen zurück).
+    if (userId && redeemPoints >= 100) {
+      // Rabatt deckeln, damit die Anzahlung >= 1 € bleibt (Stripe-Mindestbetrag).
+      const maxByDeposit = Math.floor((deposit - 1) / POINTS_REDEEM_VALUE_EUR_PER_100) * 100;
+      const usePoints = Math.min(redeemPoints, Math.max(0, maxByDeposit));
+      if (usePoints >= 100) {
+        try {
+          const rp = await sql`select public.redeem_points_for_booking(${userId}, ${booking.id}, ${usePoints}) as pts`;
+          pointsRedeemed = (Array.isArray(rp) && rp[0] && Number(rp[0].pts)) || 0;
+        } catch (e) {
+          await sql`delete from bookings where id = ${booking.id} and status = 'pending_payment'`;
+          const { code } = pgErrorStatus(e);
+          if (code === 'INSUFFICIENT_POINTS') return sendJson(res, 409, { error: 'INSUFFICIENT_POINTS', message: 'Du hast nicht genügend Treuepunkte.' });
+          if (code === 'INVALID_POINTS') return sendJson(res, 400, { error: 'INVALID_POINTS', message: 'Nur volle 100er-Schritte einlösbar.' });
+          throw e;
+        }
+      }
+      if (pointsRedeemed >= 100) {
+        discountValue = Math.round((pointsRedeemed / 100) * POINTS_REDEEM_VALUE_EUR_PER_100 * 100) / 100;
+        priceFrom = Math.round((priceFrom - discountValue) * 100) / 100;
+        deposit = Math.round((deposit - discountValue) * 100) / 100;
+        customer.redeem = { points: pointsRedeemed, discountEur: discountValue };
+        await sql`update bookings set price_from = ${priceFrom}, deposit = ${deposit}, customer = ${JSON.stringify(customer)}::jsonb where id = ${booking.id}`;
+      }
     }
 
     // 2) Rückkehr-URLs.
@@ -138,7 +176,7 @@ module.exports = async function handler(req, res) {
     // Session-ID am Hold vermerken (für Verifikation/Idempotenz).
     await sql`update bookings set stripe_checkout_session_id = ${json.id}, payment_provider = 'stripe' where id = ${booking.id}`;
 
-    return sendJson(res, 200, { url: json.url, sessionId: json.id, bookingId: booking.id });
+    return sendJson(res, 200, { url: json.url, sessionId: json.id, bookingId: booking.id, pointsRedeemed, discountValue });
   } catch (error) {
     const { status, code } = pgErrorStatus(error);
     if (code === 'SLOT_UNAVAILABLE') {

@@ -861,7 +861,9 @@ create table if not exists public.loyalty_points (
   user_id uuid not null references public.auth_users(id) on delete cascade,
   delta integer not null,
   reason text not null check (reason in ('earn', 'redeem')),
-  booking_id uuid references public.bookings(id) on delete set null,
+  -- ON DELETE CASCADE: wird ein (unbezahlter) Hold storniert/gelöscht, verschwindet
+  -- die zugehörige 'redeem'-Zeile -> eingelöste Punkte kommen automatisch zurück.
+  booking_id uuid references public.bookings(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 create index if not exists loyalty_points_user_idx on public.loyalty_points(user_id, created_at desc);
@@ -913,6 +915,39 @@ begin
     v_count := v_count + 1;
   end loop;
   return v_count;
+end;
+$$;
+
+-- Treuepunkte für eine (Hold-)Buchung einlösen. Atomar via Advisory-Lock gegen
+-- gleichzeitige Doppel-Einlösung desselben Nutzers. Zieht p_points ab (negativer
+-- delta, reason 'redeem'), an die Buchung gebunden. Wird der Hold später nicht
+-- bezahlt und gelöscht, entfernt ON DELETE CASCADE die Zeile -> Punkte zurück.
+-- Nur volle 100er-Schritte. Gibt die tatsächlich eingelösten Punkte zurück.
+create or replace function public.redeem_points_for_booking(
+  p_user_id uuid,
+  p_booking_id uuid,
+  p_points integer
+)
+returns integer
+language plpgsql
+as $$
+declare
+  v_balance integer;
+begin
+  if p_user_id is null then raise exception 'AUTH_REQUIRED'; end if;
+  if p_points is null or p_points <= 0 or (p_points % 100) <> 0 then
+    raise exception 'INVALID_POINTS';
+  end if;
+  -- Serialisiert gleichzeitige Einlösungen desselben Nutzers (verhindert Doppel-Ausgabe).
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+  select coalesce(sum(delta), 0)::int into v_balance
+  from public.loyalty_points where user_id = p_user_id;
+  if v_balance < p_points then
+    raise exception 'INSUFFICIENT_POINTS';
+  end if;
+  insert into public.loyalty_points (user_id, delta, reason, booking_id)
+  values (p_user_id, -p_points, 'redeem', p_booking_id);
+  return p_points;
 end;
 $$;
 

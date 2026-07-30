@@ -83,12 +83,30 @@ async function handleGet(req, res) {
     return sendJson(res, 200, mapBookingRow(row));
   }
 
-  const rows = await sql`
-    select * from bookings
-    where status <> 'pending_payment'
-    order by created_at desc
-    limit 500
-  `;
+  // Optionaler Zeitraum-/Stylist-Filter (für den Terminkalender im Dashboard).
+  // Ohne Parameter: bisheriges Verhalten (neueste zuerst). Mit from+to: nach
+  // Datum/Uhrzeit sortiert (kalenderfreundlich). date_iso ist ISO-Text -> lexikografisch sortierbar.
+  const from = DATE_RE.test(String(query.from || '')) ? String(query.from) : null;
+  const to = DATE_RE.test(String(query.to || '')) ? String(query.to) : null;
+  const stylistId = query.stylistId ? String(query.stylistId).trim().slice(0, 60) : null;
+
+  let rows;
+  if (from && to && stylistId) {
+    rows = await sql`
+      select * from bookings
+      where status <> 'pending_payment' and date_iso >= ${from} and date_iso <= ${to} and stylist_id = ${stylistId}
+      order by date_iso asc, time asc limit 1000`;
+  } else if (from && to) {
+    rows = await sql`
+      select * from bookings
+      where status <> 'pending_payment' and date_iso >= ${from} and date_iso <= ${to}
+      order by date_iso asc, time asc limit 1000`;
+  } else {
+    rows = await sql`
+      select * from bookings
+      where status <> 'pending_payment'
+      order by created_at desc limit 500`;
+  }
   const list = (Array.isArray(rows) ? rows : []).map(mapBookingRow);
   return sendJson(res, 200, list);
 }

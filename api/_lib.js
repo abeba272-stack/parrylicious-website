@@ -376,6 +376,8 @@ function pgErrorStatus(error) {
     { code: 'INVALID_RATING', status: 400 },
     { code: 'NOT_COMPLETED', status: 409 },
     { code: 'REVIEW_EXISTS', status: 409 },
+    { code: 'INSUFFICIENT_POINTS', status: 409 },
+    { code: 'INVALID_POINTS', status: 400 },
     { code: 'INVALID_DURATION', status: 400 },
     { code: 'INVALID_STATUS', status: 400 },
     { code: 'INVALID_ROLE', status: 400 }
