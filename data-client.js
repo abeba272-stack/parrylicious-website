@@ -400,8 +400,10 @@ export async function getReviews(serviceId, limit) {
 
 export async function getReviewsSummary(serviceId) {
   try {
-    const q = serviceId ? `?serviceId=${encodeURIComponent(serviceId)}` : '';
-    return await apiFetch(`/api/reviews/summary${q}`, { method: 'GET', auth: false });
+    // Zusammenfassung läuft über dieselbe Route mit ?summary=1 (kein /summary-Subpfad).
+    const params = new URLSearchParams({ summary: '1' });
+    if (serviceId) params.set('serviceId', serviceId);
+    return await apiFetch(`/api/reviews?${params.toString()}`, { method: 'GET', auth: false });
   } catch (_error) {
     return null;
   }
@@ -412,4 +414,26 @@ export async function submitReview(bookingId, rating, text) {
     method: 'POST',
     body: { bookingId, rating: Number(rating), text: String(text || '') }
   });
+}
+
+/* ---------------------------------------------------------------------------
+ * Admin: Reviews-Moderation  ->  /api/admin/reviews   (Feature 2)
+ *   GET ?status=pending|approved|hidden|all  ·  PATCH { id, status }  ·  DELETE ?id=
+ * ------------------------------------------------------------------------- */
+
+export async function adminListReviews(status = 'pending') {
+  const s = ['pending', 'approved', 'hidden', 'all'].includes(String(status)) ? status : 'pending';
+  const list = await apiFetch(`/api/admin/reviews?status=${encodeURIComponent(s)}`, { method: 'GET' });
+  return Array.isArray(list) ? list : [];
+}
+
+export async function adminSetReviewStatus(id, status) {
+  return apiFetch('/api/admin/reviews', {
+    method: 'PATCH',
+    body: { id: String(id || ''), status: String(status || '') }
+  });
+}
+
+export async function adminDeleteReview(id) {
+  return apiFetch(`/api/admin/reviews?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }

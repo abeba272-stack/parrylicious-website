@@ -10,7 +10,10 @@ import {
   adminDeleteStaff,
   adminListUsersWithRoles,
   updateBookingStatus,
-  removeMyWaitlistEntry
+  removeMyWaitlistEntry,
+  adminListReviews,
+  adminSetReviewStatus,
+  adminDeleteReview
 } from './data-client.js';
 import { sendBookingNotification } from './backend-client.js';
 
@@ -62,9 +65,14 @@ const calNext = document.getElementById('calNext');
 const calDay = document.getElementById('calDay');
 let calMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
 
+// Feature 2: Reviews-Moderation
+const reviewsTable = document.getElementById('reviewsTable');
+const reviewStatusFilter = document.getElementById('reviewStatusFilter');
+
 let bookingsCache = [];
 let waitlistCache = [];
 let roleUsersCache = [];
+let reviewsCache = [];
 let currentUser = null;
 let currentRole = 'customer';
 
@@ -458,6 +466,93 @@ function renderStaffCalendar() {
 calPrev?.addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderStaffCalendar(); });
 calNext?.addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderStaffCalendar(); });
 
+/* ---------- Feature 2: Reviews-Moderation ---------- */
+function reviewStatusPill(status) {
+  const label = status === 'approved' ? 'Freigeschaltet' : status === 'hidden' ? 'Ausgeblendet' : 'Zu prüfen';
+  const cls = status === 'approved' ? 'confirmed' : status === 'hidden' ? 'canceled' : 'requested';
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+function renderReviews() {
+  if (!reviewsTable) return;
+  reviewsTable.innerHTML = '';
+  if (!reviewsCache.length) {
+    const empty = document.createElement('div');
+    empty.className = 'item';
+    empty.innerHTML = '<div class="muted">Keine Bewertungen in dieser Ansicht.</div>';
+    reviewsTable.appendChild(empty);
+    return;
+  }
+  reviewsCache.forEach((r) => {
+    const rating = Math.max(1, Math.min(5, Number(r.rating) || 5));
+    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    const name = escapeHtml(r.firstName || 'Gast');
+    const service = escapeHtml(r.serviceName || '');
+    const text = escapeHtml(r.text || '');
+    const when = escapeHtml(fmtDate(String(r.createdAt || '').slice(0, 10)));
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="row between">
+        <div>
+          ${reviewStatusPill(r.status)}
+          <strong>${name}</strong>
+          ${service ? `<span class="muted small"> · ${service}</span>` : ''}
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--accent); letter-spacing:2px">${stars}</div>
+          <div class="muted small">${when}</div>
+        </div>
+      </div>
+      ${text ? `<div class="divider"></div><div class="muted small">„${text}"</div>` : ''}
+      <div class="row end gap" style="margin-top:12px">
+        ${r.status !== 'approved' ? `<button class="btn small" data-approve="${r.id}">Freischalten</button>` : ''}
+        ${r.status !== 'hidden' ? `<button class="btn small ghost" data-hide="${r.id}">Ausblenden</button>` : ''}
+        <button class="btn small ghost" data-delete="${r.id}">Löschen</button>
+      </div>
+    `;
+    div.querySelector('[data-approve]')?.addEventListener('click', () => setReviewStatus(r.id, 'approved'));
+    div.querySelector('[data-hide]')?.addEventListener('click', () => setReviewStatus(r.id, 'hidden'));
+    div.querySelector('[data-delete]')?.addEventListener('click', () => deleteReview(r.id));
+    reviewsTable.appendChild(div);
+  });
+}
+
+async function setReviewStatus(id, status) {
+  try {
+    await adminSetReviewStatus(id, status);
+  } catch (error) {
+    alert(`Konnte nicht aktualisiert werden: ${error.message}`);
+    return;
+  }
+  await loadReviews();
+}
+
+async function deleteReview(id) {
+  if (!confirm('Diese Bewertung endgültig löschen?')) return;
+  try {
+    await adminDeleteReview(id);
+  } catch (error) {
+    alert(`Löschen fehlgeschlagen: ${error.message}`);
+    return;
+  }
+  await loadReviews();
+}
+
+async function loadReviews() {
+  if (!reviewsTable) return;
+  const status = reviewStatusFilter?.value || 'pending';
+  try {
+    reviewsCache = await adminListReviews(status);
+    renderReviews();
+  } catch (error) {
+    reviewsCache = [];
+    reviewsTable.innerHTML = `<div class="item"><div class="muted">Bewertungen konnten nicht geladen werden: ${escapeHtml(error.message)}</div></div>`;
+  }
+}
+
+reviewStatusFilter?.addEventListener('change', loadReviews);
+
 async function loadData() {
   bookingsCache = await getMyBookings();
   waitlistCache = await getMyWaitlist();
@@ -584,6 +679,7 @@ async function boot() {
     await loadData();
     await loadRoleUsers();
     render();
+    loadReviews();
   } catch (error) {
     alert(`Dashboard konnte nicht geladen werden: ${error.message}`);
     window.location.href = 'login.html?next=admin.html';

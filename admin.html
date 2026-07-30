@@ -147,6 +147,21 @@
       </div>
 
       <div class="card">
+        <div class="row between">
+          <h3>Bewertungen</h3>
+          <select id="reviewStatusFilter">
+            <option value="pending">Zu prüfen</option>
+            <option value="approved">Freigeschaltet</option>
+            <option value="hidden">Ausgeblendet</option>
+            <option value="all">Alle</option>
+          </select>
+        </div>
+        <div class="muted">Neue Bewertungen prüfen: freischalten (öffentlich sichtbar), ausblenden oder löschen.</div>
+        <div class="divider"></div>
+        <div id="reviewsTable" class="table" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
         <h3>Warteliste</h3>
         <div class="muted">Wenn ausgebucht: Kunden eintragen → später Slot anbieten.</div>
         <div class="divider"></div>
