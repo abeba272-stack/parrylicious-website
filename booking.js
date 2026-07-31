@@ -676,26 +676,73 @@ async function prefillFromAccount() {
   } catch (_e) { /* nicht eingeloggt */ }
 }
 
-// Feature 3: Neukunden-Rabatt-Banner (Endbetrag rechnet der Server im Checkout).
-async function showDiscountBanner() {
-  try {
-    const el = await getCustomerEligibility();
-    if (!el || !el.newCustomerDiscount) return;
-    const wiz = document.querySelector('.wizard');
-    if (!wiz || !wiz.parentNode || document.getElementById('discountBanner')) return;
-    const b = document.createElement('div');
-    b.id = 'discountBanner';
-    b.className = 'discount-banner';
-    b.innerHTML = `✨ <strong>&minus;${el.discountPercent || 10}%</strong> auf deine erste Buchung &ndash; wird beim Bezahlen automatisch abgezogen.`;
-    wiz.parentNode.insertBefore(b, wiz);
-  } catch (_e) { /* nicht eingeloggt / kein Anspruch */ }
+// Feature 3: Großer, betonter Vorteils-Banner oben auf der Buchungsseite.
+// - Gast: Konto-Vorteile groß (10 % + Treuepunkte) + klarer Hinweis, dass
+//   Stornieren/Verschieben nur mit Kundenkonto und bis 48 h vorher möglich ist.
+// - Eingeloggt: Rabatt-Status (aktiv / E-Mail bestätigen) bzw. Treuepunkte-Hinweis.
+async function renderBookingPerks() {
+  const wiz = document.querySelector('.wizard');
+  if (!wiz || !wiz.parentNode || document.getElementById('perksBanner')) return;
+
+  let user = null;
+  try { user = await getCurrentUser(); } catch (_e) { /* Gast */ }
+
+  const banner = document.createElement('div');
+  banner.id = 'perksBanner';
+  banner.className = 'perks-banner';
+
+  if (!user) {
+    banner.innerHTML = `
+      <div class="perks-banner__head">
+        <span class="perks-banner__big">&minus;10&nbsp;%</span>
+        <span class="perks-banner__lead"><strong>Neukundenrabatt</strong> auf deine erste Buchung &ndash; mit kostenlosem Kundenkonto. Plus Treuepunkte bei jedem Termin.</span>
+      </div>
+      <ul class="perks-list">
+        <li><strong>10&nbsp;% Rabatt</strong> auf die erste Buchung</li>
+        <li><strong>Treuepunkte sammeln</strong> &ndash; 1 Punkt je 1&nbsp;€, 100 Punkte = 5&nbsp;€ Rabatt</li>
+        <li><strong>Termine stornieren &amp; verschieben</strong></li>
+      </ul>
+      <div class="perks-banner__note">ℹ️ <strong>Als Gast</strong> ist dein Termin nach der Buchung nicht mehr änderbar. <strong>Stornieren und Verschieben sind nur mit Kundenkonto und bis spätestens 48&nbsp;Std. vor dem Termin möglich.</strong></div>
+      <div class="perks-banner__cta">
+        <a class="btn" href="login.html?next=booking.html&register=1">Konto erstellen</a>
+        <a class="btn ghost" href="login.html?next=booking.html">Anmelden</a>
+      </div>`;
+  } else if (user.role === 'customer') {
+    if (!user.emailVerified) {
+      banner.innerHTML = `
+        <div class="perks-banner__head">
+          <span class="perks-banner__big">&minus;10&nbsp;%</span>
+          <span class="perks-banner__lead"><strong>Bestätige deine E-Mail</strong>, dann gilt der <strong>Neukundenrabatt</strong> auf diese Buchung &ndash; plus Treuepunkte. Den Bestätigungslink findest du in deiner E-Mail.</span>
+        </div>`;
+    } else {
+      let elig = null;
+      try { elig = await getCustomerEligibility(); } catch (_e) { /* egal */ }
+      if (elig && elig.newCustomerDiscount) {
+        banner.innerHTML = `
+          <div class="perks-banner__head">
+            <span class="perks-banner__big">&minus;${elig.discountPercent || 10}&nbsp;%</span>
+            <span class="perks-banner__lead"><strong>Neukundenrabatt aktiv</strong> &ndash; wird beim Bezahlen automatisch abgezogen. Mit dieser Buchung sammelst du außerdem <strong>Treuepunkte</strong>.</span>
+          </div>`;
+      } else {
+        banner.innerHTML = `
+          <div class="perks-banner__head">
+            <span class="perks-banner__big">★</span>
+            <span class="perks-banner__lead">Mit dieser Buchung sammelst du <strong>Treuepunkte</strong> &ndash; 1 Punkt je 1&nbsp;€, 100 Punkte = 5&nbsp;€ Rabatt. Stornieren &amp; Verschieben bis 48&nbsp;Std. vorher in &bdquo;Mein Konto&ldquo;.</span>
+          </div>`;
+      }
+    }
+  } else {
+    return; // Team/Admin – kein Vorteils-Banner
+  }
+
+  wiz.parentNode.insertBefore(banner, wiz);
 }
 
 async function boot() {
   const handledPayment = await handlePaymentReturn();
   if (!handledPayment) showStep(state.step || 1);
   prefillFromAccount();
-  showDiscountBanner();
+  renderBookingPerks();
 }
 
 boot();

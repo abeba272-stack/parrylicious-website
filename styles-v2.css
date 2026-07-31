@@ -234,6 +234,19 @@ textarea{ min-height:90px; resize:vertical; }
 .discount-banner{ margin:0 0 18px; padding:14px 18px; border:1px solid rgba(203,164,107,.4); background:rgba(203,164,107,.12); border-radius:var(--radius-sm); color:var(--ink); font-size:14.5px; }
 .discount-banner strong{ color:var(--accent-2); }
 
+/* Großer, betonter Vorteils-Banner auf der Buchungsseite (Rabatt + Treuepunkte + Konto-Hinweis) */
+.perks-banner{ margin:0 0 26px; padding:26px 28px; border:1px solid var(--accent); border-radius:var(--radius-sm); background:linear-gradient(135deg, rgba(203,164,107,.16), rgba(203,164,107,.04)); color:var(--ink); }
+.perks-banner__head{ display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
+.perks-banner__big{ font-family:var(--font-head); font-size:clamp(38px,7vw,58px); font-weight:600; color:var(--accent-2); line-height:.95; }
+.perks-banner__lead{ font-size:clamp(15px,2.2vw,18px); line-height:1.4; max-width:48ch; }
+.perks-list{ list-style:none; margin:20px 0 0; padding:0; display:grid; gap:12px; }
+.perks-list li{ position:relative; padding-left:30px; font-size:16px; line-height:1.35; }
+.perks-list li::before{ content:"✓"; position:absolute; left:0; top:1px; color:var(--accent); font-weight:700; }
+.perks-list strong{ color:var(--accent-2); }
+.perks-banner__note{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft); font-size:14px; line-height:1.5; color:var(--ink-soft); }
+.perks-banner__note strong{ color:var(--ink); }
+.perks-banner__cta{ display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; }
+
 /* Feature 8: Staff-Terminkalender */
 .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
 .cal-dow{ text-align:center; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); padding:4px 0; }

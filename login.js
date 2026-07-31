@@ -85,6 +85,12 @@ document.getElementById('toLogin')?.addEventListener('click', () => {
   setStatus(custStatus, '');
 });
 
+// „Konto erstellen"-Link (z. B. von der Buchungsseite, ?register=1) öffnet direkt die Registrierung.
+if (params.get('register') === '1' && kundeLogin && kundeRegister) {
+  kundeLogin.classList.add('hidden');
+  kundeRegister.classList.remove('hidden');
+}
+
 /* ---------------------------------------------------------------------------
  * Kunden-Login / Registrierung
  * ------------------------------------------------------------------------- */
