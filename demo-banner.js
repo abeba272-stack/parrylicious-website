@@ -24,12 +24,16 @@
       'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:100000',
       'background:#e7c98a', 'color:#1a1205',
       "font:600 13.5px/1.45 Inter,system-ui,-apple-system,sans-serif",
-      'text-align:center', 'padding:10px 16px',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'gap:10px 16px', 'flex-wrap:wrap', 'padding:9px 16px',
       'box-shadow:0 2px 10px rgba(0,0,0,.35)'
     ].join(';');
-    bar.innerHTML = '⚠️ Demo-/Testversion – bitte <strong>keine echten Buchungen</strong>. '
-      + 'Termine sind noch nicht mit dem Salon-Kalender abgeglichen, und Zahlungen werden '
-      + 'nicht bearbeitet (bereits geleistete Anzahlungen werden erstattet).';
+    bar.innerHTML =
+      '<span style="max-width:72ch">⚠️ Demo-/Testversion – bitte <strong>keine echten Buchungen</strong>. '
+      + 'Termine sind hier noch nicht mit dem Salon-Kalender abgeglichen. Für einen echten Termin:</span>'
+      + '<a href="https://salonkee.de/salon/parrylicious-hair-artist?lang=de" target="_blank" rel="noopener noreferrer" '
+      + 'style="flex:0 0 auto;background:#1a1205;color:#e7c98a;text-decoration:none;font-weight:700;'
+      + 'padding:8px 16px;border-radius:7px;white-space:nowrap">Zur echten Buchung →</a>';
     document.body.appendChild(bar);
 
     function apply() {
