@@ -294,15 +294,6 @@ export async function signInWithPassword(email, password) {
 }
 
 /* ---------------------------------------------------------------------------
- * Google OAuth
- * ------------------------------------------------------------------------- */
-
-export function signInWithGoogle(nextPath) {
-  const url = `${apiUrl('/api/auth/google')}?next=${encodeURIComponent(nextPath || '')}`;
-  window.location.href = url;
-}
-
-/* ---------------------------------------------------------------------------
  * Logout
  * ------------------------------------------------------------------------- */
 
@@ -362,72 +353,4 @@ export async function changePassword(currentPassword, newPassword) {
   saveSession(data);
   emit('TOKEN_REFRESHED');
   return true;
-}
-
-/* ---------------------------------------------------------------------------
- * OAuth-Redirect-Handoff (login.html#code=... bzw. #error=...)
- * ------------------------------------------------------------------------- */
-
-const REDIRECT_ERRORS = {
-  missing_params: 'Google-Anmeldung unvollständig. Bitte erneut versuchen.',
-  invalid_state: 'Die Anmelde-Sitzung ist abgelaufen. Bitte erneut versuchen.',
-  token_exchange_failed: 'Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
-  userinfo_failed: 'Google-Profil konnte nicht geladen werden. Bitte erneut versuchen.',
-  no_email: 'Für dieses Google-Konto ist keine E-Mail hinterlegt.',
-  code_invalid: 'Der Anmelde-Code ist ungültig oder abgelaufen.',
-  server_error: 'Ein Serverfehler ist aufgetreten. Bitte später erneut versuchen.'
-};
-
-function mapRedirectError(code) {
-  return REDIRECT_ERRORS[code] || 'Die Anmeldung ist fehlgeschlagen. Bitte erneut versuchen.';
-}
-
-// Hash aus der URL entfernen, damit ein Reload den Handoff nicht wiederholt.
-function cleanHash() {
-  try {
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
-  } catch (_error) {
-    // ignore
-  }
-}
-
-// Parst location.hash: bei #code= gegen Session tauschen und { next } liefern,
-// bei #error= Error werfen, sonst null.
-export async function handleAuthRedirect() {
-  if (typeof window === 'undefined') return null;
-
-  const rawHash = window.location.hash || '';
-  const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
-  if (!hash) return null;
-
-  let params;
-  try {
-    params = new URLSearchParams(hash);
-  } catch (_error) {
-    return null;
-  }
-
-  const errorCode = params.get('error');
-  const code = params.get('code');
-  if (!errorCode && !code) return null;
-
-  if (errorCode) {
-    cleanHash();
-    const error = new Error(mapRedirectError(errorCode));
-    error.code = errorCode;
-    throw error;
-  }
-
-  const next = params.get('next') || null;
-  const response = await postJson('/api/auth/exchange', { code });
-  const data = await parseJsonSafe(response);
-  if (!response.ok || !data || !data.accessToken) {
-    cleanHash();
-    throw makeApiError(data, response);
-  }
-
-  saveSession(data);
-  cleanHash();
-  emit('SIGNED_IN');
-  return { next };
 }
