@@ -47,6 +47,14 @@ function getQueryService() {
   return params.get('service');
 }
 
+// Kategorie kommt von der Startseite (?category=<key>). Bestimmt, welche Styles
+// direkt gezeigt werden – die Kategorie-Auswahl selbst passiert schon dort.
+function getQueryCategory() {
+  const params = new URLSearchParams(location.search);
+  const key = params.get('category');
+  return key ? (BOOKING_CATS.find((c) => c.key === key) || null) : null;
+}
+
 function getServiceById(serviceId) {
   return services.find((s) => s.id === serviceId) || null;
 }
@@ -129,6 +137,7 @@ const servicePicker = document.getElementById('servicePicker');
 const toStep2 = document.getElementById('toStep2');
 
 let activeBookingCat = null;
+let categoryLocked = false; // true = Kategorie kam von der Startseite → nicht erneut zeigen
 
 function serviceCardEl(s) {
   const selected = state.serviceId === s.id;
@@ -180,13 +189,17 @@ function renderServicesOfCat() {
   if (!activeBookingCat) return renderCategoryTiles();
   servicePicker.classList.remove('grid');
   servicePicker.innerHTML = '';
-  const back = document.createElement('button');
-  back.type = 'button';
-  back.className = 'btn small ghost';
-  back.textContent = '← Alle Kategorien';
-  back.style.marginBottom = '16px';
-  back.addEventListener('click', () => { activeBookingCat = null; renderCategoryTiles(); });
-  servicePicker.appendChild(back);
+  // Zurück-zu-Kategorien nur, wenn hier im Buchungs-Flow gewählt wurde (Direkteinstieg).
+  // Kam die Kategorie von der Startseite (categoryLocked), zeigen wir sie nicht erneut.
+  if (!categoryLocked) {
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'btn small ghost';
+    back.textContent = '← Alle Kategorien';
+    back.style.marginBottom = '16px';
+    back.addEventListener('click', () => { activeBookingCat = null; renderCategoryTiles(); });
+    servicePicker.appendChild(back);
+  }
   const grid = document.createElement('div');
   grid.className = 'grid';
   services.filter((s) => inCat(s, activeBookingCat.key)).forEach((s) => grid.appendChild(serviceCardEl(s)));
@@ -195,8 +208,12 @@ function renderServicesOfCat() {
 }
 
 function renderServicePicker() {
-  const sel = getServiceById(state.serviceId);
-  activeBookingCat = sel ? (BOOKING_CATS.find((c) => inCat(sel, c.key)) || null) : null;
+  const urlCat = getQueryCategory();
+  let sel = getServiceById(state.serviceId);
+  // Frische Kategorie von der Startseite hat Vorrang: unpassende gespeicherte Auswahl verwerfen.
+  if (urlCat && sel && !inCat(sel, urlCat.key)) { state.serviceId = null; saveState(); sel = null; }
+  activeBookingCat = sel ? (BOOKING_CATS.find((c) => inCat(sel, c.key)) || null) : urlCat;
+  categoryLocked = Boolean(sel || urlCat);
   if (activeBookingCat) renderServicesOfCat();
   else renderCategoryTiles();
 }

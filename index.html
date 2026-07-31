@@ -353,16 +353,9 @@
       <div class="sec-index reveal"><span class="num">N° 03</span><span class="line"></span><span class="label">Services</span></div>
       <div class="split-head reveal">
         <h2 class="display">Wähle deine<br><span class="it">Kategorie.</span></h2>
-        <p>Alle Preise sind Startpreise. Wähle eine Kategorie, um die passenden Styles zu sehen.</p>
+        <p>Alle Preise sind Startpreise. Wähle eine Kategorie – die passenden Styles wählst du direkt im nächsten Schritt bei der Terminbuchung.</p>
       </div>
       <div class="cat-tiles reveal" id="catTiles"></div>
-      <div id="catServices" class="hidden">
-        <div class="cat-bar">
-          <button class="cat-back" id="catBack">← Alle Kategorien</button>
-          <h3 class="cat-current" id="catCurrent"></h3>
-        </div>
-        <div class="cards" id="servicesGrid"></div>
-      </div>
     </div>
   </section>
 
@@ -546,12 +539,7 @@
       { key:'extensions', label:'Extensions',        img:'assets/categories/extensions.jpg' },
       { key:'kids',       label:'Kids',              img:'assets/categories/kids.jpg' }
     ];
-    const grid = document.getElementById('servicesGrid');
     const catTiles = document.getElementById('catTiles');
-    const catServices = document.getElementById('catServices');
-    const catCurrent = document.getElementById('catCurrent');
-    const catBack = document.getElementById('catBack');
-    const servicesSection = document.getElementById('services');
     const inCat = (s, key) => (s.tags || []).includes(key);
 
     function renderTiles(){
@@ -568,43 +556,10 @@
             <span class="cat-tile__name">${c.label}</span>
             <span class="cat-tile__count">${count} ${count === 1 ? 'Style' : 'Styles'}</span>
           </span>`;
-        t.addEventListener('click', () => openCat(c));
+        t.addEventListener('click', () => { window.location.href = 'booking.html?category=' + encodeURIComponent(c.key); });
         catTiles.appendChild(t);
       });
     }
-
-    function openCat(c){
-      grid.innerHTML = '';
-      services.filter(s => inCat(s, c.key)).forEach(s => {
-        const el = document.createElement('article');
-        el.className = 'card';
-        el.innerHTML = `
-          <div class="card__img"><img src="${s.image || 'assets/placeholder-editorial.jpg'}" alt="${s.name}" loading="lazy"></div>
-          <div class="card__body">
-            <div class="card__top">
-              <h3 class="card__title">${s.name}</h3>
-              <span class="card__price">ab ${eur(s.priceFrom)}</span>
-            </div>
-            <p class="card__cat">${s.category || ''}</p>
-            <p class="card__desc">${s.description || ''}</p>
-            <div class="card__meta">
-              <span class="card__dur">⏱ ${dur(s.durationMin)}</span>
-              <a class="link" href="booking.html?service=${encodeURIComponent(s.id)}">Termin wählen</a>
-            </div>
-          </div>`;
-        grid.appendChild(el);
-      });
-      catCurrent.textContent = c.label;
-      catTiles.classList.add('hidden');
-      catServices.classList.remove('hidden');
-      servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    catBack.addEventListener('click', () => {
-      catServices.classList.add('hidden');
-      catTiles.classList.remove('hidden');
-      servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
 
     renderTiles();
 
