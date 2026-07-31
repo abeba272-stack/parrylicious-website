@@ -440,9 +440,9 @@
         <h2 class="display reveal">The results <span class="it">speak.</span><br>The community <span class="it">confirms<span class="dot">.</span></span></h2>
       </div>
       <div class="reveal">
-        <div class="rating__num">4,9<small>/ 5</small></div>
-        <div class="rating__stars">★★★★★</div>
-        <div class="rating__note" id="ratingNote">180+ verifizierte Bewertungen</div>
+        <div class="rating__num" id="ratingNum">—</div>
+        <div class="rating__stars" id="ratingStars"></div>
+        <div class="rating__note" id="ratingNote">Bewertungen werden geladen…</div>
       </div>
       <div class="home-reviews" id="homeReviews" style="grid-column:1/-1"></div>
     </div>
@@ -463,7 +463,7 @@
               <span>So</span><span>geschlossen</span>
             </div>
           </div>
-          <div><h4>Kontakt</h4><p>0151 70588497 · @parrylicious_studio</p></div>
+          <div><h4>Kontakt</h4><p>+49 151 70588497 · @parrylicious_studio</p></div>
           <div class="besuch-cta">
             <a class="btn btn--accent" href="booking.html">Termin buchen</a>
             <a class="btn btn--ghost" href="https://wa.me/4915170588497" target="_blank" rel="noreferrer">WhatsApp</a>
@@ -506,11 +506,18 @@
       const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
       try {
         const summary = await getReviewsSummary();
+        const num = document.getElementById('ratingNum');
+        const starsEl = document.getElementById('ratingStars');
+        const note = document.getElementById('ratingNote');
         if (summary && Number(summary.count) > 0) {
-          const num = document.querySelector('.rating__num');
-          const note = document.getElementById('ratingNote');
+          const avg = Number(summary.avg) || 0;
           if (num) num.innerHTML = `${String(summary.avg).replace('.', ',')}<small>/ 5</small>`;
-          if (note) note.textContent = `${summary.count}+ verifizierte Bewertungen`;
+          if (starsEl) starsEl.textContent = '★'.repeat(Math.max(1, Math.min(5, Math.round(avg))));
+          if (note) note.textContent = `${summary.count} verifizierte Bewertung${Number(summary.count) === 1 ? '' : 'en'}`;
+        } else {
+          if (num) num.textContent = 'Neu';
+          if (starsEl) starsEl.textContent = '';
+          if (note) note.innerHTML = 'Noch keine Bewertungen — <a class="link" href="konto.html">schreib die erste</a>.';
         }
         const list = await getReviews(null, 4);
         if (host && Array.isArray(list) && list.length) {
@@ -521,7 +528,12 @@
               <figcaption>${esc(r.firstName || 'Gast')}${r.serviceName ? ` · ${esc(r.serviceName)}` : ''}</figcaption>
             </figure>`).join('');
         }
-      } catch (_e) { /* Reviews-Backend noch nicht da */ }
+      } catch (_e) {
+        const num = document.getElementById('ratingNum');
+        const note = document.getElementById('ratingNote');
+        if (num && num.textContent === '—') num.textContent = 'Neu';
+        if (note) note.textContent = 'Bewertungen bald verfügbar.';
+      }
     })();
     import { getCurrentUser } from './auth-client.js';
 

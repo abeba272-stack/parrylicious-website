@@ -409,11 +409,12 @@ export async function getReviewsSummary(serviceId) {
   }
 }
 
+// bookingId optional: mit ID = buchungsbezogen, ohne = allgemeine Bewertung
+// (nur bei bestätigter E-Mail, serverseitig geprüft).
 export async function submitReview(bookingId, rating, text) {
-  return apiFetch('/api/reviews', {
-    method: 'POST',
-    body: { bookingId, rating: Number(rating), text: String(text || '') }
-  });
+  const body = { rating: Number(rating), text: String(text || '') };
+  if (bookingId) body.bookingId = bookingId;
+  return apiFetch('/api/reviews', { method: 'POST', body });
 }
 
 /* ---------------------------------------------------------------------------

@@ -2,7 +2,9 @@
  * /api/reviews — Bewertungen.
  *   GET  ?serviceId?=&limit?=   -> freigeschaltete Reviews (öffentlich)
  *   GET  ?summary=1&serviceId?= -> { avg, count } (freigeschaltet)
- *   POST { bookingId, rating, text } (Auth Kunde) -> Review anlegen (status 'pending')
+ *   POST { bookingId?, rating, text } (Auth Kunde) -> Review anlegen (status 'pending')
+ *        - mit bookingId: buchungsbezogen (create_review, verifizierter Kauf)
+ *        - ohne bookingId: allgemeine Bewertung, nur bei bestätigter E-Mail, 1 pro Konto
  * Moderation (freischalten/ausblenden/löschen) läuft über /api/admin/reviews.
  */
 const {
@@ -50,12 +52,47 @@ async function handlePost(req, res) {
   const body = bodyFromReq(req) || {};
   const bookingId = String(body.bookingId || '').trim();
   const rating = Number.parseInt(body.rating, 10);
-  const text = String(body.text || '');
-  if (!bookingId) return sendJson(res, 400, { error: 'INVALID_ID', message: 'Buchungs-ID fehlt.' });
+  const text = String(body.text || '').slice(0, 2000);
 
-  const rows = await sql`select * from create_review(${user.id}, ${bookingId}, ${rating}, ${text})`;
-  const r = Array.isArray(rows) ? rows[0] : null;
-  return sendJson(res, 201, { id: r?.id, status: r?.status || 'pending' });
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    return sendJson(res, 400, { error: 'INVALID_RATING', message: MSG.INVALID_RATING });
+  }
+
+  // (1) Buchungsbezogene Bewertung (verifizierter Kauf) — Prüfung in create_review().
+  if (bookingId) {
+    const rows = await sql`select * from create_review(${user.id}, ${bookingId}, ${rating}, ${text})`;
+    const r = Array.isArray(rows) ? rows[0] : null;
+    return sendJson(res, 201, { id: r?.id, status: r?.status || 'pending' });
+  }
+
+  // (2) Allgemeine Bewertung — nur für Konten mit BESTÄTIGTER E-Mail. Genau eine
+  //     pro Konto (erneutes Senden aktualisiert die bestehende → erneute Prüfung).
+  const urows = await sql`select email_verified, full_name from public.auth_users where id = ${user.id} limit 1`;
+  const urow = Array.isArray(urows) ? urows[0] : null;
+  if (!urow) return sendJson(res, 404, { error: 'USER_NOT_FOUND', message: 'Konto nicht gefunden.' });
+  if (!urow.email_verified) {
+    return sendJson(res, 403, { error: 'EMAIL_NOT_VERIFIED', message: 'Bitte bestätige zuerst deine E-Mail-Adresse, um eine Bewertung zu schreiben.' });
+  }
+  const firstName = String(urow.full_name || '').trim().split(/\s+/)[0] || '';
+
+  const existing = await sql`select id from public.reviews where user_id = ${user.id} and booking_id is null limit 1`;
+  const ex = Array.isArray(existing) ? existing[0] : null;
+  let saved;
+  if (ex) {
+    const up = await sql`
+      update public.reviews
+      set rating = ${rating}, text = ${text}, first_name = ${firstName}, status = 'pending', created_at = now()
+      where id = ${ex.id}
+      returning id, status`;
+    saved = Array.isArray(up) ? up[0] : null;
+  } else {
+    const ins = await sql`
+      insert into public.reviews (user_id, rating, text, first_name, status)
+      values (${user.id}, ${rating}, ${text}, ${firstName}, 'pending')
+      returning id, status`;
+    saved = Array.isArray(ins) ? ins[0] : null;
+  }
+  return sendJson(res, 201, { id: saved?.id, status: saved?.status || 'pending' });
 }
 
 module.exports = async function handler(req, res) {

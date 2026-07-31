@@ -242,6 +242,52 @@ function renderRewards() {
   } else if (card) {
     card.hidden = true;
   }
+  renderReviewCard(verified);
+}
+
+// Bewertung schreiben: verifizierte Konten bekommen ein Sterne-Formular (1–5),
+// nicht verifizierte einen Hinweis, dass dies nach der Bestätigung freigeschaltet wird.
+function renderReviewCard(verified) {
+  const card = document.getElementById('reviewCard');
+  const body = document.getElementById('reviewCardBody');
+  if (!card || !body) return;
+  card.hidden = false;
+
+  if (!verified) {
+    body.innerHTML = '<p class="muted">🔒 Sobald du deine E-Mail bestätigt hast, kannst du hier eine Bewertung mit <strong>bis zu 5 Sternen</strong> hinterlassen. Sie erscheint nach Prüfung auf der Startseite.</p>';
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="review-box">
+      <div class="fineprint">Wie war dein Erlebnis bei Parrylicious? Deine Bewertung erscheint nach Prüfung auf der Startseite.</div>
+      <div class="stars" id="genStars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="star" data-star="${n}" aria-label="${n} Sterne">★</button>`).join('')}</div>
+      <textarea class="rv-text" id="genReviewText" rows="3" placeholder="Erzähl kurz, wie es war…"></textarea>
+      <div class="row gap"><button class="btn small" id="genReviewSubmit" type="button">Bewertung senden</button></div>
+      <div class="fineprint" id="genReviewStatus"></div>
+    </div>`;
+
+  let rating = 5;
+  const stars = [...body.querySelectorAll('#genStars .star')];
+  const paint = () => stars.forEach((s) => s.classList.toggle('on', Number(s.dataset.star) <= rating));
+  stars.forEach((s) => s.addEventListener('click', () => { rating = Number(s.dataset.star); paint(); }));
+  paint();
+
+  const status = body.querySelector('#genReviewStatus');
+  body.querySelector('#genReviewSubmit').addEventListener('click', async () => {
+    status.style.color = '';
+    status.textContent = 'Sende…';
+    try {
+      await submitReview(null, rating, body.querySelector('#genReviewText').value);
+    } catch (error) {
+      status.textContent = String(error?.code || '') === 'EMAIL_NOT_VERIFIED'
+        ? 'Bitte bestätige zuerst deine E-Mail-Adresse.'
+        : `Konnte nicht gesendet werden: ${error.message}`;
+      status.style.color = '#d6807b';
+      return;
+    }
+    body.innerHTML = '<p class="muted">Danke! Deine Bewertung wird nach Prüfung auf der Startseite sichtbar. Du kannst sie jederzeit erneut einreichen, um sie zu aktualisieren.</p>';
+  });
 }
 
 profileForm?.addEventListener('submit', async (event) => {
