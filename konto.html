@@ -26,6 +26,10 @@
     .review-box .stars{ display:flex; gap:4px; }
     .review-box .star{ cursor:pointer; font-size:22px; color:var(--ink-faint); background:none; border:none; padding:0; line-height:1; }
     .review-box .star.on{ color:var(--accent); }
+    .verify-banner{ display:flex; gap:14px; align-items:flex-start; padding:18px 20px; margin:0 0 22px; border:1px solid var(--accent); border-radius:var(--radius-sm); background:rgba(203,164,107,.09); }
+    .verify-banner .vb-icon{ font-size:22px; line-height:1.1; color:var(--accent); }
+    .verify-banner h3{ margin:0 0 4px; }
+    .points-empty{ color:var(--ink-soft); padding:6px 0; }
   </style>
 </head>
 <body>
@@ -46,6 +50,14 @@
         <p class="kicker">Mein Konto</p>
         <h2>Hallo <span id="greetName">…</span></h2>
         <p class="muted" id="accountHint">Deine Termine und dein Profil auf einen Blick.</p>
+      </div>
+
+      <div class="verify-banner" id="verifyBanner" hidden>
+        <span class="vb-icon">✨</span>
+        <div>
+          <h3>Bestätige deine E-Mail</h3>
+          <p class="muted small">Sobald dein Konto bestätigt ist, warten <strong>10 % Neukundenrabatt</strong> auf deine erste Buchung und dein <strong>Treuepunkte-Konto</strong> auf dich. Öffne dazu einfach den Bestätigungslink in der E-Mail, die wir dir nach der Registrierung geschickt haben.</p>
+        </div>
       </div>
 
       <div class="card">

@@ -18,6 +18,7 @@ const pfPhone = document.getElementById('pfPhone');
 const pfEmail = document.getElementById('pfEmail');
 const profileStatus = document.getElementById('profileStatus');
 const logoutBtn = document.getElementById('logoutBtn');
+const verifyBanner = document.getElementById('verifyBanner');
 
 let currentUser = null;
 
@@ -205,7 +206,8 @@ function toggleReview(b, item) {
   });
 }
 
-// Feature 4: Treuepunkte anzeigen (Karte bleibt versteckt, wenn nichts vorhanden).
+// Feature 4: Treuepunkte anzeigen. Für verifizierte Kunden immer sichtbar (auch bei 0),
+// damit sie sehen, wie viele Punkte sie gesammelt haben.
 async function loadPoints() {
   let data;
   try {
@@ -213,19 +215,33 @@ async function loadPoints() {
   } catch (_error) { return; }
   const balance = Number(data?.balance || 0);
   const history = Array.isArray(data?.history) ? data.history : [];
-  if (!balance && !history.length) return;
   const card = document.getElementById('pointsCard');
   const balEl = document.getElementById('pointsBalance');
   const histEl = document.getElementById('pointsHistory');
   if (balEl) balEl.textContent = String(balance);
   if (histEl) {
-    histEl.innerHTML = history.slice(0, 8).map((h) => `
-      <div class="item" style="display:flex; justify-content:space-between; gap:12px">
-        <span>${escapeHtml(h.reason || '')}</span>
-        <strong style="color:${Number(h.delta) >= 0 ? 'var(--accent-2)' : 'var(--ink-soft)'}">${Number(h.delta) >= 0 ? '+' : ''}${escapeHtml(String(h.delta))}</strong>
-      </div>`).join('');
+    histEl.innerHTML = history.length
+      ? history.slice(0, 8).map((h) => `
+        <div class="item" style="display:flex; justify-content:space-between; gap:12px">
+          <span>${escapeHtml(h.reason || '')}</span>
+          <strong style="color:${Number(h.delta) >= 0 ? 'var(--accent-2)' : 'var(--ink-soft)'}">${Number(h.delta) >= 0 ? '+' : ''}${escapeHtml(String(h.delta))}</strong>
+        </div>`).join('')
+      : '<div class="points-empty">Noch keine Punkte gesammelt – mit jedem abgeschlossenen Termin sammelst du Treuepunkte (1 Punkt je 1 €).</div>';
   }
   if (card) card.hidden = false;
+}
+
+// Belohnungs-Bereich: verifiziert → Treuepunkte-Anzeige; noch nicht verifiziert →
+// Hinweis, dass nach der Bestätigung Neukundenrabatt + Treuepunkte warten.
+function renderRewards() {
+  const verified = Boolean(currentUser?.emailVerified);
+  if (verifyBanner) verifyBanner.hidden = verified;
+  const card = document.getElementById('pointsCard');
+  if (verified) {
+    loadPoints();
+  } else if (card) {
+    card.hidden = true;
+  }
 }
 
 profileForm?.addEventListener('submit', async (event) => {
@@ -276,7 +292,7 @@ async function boot() {
   pfPhone.value = currentUser.profile?.phone || '';
   pfEmail.value = currentUser.email || '';
   await loadBookings();
-  loadPoints();
+  renderRewards();
 }
 
 boot();
