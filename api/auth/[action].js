@@ -493,6 +493,40 @@ async function handleVerifyEmail(req, res) {
   return sendJson(res, 200, { ok: true, emailVerified: true });
 }
 
+// Bestätigungsmail erneut senden (eingeloggt). 60-Sekunden-Cooldown pro Konto.
+async function handleResendVerification(req, res) {
+  const authUser = requireAuthUser(req, res);
+  if (!authUser) return;
+
+  const userRow = await getAuthUserRow(authUser.id);
+  if (!userRow) return sendJson(res, 404, { error: 'USER_NOT_FOUND', message: 'Benutzer nicht gefunden.' });
+  if (userRow.email_verified) return sendJson(res, 200, { ok: true, alreadyVerified: true });
+
+  // Cooldown: Alter der letzten email_verify-Anforderung (in Sekunden).
+  const rows = await sql`
+    select extract(epoch from (now() - created_at)) as age
+    from auth_tokens
+    where user_id = ${authUser.id} and purpose = 'email_verify'
+    order by created_at desc
+    limit 1
+  `;
+  const age = Array.isArray(rows) && rows[0] ? Number(rows[0].age) : null;
+  if (age !== null && age < 60) {
+    const retryAfter = Math.max(1, Math.ceil(60 - age));
+    res.setHeader('Retry-After', String(retryAfter));
+    return sendJson(res, 429, { error: 'COOLDOWN', retryAfter, message: `Bitte warte noch ${retryAfter} Sekunden.` });
+  }
+
+  try {
+    const token = await createAuthToken(userRow.id, 'email_verify', 24 * 60 * 60);
+    const base = (process.env.FRONTEND_URL || `https://${req.headers.host || 'parrylicious.store'}`).replace(/\/$/, '');
+    await sendVerificationEmail(userRow.email, `${base}/verify.html?token=${token}`);
+  } catch (_error) {
+    // Mailversand-/Token-Fehler nicht hart nach außen geben.
+  }
+  return sendJson(res, 200, { ok: true });
+}
+
 /* ---------------------------------------------------------------------------
  * Dispatcher
  * ------------------------------------------------------------------------- */
@@ -503,6 +537,7 @@ async function handleVerifyEmail(req, res) {
 const ROUTES = {
   signup: { method: 'POST', handler: handleSignup },
   'verify-email': { method: 'POST', handler: handleVerifyEmail },
+  'resend-verification': { method: 'POST', handler: handleResendVerification },
   login: { method: 'POST', handler: handleLogin },
   refresh: { method: 'POST', handler: handleRefresh },
   me: { method: 'GET', handler: handleMe },

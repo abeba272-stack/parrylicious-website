@@ -1,4 +1,4 @@
-import { getCurrentUser, signOut, onAuthStateChange, isAuthConfigured } from './auth-client.js';
+import { getCurrentUser, signOut, onAuthStateChange, isAuthConfigured, resendVerification } from './auth-client.js';
 import {
   getCustomerBookings,
   saveCustomerProfile,
@@ -177,7 +177,7 @@ function toggleReview(b, item) {
   const box = document.createElement('div');
   box.className = 'review-box';
   box.innerHTML = `
-    <div class="fineprint">Wie war dein Termin? Deine Bewertung wird nach Prüfung sichtbar.</div>
+    <div class="fineprint">Wie war dein Termin? Deine Bewertung erscheint direkt auf der Startseite.</div>
     <div class="stars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="star" data-star="${n}">★</button>`).join('')}</div>
     <textarea class="rv-text" rows="3" placeholder="Erzähl kurz, wie es war (optional)…"></textarea>
     <div class="row gap"><button class="btn small rv-go" type="button">Bewertung senden</button></div>
@@ -202,7 +202,7 @@ function toggleReview(b, item) {
       rvStatus.style.color = '#d6807b';
       return;
     }
-    box.innerHTML = '<div class="fineprint">Danke! Deine Bewertung wird nach Prüfung sichtbar.</div>';
+    box.innerHTML = '<div class="fineprint">Danke! Deine Bewertung ist jetzt sichtbar.</div>';
   });
 }
 
@@ -254,13 +254,13 @@ function renderReviewCard(verified) {
   card.hidden = false;
 
   if (!verified) {
-    body.innerHTML = '<p class="muted">🔒 Sobald du deine E-Mail bestätigt hast, kannst du hier eine Bewertung mit <strong>bis zu 5 Sternen</strong> hinterlassen. Sie erscheint nach Prüfung auf der Startseite.</p>';
+    body.innerHTML = '<p class="muted">🔒 Sobald du deine E-Mail bestätigt hast, kannst du hier eine Bewertung mit <strong>bis zu 5 Sternen</strong> hinterlassen. Sie erscheint direkt auf der Startseite.</p>';
     return;
   }
 
   body.innerHTML = `
     <div class="review-box">
-      <div class="fineprint">Wie war dein Erlebnis bei Parrylicious? Deine Bewertung erscheint nach Prüfung auf der Startseite.</div>
+      <div class="fineprint">Wie war dein Erlebnis bei Parrylicious? Deine Bewertung erscheint direkt auf der Startseite.</div>
       <div class="stars" id="genStars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="star" data-star="${n}" aria-label="${n} Sterne">★</button>`).join('')}</div>
       <textarea class="rv-text" id="genReviewText" rows="3" placeholder="Erzähl kurz, wie es war…"></textarea>
       <div class="row gap"><button class="btn small" id="genReviewSubmit" type="button">Bewertung senden</button></div>
@@ -286,7 +286,7 @@ function renderReviewCard(verified) {
       status.style.color = '#d6807b';
       return;
     }
-    body.innerHTML = '<p class="muted">Danke! Deine Bewertung wird nach Prüfung auf der Startseite sichtbar. Du kannst sie jederzeit erneut einreichen, um sie zu aktualisieren.</p>';
+    body.innerHTML = '<p class="muted">Danke! Deine Bewertung ist jetzt auf der Startseite sichtbar. Du kannst sie jederzeit erneut einreichen, um sie zu aktualisieren.</p>';
   });
 }
 
@@ -307,6 +307,45 @@ profileForm?.addEventListener('submit', async (event) => {
 logoutBtn?.addEventListener('click', async () => {
   try { await signOut(); } catch (_error) { /* lokal wird die Session ohnehin gelöscht */ }
   window.location.href = '/';
+});
+
+// Bestätigungsmail erneut senden — mit 60-Sekunden-Cooldown (Server + Button).
+let resendTimer = null;
+function startResendCooldown(seconds) {
+  const btn = document.getElementById('resendVerifyBtn');
+  if (!btn) return;
+  let remaining = Math.max(1, Math.ceil(Number(seconds) || 60));
+  btn.disabled = true;
+  const tick = () => {
+    if (remaining <= 0) {
+      btn.disabled = false;
+      btn.textContent = 'Bestätigungsmail erneut senden';
+      if (resendTimer) { clearInterval(resendTimer); resendTimer = null; }
+      return;
+    }
+    btn.textContent = `Erneut senden in ${remaining}s`;
+    remaining -= 1;
+  };
+  tick();
+  if (resendTimer) clearInterval(resendTimer);
+  resendTimer = setInterval(tick, 1000);
+}
+
+document.getElementById('resendVerifyBtn')?.addEventListener('click', async () => {
+  const status = document.getElementById('resendVerifyStatus');
+  const setStatus = (msg, isError) => { if (status) { status.style.color = isError ? '#d6807b' : ''; status.textContent = msg; } };
+  setStatus('Sende…');
+  let res;
+  try {
+    res = await resendVerification();
+  } catch (error) {
+    setStatus(`Konnte nicht gesendet werden: ${error.message}`, true);
+    return;
+  }
+  if (res.alreadyVerified) { setStatus('Deine E-Mail ist bereits bestätigt — lade die Seite neu.'); return; }
+  if (res.cooldown) { setStatus(res.message || 'Bitte kurz warten.'); startResendCooldown(res.retryAfter); return; }
+  setStatus('E-Mail gesendet — bitte schau in dein Postfach (auch Spam).');
+  startResendCooldown(60);
 });
 
 onAuthStateChange((event) => {

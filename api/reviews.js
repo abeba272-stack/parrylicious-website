@@ -59,10 +59,12 @@ async function handlePost(req, res) {
   }
 
   // (1) Buchungsbezogene Bewertung (verifizierter Kauf) — Prüfung in create_review().
+  //     Standardmäßig sofort freigeschaltet; Heike kann im Dashboard entfernen/ausblenden.
   if (bookingId) {
     const rows = await sql`select * from create_review(${user.id}, ${bookingId}, ${rating}, ${text})`;
     const r = Array.isArray(rows) ? rows[0] : null;
-    return sendJson(res, 201, { id: r?.id, status: r?.status || 'pending' });
+    if (r?.id) await sql`update public.reviews set status = 'approved' where id = ${r.id}`;
+    return sendJson(res, 201, { id: r?.id, status: 'approved' });
   }
 
   // (2) Allgemeine Bewertung — nur für Konten mit BESTÄTIGTER E-Mail. Genau eine
@@ -78,21 +80,22 @@ async function handlePost(req, res) {
   const existing = await sql`select id from public.reviews where user_id = ${user.id} and booking_id is null limit 1`;
   const ex = Array.isArray(existing) ? existing[0] : null;
   let saved;
+  // Standardmäßig sofort freigeschaltet ('approved'); Heike entfernt/versteckt manuell.
   if (ex) {
     const up = await sql`
       update public.reviews
-      set rating = ${rating}, text = ${text}, first_name = ${firstName}, status = 'pending', created_at = now()
+      set rating = ${rating}, text = ${text}, first_name = ${firstName}, status = 'approved', created_at = now()
       where id = ${ex.id}
       returning id, status`;
     saved = Array.isArray(up) ? up[0] : null;
   } else {
     const ins = await sql`
       insert into public.reviews (user_id, rating, text, first_name, status)
-      values (${user.id}, ${rating}, ${text}, ${firstName}, 'pending')
+      values (${user.id}, ${rating}, ${text}, ${firstName}, 'approved')
       returning id, status`;
     saved = Array.isArray(ins) ? ins[0] : null;
   }
-  return sendJson(res, 201, { id: saved?.id, status: saved?.status || 'pending' });
+  return sendJson(res, 201, { id: saved?.id, status: saved?.status || 'approved' });
 }
 
 module.exports = async function handler(req, res) {

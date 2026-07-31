@@ -354,3 +354,17 @@ export async function changePassword(currentPassword, newPassword) {
   emit('TOKEN_REFRESHED');
   return true;
 }
+
+// Bestätigungsmail erneut anfordern (eingeloggt). 60-Sek-Cooldown serverseitig;
+// bei 429 wird nicht geworfen, sondern { cooldown:true, retryAfter } zurückgegeben.
+export async function resendVerification() {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Nicht angemeldet.');
+  const response = await postJson('/api/auth/resend-verification', {}, token);
+  const data = await parseJsonSafe(response);
+  if (response.status === 429) {
+    return { ok: false, cooldown: true, retryAfter: Number(data && data.retryAfter) || 60, message: data && data.message };
+  }
+  if (!response.ok) throw makeApiError(data, response);
+  return data || { ok: true };
+}

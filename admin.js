@@ -541,7 +541,7 @@ async function deleteReview(id) {
 
 async function loadReviews() {
   if (!reviewsTable) return;
-  const status = reviewStatusFilter?.value || 'pending';
+  const status = reviewStatusFilter?.value || 'approved';
   try {
     reviewsCache = await adminListReviews(status);
     renderReviews();
