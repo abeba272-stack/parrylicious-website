@@ -130,6 +130,18 @@
       </div>
 
       <div class="card">
+        <h3>Tage sperren</h3>
+        <p class="muted">Sperre einzelne Tage (Urlaub, geschlossen) für Online-Buchungen. <strong>Samstage &amp; Sonntage sind automatisch gesperrt.</strong></p>
+        <form class="row gap admin-role-form" id="blockDayForm">
+          <input id="blockDayInput" type="date" required />
+          <button class="btn small" type="submit">Tag sperren</button>
+        </form>
+        <div class="fineprint" id="blockDayStatus"></div>
+        <div class="divider"></div>
+        <div id="blockedDaysList" class="table"></div>
+      </div>
+
+      <div class="card">
         <div class="row between">
           <h3>Anfragen & Termine</h3>
           <div class="row gap">

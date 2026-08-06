@@ -50,6 +50,16 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 400, { error: 'INVALID_SLOT', message: 'Datum oder Uhrzeit ungültig.' });
   }
 
+  // Wochenende (Sa/So) und von Admin/Staff gesperrte Tage sind nicht online buchbar.
+  const dow = new Date(`${dateISO}T00:00:00Z`).getUTCDay(); // 0 = So, 6 = Sa
+  if (dow === 0 || dow === 6) {
+    return sendJson(res, 409, { error: 'DAY_UNAVAILABLE', message: 'An Wochenenden sind keine Online-Buchungen möglich.' });
+  }
+  const blockedRows = await sql`select 1 from public.blocked_days where day = ${dateISO} limit 1`;
+  if (Array.isArray(blockedRows) && blockedRows.length) {
+    return sendJson(res, 409, { error: 'DAY_UNAVAILABLE', message: 'Dieser Tag ist geschlossen. Bitte wähle einen anderen Tag.' });
+  }
+
   const stylistId = cleanStr(body.stylistId, 60) || 'auto';
   const stylistName = cleanStr(body.stylistName, 120) || 'Egal (automatisch)';
 

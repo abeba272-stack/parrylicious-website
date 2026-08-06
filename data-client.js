@@ -438,3 +438,29 @@ export async function adminSetReviewStatus(id, status) {
 export async function adminDeleteReview(id) {
   return apiFetch(`/api/admin/reviews?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
+
+/* ---------------------------------------------------------------------------
+ * Kalender-Sperrtage  ->  /api/slots?blocked=1 (öffentlich) · /api/admin/blocked-days
+ * ------------------------------------------------------------------------- */
+
+// Öffentliche Liste gesperrter Tage (für den Buchungskalender). Graceful -> [].
+export async function getBlockedDays() {
+  try {
+    const data = await apiFetch('/api/slots?blocked=1', { method: 'GET', auth: false });
+    return Array.isArray(data?.blockedDays) ? data.blockedDays : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+// Admin/Staff: Sperrtage verwalten.
+export async function adminListBlockedDays() {
+  const list = await apiFetch('/api/admin/blocked-days', { method: 'GET' });
+  return Array.isArray(list) ? list : [];
+}
+export async function adminBlockDay(date) {
+  return apiFetch('/api/admin/blocked-days', { method: 'POST', body: { date: String(date || '') } });
+}
+export async function adminUnblockDay(date) {
+  return apiFetch(`/api/admin/blocked-days?date=${encodeURIComponent(date)}`, { method: 'DELETE' });
+}

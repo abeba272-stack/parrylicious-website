@@ -160,7 +160,13 @@ async function handlePost(req, res) {
       ${depositPaid}
     )
   `;
-  const row = Array.isArray(rows) ? rows[0] : null;
+  let row = Array.isArray(rows) ? rows[0] : null;
+  // Team-erstellte Termine sind standardmäßig bestätigt (keine manuelle Freigabe nötig).
+  // Kunden-Termine bestätigt ohnehin der Stripe-Webhook nach Zahlung.
+  if (row && row.id && row.status === 'requested') {
+    const upd = await sql`update public.bookings set status = 'confirmed' where id = ${row.id} returning *`;
+    if (Array.isArray(upd) && upd[0]) row = upd[0];
+  }
   return sendJson(res, 201, mapBookingRow(row));
 }
 

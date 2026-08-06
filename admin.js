@@ -13,7 +13,10 @@ import {
   removeMyWaitlistEntry,
   adminListReviews,
   adminSetReviewStatus,
-  adminDeleteReview
+  adminDeleteReview,
+  adminListBlockedDays,
+  adminBlockDay,
+  adminUnblockDay
 } from './data-client.js';
 import { sendBookingNotification } from './backend-client.js';
 
@@ -553,6 +556,60 @@ async function loadReviews() {
 
 reviewStatusFilter?.addEventListener('change', loadReviews);
 
+/* ---------- Kalender-Sperrtage ---------- */
+async function loadBlockedDays() {
+  const list = document.getElementById('blockedDaysList');
+  if (!list) return;
+  let days = [];
+  try {
+    days = await adminListBlockedDays();
+  } catch (error) {
+    list.innerHTML = `<div class="item"><div class="muted">Sperrtage konnten nicht geladen werden: ${escapeHtml(error.message)}</div></div>`;
+    return;
+  }
+  if (!days.length) {
+    list.innerHTML = '<div class="item"><div class="muted">Keine gesperrten Tage. (Samstage & Sonntage sind automatisch gesperrt.)</div></div>';
+    return;
+  }
+  list.innerHTML = '';
+  days.forEach((day) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<div class="row between"><strong>${escapeHtml(fmtDate(day))}</strong><button class="btn small ghost" data-unblock="${escapeHtml(day)}">Freigeben</button></div>`;
+    div.querySelector('[data-unblock]')?.addEventListener('click', async () => {
+      try {
+        await adminUnblockDay(day);
+      } catch (error) {
+        alert(`Freigeben fehlgeschlagen: ${error.message}`);
+        return;
+      }
+      await loadBlockedDays();
+    });
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('blockDayForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.getElementById('blockDayInput');
+  const status = document.getElementById('blockDayStatus');
+  const day = String(input?.value || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    if (status) { status.style.color = '#8f1c1c'; status.textContent = 'Bitte ein Datum wählen.'; }
+    return;
+  }
+  if (status) { status.style.color = ''; status.textContent = 'Speichere…'; }
+  try {
+    await adminBlockDay(day);
+  } catch (error) {
+    if (status) { status.style.color = '#8f1c1c'; status.textContent = `Konnte nicht gesperrt werden: ${error.message}`; }
+    return;
+  }
+  if (status) status.textContent = `${fmtDate(day)} gesperrt.`;
+  if (input) input.value = '';
+  await loadBlockedDays();
+});
+
 async function loadData() {
   bookingsCache = await getMyBookings();
   waitlistCache = await getMyWaitlist();
@@ -676,10 +733,16 @@ async function boot() {
       return;
     }
     renderIdentity();
+    const blockInput = document.getElementById('blockDayInput');
+    if (blockInput) {
+      const t = new Date();
+      blockInput.min = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    }
     await loadData();
     await loadRoleUsers();
     render();
     loadReviews();
+    loadBlockedDays();
   } catch (error) {
     alert(`Dashboard konnte nicht geladen werden: ${error.message}`);
     window.location.href = 'login.html?next=admin.html';

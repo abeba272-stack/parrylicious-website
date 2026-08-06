@@ -108,6 +108,34 @@ async function reviewsDelete(req, res, actorId) {
   return sendJson(res, 200, { ok: true, id });
 }
 
+/* ---- blocked-days (Kalender-Sperrtage; Staff/Admin) ---- */
+const DATE_ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+async function requireStaff(res, actorId) {
+  const role = await getUserRole(actorId);
+  if (!isStaffRole(role)) { sendJson(res, 403, { error: 'FORBIDDEN', message: MSG.FORBIDDEN }); return false; }
+  return true;
+}
+async function blockedDaysGet(req, res, actorId) {
+  if (!(await requireStaff(res, actorId))) return;
+  const rows = await sql`select to_char(day, 'YYYY-MM-DD') as day from blocked_days where day >= current_date order by day`;
+  return sendJson(res, 200, (Array.isArray(rows) ? rows : []).map((r) => r.day));
+}
+async function blockedDaysPost(req, res, actorId) {
+  if (!(await requireStaff(res, actorId))) return;
+  const body = bodyFromReq(req) || {};
+  const day = String(body.date || body.day || '').trim();
+  if (!DATE_ISO_RE.test(day)) return sendJson(res, 400, { error: 'INVALID_DATE', message: 'Bitte ein Datum (YYYY-MM-DD) angeben.' });
+  await sql`insert into blocked_days (day, created_by) values (${day}, ${actorId}) on conflict (day) do nothing`;
+  return sendJson(res, 201, { ok: true, day });
+}
+async function blockedDaysDelete(req, res, actorId) {
+  if (!(await requireStaff(res, actorId))) return;
+  const day = String(getQuery(req).date || getQuery(req).day || '').trim();
+  if (!DATE_ISO_RE.test(day)) return sendJson(res, 400, { error: 'INVALID_DATE', message: 'Ungültiges Datum.' });
+  await sql`delete from blocked_days where day = ${day}`;
+  return sendJson(res, 200, { ok: true, day });
+}
+
 module.exports = async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
@@ -127,6 +155,10 @@ module.exports = async function handler(req, res) {
       if (req.method === 'GET') return await reviewsGet(req, res, user.id);
       if (req.method === 'PATCH') return await reviewsPatch(req, res, user.id);
       if (req.method === 'DELETE') return await reviewsDelete(req, res, user.id);
+    } else if (action === 'blocked-days') {
+      if (req.method === 'GET') return await blockedDaysGet(req, res, user.id);
+      if (req.method === 'POST') return await blockedDaysPost(req, res, user.id);
+      if (req.method === 'DELETE') return await blockedDaysDelete(req, res, user.id);
     } else {
       return sendJson(res, 404, { error: 'UNKNOWN_ACTION', message: 'Unbekannte Aktion.' });
     }

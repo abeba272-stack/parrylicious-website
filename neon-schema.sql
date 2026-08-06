@@ -1100,3 +1100,12 @@ grant select, insert, update, delete on
 to parry_api;
 
 grant execute on all functions in schema public to parry_api;
+
+-- Kalender-Sperrtage (Admin/Staff): einzelne Tage für Online-Buchungen sperren.
+-- Wochenenden (Sa/So) werden zusätzlich in der API-Schicht (slots.js/checkout.js) geblockt.
+create table if not exists public.blocked_days (
+  day date primary key,
+  created_by uuid references public.auth_users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+grant select, insert, delete on public.blocked_days to parry_api;

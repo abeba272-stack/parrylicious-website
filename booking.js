@@ -1,6 +1,6 @@
 import { services } from './data/services.js';
 import { storage, fmtDate, currency, formatMinutes } from './common.js';
-import { checkSlotAvailability, getMyProfile, getCustomerEligibility, getCustomerPoints } from './data-client.js';
+import { checkSlotAvailability, getMyProfile, getCustomerEligibility, getCustomerPoints, getBlockedDays } from './data-client.js';
 import { getCurrentUser } from './auth-client.js';
 import {
   startBookingCheckout,
@@ -260,7 +260,14 @@ toStep4.addEventListener('click', () => {
   showStep(4);
 });
 
-const openDays = [2, 3, 4, 5, 6]; // Tue..Sat in JS: 0 Sun
+const openDays = [2, 3, 4, 5]; // Di–Fr (Sa/So automatisch gesperrt); JS: 0 So … 6 Sa
+let blockedSet = new Set();
+let blockedLoaded = false;
+async function ensureBlockedDays() {
+  if (blockedLoaded) return;
+  try { blockedSet = new Set(await getBlockedDays()); } catch (_error) { /* Kalender bleibt offen */ }
+  blockedLoaded = true;
+}
 const openStart = '11:00';
 const openEnd = '19:30';
 const slotStepMin = 30;
@@ -277,7 +284,8 @@ function minutesToTime(min) {
   return `${h}:${m}`;
 }
 
-function renderCalendar() {
+async function renderCalendar() {
+  await ensureBlockedDays();
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   calendarEl.innerHTML = '';
@@ -306,21 +314,23 @@ function renderCalendar() {
     d.setDate(d.getDate() + i);
     const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const isOpen = openDays.includes(d.getDay());
+    const isBlocked = blockedSet.has(iso);
+    const bookable = isOpen && !isBlocked;
     const ahead = Math.floor((d - start) / (1000 * 60 * 60 * 24));
     const inRange = ahead <= maxDaysAhead;
 
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'day';
-    if (!isOpen || !inRange) btn.classList.add('disabled');
+    if (!bookable || !inRange) btn.classList.add('disabled');
 
     const day = d.getDate().toString().padStart(2, '0');
     const mon = (d.getMonth() + 1).toString().padStart(2, '0');
-    btn.innerHTML = `<div>${day}.${mon}</div><div class="sub">${isOpen ? '' : 'zu'}</div>`;
+    btn.innerHTML = `<div>${day}.${mon}</div><div class="sub">${!isOpen ? 'zu' : (isBlocked ? 'gesperrt' : '')}</div>`;
     if (state.dateISO === iso) btn.classList.add('selected');
 
     btn.addEventListener('click', () => {
-      if (!isOpen || !inRange) return;
+      if (!bookable || !inRange) return;
       state.dateISO = iso;
       state.time = null;
       saveState();

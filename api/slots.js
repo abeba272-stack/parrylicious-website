@@ -32,6 +32,17 @@ module.exports = async function handler(req, res) {
   }
 
   const query = getQuery(req);
+
+  // Liste der gesperrten Tage (für den Buchungskalender) — ohne weitere Parameter.
+  if (query.blocked === '1' || query.blocked === 'true') {
+    try {
+      const rows = await sql`select to_char(day, 'YYYY-MM-DD') as day from public.blocked_days where day >= current_date order by day`;
+      return sendJson(res, 200, { blockedDays: (Array.isArray(rows) ? rows : []).map((r) => r.day) });
+    } catch (_error) {
+      return sendJson(res, 200, { blockedDays: [] });
+    }
+  }
+
   const dateISO = query.dateISO ? String(query.dateISO).trim() : '';
   const time = query.time ? String(query.time).trim() : '';
   const durationMin = Number(query.durationMin);
@@ -53,6 +64,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Wochenende (Sa/So) und gesperrte Tage sind grundsätzlich nicht verfügbar.
+    const dow = new Date(`${dateISO}T00:00:00Z`).getUTCDay(); // 0 = So, 6 = Sa
+    if (dow === 0 || dow === 6) return sendJson(res, 200, { available: false });
+    const blk = await sql`select 1 from public.blocked_days where day = ${dateISO} limit 1`;
+    if (Array.isArray(blk) && blk.length) return sendJson(res, 200, { available: false });
+
     const rows = await sql`
       select slot_is_available(
         ${dateISO},
