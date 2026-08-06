@@ -229,9 +229,9 @@
       <a href="#studio">Studio</a>
       <a href="#reviews">Reviews</a>
       <a href="#besuch">Besuch</a>
-      <a href="booking.html" class="cta-mobile">Termin buchen</a>
+      <a href="booking.html" target="_blank" rel="noopener" class="cta-mobile">Termin buchen</a>
     </nav>
-    <a class="btn btn--accent" href="booking.html">Termin buchen</a>
+    <a class="btn btn--accent" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
 
@@ -253,7 +253,7 @@
       <div class="hero__lower">
         <p class="hero__sub anim d4">Braids, Locs, Cornrows und individuelle Styles für unterschiedliche Haarstrukturen — präzise gearbeitet in Düsseldorf.</p>
         <div class="hero__cta anim d5">
-          <a class="btn btn--accent btn--arrow" href="booking.html">Termin buchen</a>
+          <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
           <a class="btn btn--ghost" href="#services">Styles entdecken</a>
         </div>
       </div>
@@ -487,7 +487,7 @@
           </div>
           <div><h4>Kontakt</h4><p>+49 151 70588497 · @parrylicious_studio</p></div>
           <div class="besuch-cta">
-            <a class="btn btn--accent" href="booking.html">Termin buchen</a>
+            <a class="btn btn--accent" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
             <a class="btn btn--ghost" href="https://wa.me/4915170588497" target="_blank" rel="noreferrer">WhatsApp</a>
           </div>
         </div>
@@ -590,7 +590,7 @@
             <span class="cat-tile__name">${c.label}</span>
             <span class="cat-tile__count">${count} ${count === 1 ? 'Style' : 'Styles'}</span>
           </span>`;
-        t.addEventListener('click', () => { window.location.href = 'booking.html?category=' + encodeURIComponent(c.key); });
+        t.addEventListener('click', () => { window.open('booking.html?category=' + encodeURIComponent(c.key), '_blank', 'noopener'); });
         catTiles.appendChild(t);
       });
     }
