@@ -293,6 +293,11 @@
     .parallax__quote{ font-family:var(--font-display); font-weight:600; font-size:clamp(40px,6.4vw,80px); line-height:1; margin:10px 0 0; color:var(--ink); }
     .parallax__quote .it{ font-style:italic; color:var(--gold); }
     .promo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:44px; }
+    .work-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:44px; }
+    .work{ margin:0; overflow:hidden; border-radius:3px; border:1px solid var(--line-soft); aspect-ratio:3/4; background:#1c1c22; }
+    .work img{ width:100%; height:100%; object-fit:cover; transition:transform .7s var(--ease); }
+    .work:hover img{ transform:scale(1.05); }
+    @media (max-width:720px){ .work-grid{ grid-template-columns:repeat(2,1fr); } }
     .promo{ margin:0; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; aspect-ratio:4/3; }
     .promo img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
     .promo:hover img{ transform:scale(1.05); }
@@ -354,6 +359,25 @@
         <p>Alle Preise sind Startpreise. Wähle eine Kategorie – die passenden Styles wählst du direkt im nächsten Schritt bei der Terminbuchung.</p>
       </div>
       <div class="cat-tiles reveal" id="catTiles"></div>
+    </div>
+  </section>
+
+  <!-- UNSERE ARBEIT -->
+  <section id="arbeit">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 04</span><span class="line"></span><span class="label">Unsere Arbeit</span></div>
+      <div class="split-head reveal">
+        <h2 class="display">Ergebnisse, die<br><span class="it">für sich sprechen.</span></h2>
+        <p>Ein Einblick in echte Styles aus unserem Studio — Cornrows, Braids und Locs, präzise gearbeitet.</p>
+      </div>
+      <div class="work-grid reveal">
+        <figure class="work"><img src="assets/work/w1.jpg" alt="Cornrows-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w2.jpg" alt="Cornrow-Muster im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w3.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w4.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w5.jpg" alt="Cornrows-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w6.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+      </div>
     </div>
   </section>
 
@@ -424,8 +448,8 @@
         <p>Unsere Arbeiten erreichen auch bekannte Gesichter aus Sport und Social Media.</p>
       </div>
       <div class="promo-grid">
-        <figure class="promo reveal"><img src="assets/promo/prominent_bayer04.jpg" alt="Prominenter Besuch im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="promo reveal"><img src="assets/promo/prominent_group.jpg" alt="Community im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="promo reveal"><img src="assets/promo/studio-community.jpg" alt="Community im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="promo reveal"><img src="assets/promo/studio-work.jpg" alt="Handarbeit im Parrylicious Studio" loading="lazy"></figure>
       </div>
     </div>
   </section>
