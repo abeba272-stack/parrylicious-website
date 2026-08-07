@@ -499,12 +499,14 @@ function renderSummary() {
     </div>
     <div class="row" style="margin-top:6px"><strong>Jetzt online</strong><div id="payNowAmount">${currency(payFull ? service.priceFrom : service.deposit)}</div></div>
   `;
-  summary.querySelectorAll('input[name="payMode"]').forEach((r) => r.addEventListener('change', (e) => {
-    payFull = e.target.value === 'full';
-    const amt = document.getElementById('payNowAmount');
-    if (amt) amt.textContent = currency(payFull ? service.priceFrom : service.deposit);
-    summary.querySelectorAll('.pay-opt').forEach((o) => o.classList.remove('sel'));
-    e.target.closest('.pay-opt')?.classList.add('sel');
+  summary.querySelectorAll('input[name="payMode"]').forEach((r) => {
+    r.addEventListener('change', (e) => {
+      payFull = e.target.value === 'full';
+      const amt = document.getElementById('payNowAmount');
+      if (amt) amt.textContent = currency(payFull ? service.priceFrom : service.deposit);
+      summary.querySelectorAll('.pay-opt').forEach((o) => o.classList.remove('sel'));
+      e.target.closest('.pay-opt')?.classList.add('sel');
+    });
   });
 
   // Feature 4: Treuepunkte einlösen (Server rechnet den finalen Rabatt).
@@ -769,11 +771,40 @@ async function renderBookingPerks() {
   wiz.parentNode.insertBefore(banner, wiz);
 }
 
-async function boot() {
-  const handledPayment = await handlePaymentReturn();
-  if (!handledPayment) showStep(state.step || 1);
+// Nach getroffener Wahl (Gast oder eingeloggt): Buchungs-Wizard zeigen und starten.
+function proceedToBooking() {
+  const gate = document.getElementById('bookingGate');
+  const wizard = document.querySelector('.wizard');
+  if (gate) gate.hidden = true;
+  if (wizard) wizard.hidden = false;
+  showStep(state.step || 1);
   prefillFromAccount();
   renderBookingPerks();
+}
+
+document.getElementById('gateGuest')?.addEventListener('click', () => {
+  try { sessionStorage.setItem('parry_booking_guest_ok', '1'); } catch (_e) { /* ignore */ }
+  proceedToBooking();
+});
+document.getElementById('gateAccount')?.addEventListener('click', () => {
+  window.location.href = 'login.html?next=booking.html';
+});
+
+async function boot() {
+  const handledPayment = await handlePaymentReturn();
+  if (handledPayment) { prefillFromAccount(); return; } // Rückkehr von Stripe → Bestätigung, kein Gate
+
+  // Vor der Buchung: Gast oder Kundenkonto wählen (übersprungen für Eingeloggte / bereits Gewählte).
+  let user = null;
+  try { user = await getCurrentUser(); } catch (_e) { /* Gast */ }
+  let chosen = false;
+  try { chosen = sessionStorage.getItem('parry_booking_guest_ok') === '1'; } catch (_e) { /* ignore */ }
+  if (user || chosen) { proceedToBooking(); return; }
+
+  const gate = document.getElementById('bookingGate');
+  const wizard = document.querySelector('.wizard');
+  if (wizard) wizard.hidden = true;
+  if (gate) gate.hidden = false;
 }
 
 boot();

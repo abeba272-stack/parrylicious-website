@@ -31,6 +31,16 @@
         <p class="muted" id="bookingModeHint">Sichere deinen Termin mit einer Anzahlung – der Rest wird vor Ort im Salon bezahlt.</p>
       </div>
 
+      <div class="card" id="bookingGate" hidden>
+        <h3>Wie möchtest du buchen?</h3>
+        <p class="muted">Buche als Gast — oder mit kostenlosem Kundenkonto und sichere dir <strong>10 % Neukundenrabatt</strong>, <strong>Treuepunkte</strong> und die Möglichkeit, Termine zu <strong>stornieren/verschieben</strong>.</p>
+        <div class="row gap" style="margin-top:14px; flex-wrap:wrap">
+          <button class="btn" id="gateAccount" type="button">Mit Kundenkonto anmelden</button>
+          <button class="btn ghost" id="gateGuest" type="button">Als Gast buchen</button>
+        </div>
+        <p class="fineprint" style="margin-top:12px">Noch kein Konto? <a class="link" href="login.html?next=booking.html&register=1">Kostenlos registrieren</a></p>
+      </div>
+
       <div class="wizard">
         <div class="steps" aria-label="Buchungsschritte">
           <div class="step active" data-step="1">1 · Style</div>
