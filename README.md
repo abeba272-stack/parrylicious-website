@@ -1,108 +1,130 @@
-# Parrylicious Studio Website
+# Parrylicious Studio — Website
 
-Produktionsstand der Website mit:
-- statischem Frontend (GitHub Pages oder Vercel Static),
-- Supabase Auth + Buchungsdaten,
-- Stripe Checkout + Webhook,
-- SMS/E-Mail-Benachrichtigungen via Twilio/Resend.
+Buchungs-Website für den Afro-Hair-Salon **Parrylicious** (Düsseldorf), live unter
+**[parrylicious.store](https://parrylicious.store)**.
+
+Statisches Frontend (Vanilla JS, ES-Module) + Serverless-Backend (Vercel Functions)
+mit **Neon Postgres**, eigenem **JWT-Auth**, **Stripe**-Anzahlung und **Resend**-E-Mails.
+
+---
+
+## Tech-Stack
+
+| Bereich | Technologie |
+|---|---|
+| Frontend | Vanilla JS (ES-Module), kein Framework · `styles-v2.css` (dunkles Editorial-Theme) |
+| Hosting | **Vercel** (statische Seiten + Serverless-Funktionen unter `/api`) |
+| Datenbank | **Neon** (Serverless Postgres) — Schema/Funktionen in `neon-schema.sql` |
+| Auth | Eigenes **JWT** (HS256), Passwörter mit **bcryptjs** (cost 10) — kein externes SDK |
+| Zahlung | **Stripe** Checkout (50 % Anzahlung) + Webhook als Quelle der Wahrheit |
+| E-Mail | **Resend** (Buchungsbestätigung, Passwort-Reset, E-Mail-Verifizierung) |
+| SMS (optional) | **Twilio** (nur wenn konfiguriert) |
+| DNS | **Cloudflare** (Domain bei Strato registriert, NS auf Cloudflare delegiert) |
+
+> Der frühere Supabase-/GitHub-Pages-Stand wurde vollständig abgelöst.
 
 ## Features
-- Service-Katalog mit echten Style-Bildern
-- Buchungs-Wizard mit Gastmodus oder Login
-- Kundenprofil im Dashboard (Name, Telefon, Adresse, Profilbild)
-- Slot-Schutz gegen Doppelbuchungen (`slot_is_available`)
-- Rollenbasiertes Dashboard (`customer`, `staff`, `admin`)
-- Zahlungsstatus pro Buchung (`unpaid`, `pending`, `paid`, `failed`, `refunded`)
-- Admin-Aktionen mit Benachrichtigungsversand (Bestätigung/Storno)
 
-## Supabase Setup
-1. `supabase-config.js` ausfüllen:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-2. In Supabase SQL Editor `supabase-schema.sql` komplett ausführen.
-3. Auth Redirects setzen (`Authentication -> URL Configuration`):
-   - `Site URL`: deine Live-Domain
-   - `Redirect URLs`: mindestens `<LIVE_URL>/login.html`
-   - lokal optional: `http://localhost:3000/login.html`
-4. OAuth Provider aktivieren (`Authentication -> Providers`):
-   - Google
-5. Rollen per E-Mail-Regel vergeben (automatisch bei Login/Registrierung):
-   - im Dashboard als `admin` unter "Rollenverwaltung" E-Mail + Rolle setzen
-   - oder SQL:
-     - `insert into public.role_email_rules (email, role) values ('admin1@mail.de', 'admin') on conflict (email) do update set role = excluded.role;`
-     - `insert into public.role_email_rules (email, role) values ('admin2@mail.de', 'admin') on conflict (email) do update set role = excluded.role;`
-     - `insert into public.role_email_rules (email, role) values ('staff1@mail.de', 'staff') on conflict (email) do update set role = excluded.role;`
-     - `insert into public.role_email_rules (email, role) values ('staff2@mail.de', 'staff') on conflict (email) do update set role = excluded.role;`
+- **Oberkategorien → Styles**: Startseite zeigt Kategorien; Klick führt in die Buchung zu den Styles.
+- **Buchungs-Wizard**: Style → Stylist → Datum/Slot → Daten → Stripe-Anzahlung. Slot-Schutz gegen Doppelbuchungen (Advisory-Lock / `slot_is_available`).
+- **Gast- oder Kontobuchung**: Gäste buchen mit Anzahlung; Konten bekommen Zusatzfunktionen.
+- **Kundenkonten** (`konto.html`): eigene Termine, Profil, Stornieren/Verschieben (bis 48 h vorher), Treuepunkte, Bewertung schreiben.
+- **Neukundenrabatt** 10 % (nur angemeldet + E-Mail bestätigt, erste Buchung).
+- **Treuepunkte**: 1 Punkt/€ nach abgeschlossenem Termin; Einlösen 100 = 5 € auf die Anzahlung (min. 1 € Restanzahlung).
+- **Bewertungen**: verifizierte Konten schreiben Reviews (1–5 Sterne) → Moderation im Dashboard → Anzeige auf der Startseite.
+- **Mitarbeiter-Dashboard** (`admin.html`, Rollen `staff`/`admin`): Termine bestätigen/stornieren, Terminkalender, Warteliste, Reviews-Moderation, Team-Accounts & Rollen (nur admin).
 
-## Account-Typen
-- `customer`: Eigene Buchungen/Warteliste, eigene Stornos, Anzahlung starten, eigenes Profil pflegen.
-- `staff`: Alle Buchungen/Warteliste sehen, Buchungen bestätigen/stornieren.
-- `admin`: Wie `staff` plus Rollenverwaltung im Dashboard.
-- Ohne E-Mail-Regel ist der Default immer `customer`.
+## Projektstruktur
 
-## Backend Environment Variables
-Für `/api/*` (z. B. auf Vercel):
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `ALLOWED_ORIGIN` (z. B. `https://parrylicious.store` oder mehrere per Komma: `https://parrylicious.store,http://localhost:3000`)
-- `RESEND_API_KEY` (optional, für E-Mail)
-- `RESEND_FROM_EMAIL` (optional, für E-Mail)
-- `TWILIO_ACCOUNT_SID` (optional, für SMS)
-- `TWILIO_AUTH_TOKEN` (optional, für SMS)
-- `TWILIO_FROM_NUMBER` (optional, für SMS)
-
-## Frontend API Ziel setzen
-Wenn Frontend und API nicht auf derselben Domain laufen:
-1. In `backend-config.js` `BACKEND_API_BASE_URL` setzen, z. B. `https://parrylicious-api.vercel.app`
-2. Backend `ALLOWED_ORIGIN` auf deine Frontend-Domain setzen.
-
-## Stripe Setup
-1. In Stripe ein Produkt für die Anzahlung ist nicht zwingend nötig; Checkout wird dynamisch pro Buchung erzeugt.
-2. Webhook Endpoint anlegen:
-   - URL: `<API_BASE_URL>/api/stripe-webhook`
-   - Events:
-     - `checkout.session.completed`
-     - `checkout.session.async_payment_succeeded`
-     - `checkout.session.async_payment_failed`
-     - `checkout.session.expired`
-3. Signatur-Secret aus Stripe als `STRIPE_WEBHOOK_SECRET` setzen.
-4. `ALLOWED_ORIGIN` muss auf die Frontend-Domain zeigen, sonst blockiert Checkout-Rückkehr (`successUrl`/`cancelUrl`).
-5. Für stabile Webhook-Verifikation auf allen Hostern: `STRIPE_SECRET_KEY` auch im Webhook-Backend setzen (Fallback per Event-ID Abruf).
-
-## Lokaler Start
-Empfohlen mit Vercel CLI, damit Frontend und `/api/*` lokal zusammen laufen:
-```bash
-vercel dev
 ```
-Dann öffnen: `http://localhost:3000`
+index.html                 Startseite (dunkles Editorial-Theme, inline CSS/JS)
+booking.html / booking.js  Buchungs-Wizard
+konto.html  / konto.js     „Mein Konto" (Kunde)
+login.html  / login.js     Login/Registrierung (Kunde) + Team-Login
+admin.html  / admin.js     Mitarbeiter-Dashboard
+verify.html                E-Mail-Bestätigung (?token=…)
+impressum.html / privacy.html   Impressum · Datenschutz & Bedingungen
+styles-v2.css              gemeinsames Theme
+data/services.js           Service-/Preis-Katalog (Frontend-Anzeige)
+data-client.js             /api-Client (Buchungen, Kunde, Reviews, Admin)
+auth-client.js             JWT-Session (localStorage), Login/Logout/Refresh
+backend-client.js          Checkout/Waitlist/Notification-Aufrufe
+nav.js                     mobile Navigation + rollenabhängiger Konto-Link
+api/                       Vercel Serverless-Funktionen (siehe unten)
+neon-schema.sql            Datenbank-Schema + Funktionen (Neon)
+```
 
-## Deployment
-- Nur Frontend (ohne `/api/*`): GitHub Pages möglich.
-- Voller Produktivbetrieb mit Checkout/Webhook/Notifications: Vercel (oder anderes Hosting mit Node Functions) empfohlen.
+### API (`/api`) — 12 Funktionen (Vercel Hobby-Limit!)
+Dateien mit `_` sind gemeinsame Module und zählen **nicht** als Funktion.
+Zusammengefasste Endpunkte nutzen dynamische `[action].js`-Dispatcher, um unter 12 zu bleiben.
 
-## Rechtliches
-- `impressum.html` und `privacy.html` sind auf produktive Inhalte umgestellt.
-- Vor Livegang juristisch final prüfen lassen (insb. USt-/Steuerangaben, Auftragsverarbeiter, Formulierungen).
+```
+api/auth/[action].js       signup, verify-email, login, refresh, me, logout, reset-password, change-password
+api/customer/[action].js   bookings (cancel/reschedule), eligibility, points, profile
+api/admin/[action].js      roles, staff, reviews (Moderation)
+api/bookings.js            Team-Buchungsliste
+api/bookings/checkout.js   Gast-/Kunden-Checkout (Stripe-Session, Rabatt, Punkte)
+api/reviews.js             Reviews lesen/summary + schreiben (buchungsbezogen & allgemein)
+api/slots.js               Slot-Verfügbarkeit (öffentlich)
+api/waitlist.js            Warteliste
+api/profile.js             Profil
+api/stripe-webhook.js      Stripe-Webhook (Signaturprüfung!) — bestätigt Buchung
+api/verify-checkout-session.js  Rückkehr-Verifikation
+api/send-booking-notification.js  Benachrichtigung (Resend / optional Twilio)
+api/_lib.js  api/_email.js  api/_services.js   gemeinsame Module (keine Funktionen)
+```
 
-## QA-Checkliste vor Launch
-- Login:
-  - E-Mail/Passwort
-  - Google OAuth
-- Buchung:
-  - Gastbuchung ohne Login
-  - Konto-Buchung mit Stripe Checkout
-  - Checkout startet nur für aktive (nicht stornierte) Buchungen
-  - Offene Anzahlungen aus dem Dashboard erneut starten
-  - Rückkehr nach erfolgreicher Zahlung (`payment=success`)
-  - Rückkehr bei Abbruch (`payment=cancel`)
-- Slotlogik:
-  - Doppelbuchungsschutz aktiv
-  - Kalenderhorizont: `maxDaysAhead = 60` und Anzeige ebenfalls 60 Tage
-- Admin:
-  - Rollenrechte (`customer` vs `staff/admin`)
-  - Bestätigen/Stornieren aktualisiert DB
-  - Benachrichtigungen werden versendet
-- Mobile:
-  - Header, Wizard, Dashboard auf iOS/Android prüfen
+## Environment-Variablen (Vercel-Projekt → Settings → Environment Variables)
+
+| Variable | Zweck |
+|---|---|
+| `DATABASE_URL` | Neon-Connection-String |
+| `JWT_SECRET` | Signatur der Access-Tokens (HS256) |
+| `STRIPE_SECRET_KEY` | Stripe (Live: `sk_live_…`) |
+| `STRIPE_WEBHOOK_SECRET` | Verifikation des Stripe-Webhooks (`whsec_…`) |
+| `RESEND_API_KEY` | Resend (⚠️ aus dem Konto, in dem die Domain verifiziert ist) |
+| `RESEND_FROM_EMAIL` | Absender, z. B. `buchung@parrylicious.store` |
+| `RESEND_REPLY_TO` | optionale Antwortadresse |
+| `RESEND_BCC` | optionale BCC-Kopie |
+| `FRONTEND_URL` | Basis-URL für Links in E-Mails (z. B. `https://parrylicious.store`) |
+| `ALLOWED_ORIGIN` | CORS-Origin(s), Komma-getrennt möglich |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` | optional (SMS) |
+
+`.env` / `.env.local` sind **gitignored** und werden per `.vercelignore` **nicht** mitdeployt.
+Secrets werden ausschließlich im Vercel-Dashboard gesetzt.
+
+## Lokale Entwicklung
+
+```bash
+npm install
+node dev-server.cjs   # lokaler Dev-Server (nicht im Deploy enthalten)
+```
+
+Für Zahlungen im Testmodus Stripe-Testkarte `4242 4242 4242 4242` und
+`stripe listen --forward-to localhost:3000/api/stripe-webhook` verwenden.
+
+## Deployment (Vercel)
+
+```bash
+npx vercel@latest deploy --prod
+npx vercel@latest alias set <deployment-url> parrylicious.store
+```
+
+Die Domain muss nach jedem Prod-Deploy neu aliasiert werden.
+Der Stripe-Webhook zeigt im Stripe-Dashboard auf `https://parrylicious.store/api/stripe-webhook`
+(Events: `checkout.session.completed`, `async_payment_succeeded`, `async_payment_failed`, `expired`).
+
+## Datenbank
+
+Schema und alle Postgres-Funktionen liegen in `neon-schema.sql` und wurden gegen die
+Live-Neon-Instanz migriert. Bei Katalog-Änderungen müssen `data/services.js` (Frontend)
+und `api/_services.js` (serverseitige Preisquelle für Stripe) **synchron** bleiben.
+
+## Rollen
+- `customer` (Default): eigene Termine, Profil, Stornieren/Verschieben, Punkte, Bewertung.
+- `staff`: alle Termine/Warteliste, bestätigen/stornieren, Kalender, Reviews moderieren.
+- `admin`: wie `staff` + Team-Accounts anlegen und Rollen verwalten.
+
+## Vor der Übergabe
+Siehe **`ABGABE-CHECKLISTE.md`** (Secrets rotieren, echte Fotos/Namen, Stripe-Live prüfen,
+Konten-Übergabe, anwaltliche Prüfung der Rechtstexte).
