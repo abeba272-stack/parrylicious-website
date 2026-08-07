@@ -338,6 +338,7 @@ function mapProfileRow(row) {
     phone: row.phone || '',
     address: row.address || '',
     avatarUrl: row.avatar_url || '',
+    marketingOptIn: Boolean(row.marketing_opt_in),
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null
   };

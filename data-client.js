@@ -338,13 +338,14 @@ export async function getCustomerBookings() {
 
 // Profil aktualisieren (Name/Telefon).
 export async function saveCustomerProfile(profile) {
-  return apiFetch('/api/customer/profile', {
-    method: 'PATCH',
-    body: {
-      fullName: String(profile?.fullName || ''),
-      phone: String(profile?.phone || '')
-    }
-  });
+  const body = {
+    fullName: String(profile?.fullName || ''),
+    phone: String(profile?.phone || '')
+  };
+  if (profile && typeof profile.marketingOptIn !== 'undefined') {
+    body.marketingOptIn = Boolean(profile.marketingOptIn);
+  }
+  return apiFetch('/api/customer/profile', { method: 'PATCH', body });
 }
 
 // Termin stornieren (nur wenn canCancel; Server erzwingt 48h-Regel + Erstattung).

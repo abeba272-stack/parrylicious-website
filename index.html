@@ -298,6 +298,10 @@
     .work img{ width:100%; height:100%; object-fit:cover; transition:transform .7s var(--ease); }
     .work:hover img{ transform:scale(1.05); }
     @media (max-width:720px){ .work-grid{ grid-template-columns:repeat(2,1fr); } }
+    .account-cta{ border:1px solid var(--line-soft); border-radius:4px; padding:clamp(28px,5vw,52px); margin-top:32px; background:linear-gradient(135deg, rgba(203,164,107,.09), transparent); }
+    .account-cta h2{ margin:0 0 14px; }
+    .account-cta p{ color:var(--ink-soft); max-width:60ch; margin:0 0 22px; font-size:15px; }
+    .account-cta__btns{ display:flex; gap:14px; flex-wrap:wrap; }
     .promo{ margin:0; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; aspect-ratio:4/3; }
     .promo img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
     .promo:hover img{ transform:scale(1.05); }
@@ -467,6 +471,21 @@
         <div class="rating__note" id="ratingNote">Bewertungen werden geladen…</div>
       </div>
       <div class="home-reviews" id="homeReviews" style="grid-column:1/-1"></div>
+    </div>
+  </section>
+
+  <!-- KUNDENKONTO-VORTEILE -->
+  <section id="konto-vorteile">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Kundenkonto</span></div>
+      <div class="account-cta reveal">
+        <h2 class="display">Mehr Vorteile mit<br><span class="it">deinem Kundenkonto.</span></h2>
+        <p>Erstelle kostenlos ein Kundenkonto und profitiere von Treuepunkten, einer schnelleren Terminbuchung sowie exklusiven Informationen zu neuen Dienstleistungen, Produkten und Veranstaltungen.</p>
+        <div class="account-cta__btns">
+          <a class="btn btn--accent" href="login.html?register=1">Kostenlos registrieren</a>
+          <a class="btn btn--ghost" href="booking.html" target="_blank" rel="noopener">Als Gast buchen</a>
+        </div>
+      </div>
     </div>
   </section>
 

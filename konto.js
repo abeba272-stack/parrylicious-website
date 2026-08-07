@@ -16,6 +16,7 @@ const profileForm = document.getElementById('profileForm');
 const pfName = document.getElementById('pfName');
 const pfPhone = document.getElementById('pfPhone');
 const pfEmail = document.getElementById('pfEmail');
+const pfMarketing = document.getElementById('pfMarketing');
 const profileStatus = document.getElementById('profileStatus');
 const logoutBtn = document.getElementById('logoutBtn');
 const verifyBanner = document.getElementById('verifyBanner');
@@ -295,7 +296,7 @@ profileForm?.addEventListener('submit', async (event) => {
   profileStatus.style.color = '';
   profileStatus.textContent = 'Speichere…';
   try {
-    await saveCustomerProfile({ fullName: pfName.value, phone: pfPhone.value });
+    await saveCustomerProfile({ fullName: pfName.value, phone: pfPhone.value, marketingOptIn: !!(pfMarketing && pfMarketing.checked) });
   } catch (error) {
     profileStatus.textContent = `Speichern fehlgeschlagen: ${error.message}`;
     profileStatus.style.color = '#d6807b';
@@ -376,6 +377,7 @@ async function boot() {
   pfName.value = currentUser.profile?.fullName || currentUser.fullName || '';
   pfPhone.value = currentUser.profile?.phone || '';
   pfEmail.value = currentUser.email || '';
+  if (pfMarketing) pfMarketing.checked = Boolean(currentUser.profile?.marketingOptIn);
   await loadBookings();
   renderRewards();
 }

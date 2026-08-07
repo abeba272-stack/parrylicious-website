@@ -59,17 +59,21 @@ async function handlePatch(req, res, userId) {
   const phone = cleanValue(body.phone);
   const address = cleanValue(body.address);
   const avatarUrl = cleanValue(body.avatarUrl);
+  // Marketing-Einwilligung nur ändern, wenn explizit mitgesendet (sonst null -> bestehenden Wert behalten).
+  const hasMarketing = Object.prototype.hasOwnProperty.call(body, 'marketingOptIn');
+  const marketingOptIn = hasMarketing ? (body.marketingOptIn === true || String(body.marketingOptIn) === 'true') : null;
 
-  // Upsert ONLY these four columns. role is never writable via this route:
-  // on insert it falls back to the table default, on conflict it is untouched.
+  // Upsert. role is never writable via this route: on insert it falls back to the
+  // table default, on conflict it is untouched.
   const rows = await sql`
-    insert into profiles (id, full_name, phone, address, avatar_url)
-    values (${userId}, ${fullName}, ${phone}, ${address}, ${avatarUrl})
+    insert into profiles (id, full_name, phone, address, avatar_url, marketing_opt_in)
+    values (${userId}, ${fullName}, ${phone}, ${address}, ${avatarUrl}, coalesce(${marketingOptIn}, false))
     on conflict (id) do update
       set full_name = excluded.full_name,
           phone = excluded.phone,
           address = excluded.address,
-          avatar_url = excluded.avatar_url
+          avatar_url = excluded.avatar_url,
+          marketing_opt_in = coalesce(${marketingOptIn}, profiles.marketing_opt_in)
     returning *
   `;
   return sendJson(res, 200, mapProfileRow(rows[0]));

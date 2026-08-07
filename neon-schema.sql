@@ -1109,3 +1109,7 @@ create table if not exists public.blocked_days (
   created_at timestamptz not null default now()
 );
 grant select, insert, delete on public.blocked_days to parry_api;
+
+-- Marketing-Einwilligung (Kundenkonto-Vorteil: Infos zu neuen Leistungen,
+-- Produkten, Pop-ups/Events und Aktionen). DSGVO: Opt-in, Standard false.
+alter table public.profiles add column if not exists marketing_opt_in boolean not null default false;

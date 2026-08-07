@@ -296,7 +296,8 @@ async function handleMe(req, res) {
       fullName: profile.full_name || userRow.full_name || '',
       phone: profile.phone || '',
       address: profile.address || '',
-      avatarUrl: profile.avatar_url || userRow.avatar_url || ''
+      avatarUrl: profile.avatar_url || userRow.avatar_url || '',
+      marketingOptIn: Boolean(profile.marketing_opt_in)
     }
   });
 }
