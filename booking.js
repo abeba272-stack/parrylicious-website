@@ -24,6 +24,7 @@ const inCat = (s, key) => (s.tags || []).includes(key);
 // Feature 4: Treuepunkte-Einlösen (nur eingeloggte Kunden). 100 Punkte = 5 € (Server rechnet final).
 let pointsBalance = 0;
 let redeemPoints = 0;
+let payFull = false; // Zahlungsart: false = Anzahlung (50 %), true = ganze Zahlung (100 %)
 
 const YEAR = document.getElementById('year');
 if (YEAR) YEAR.textContent = new Date().getFullYear();
@@ -486,9 +487,25 @@ function renderSummary() {
     <div class="row"><strong>Datum</strong><div>${fmtDate(state.dateISO)} · ${state.time}</div></div>
     <div class="row"><strong>Stylist</strong><div>${getStylistName(state.stylistId)}</div></div>
     <div class="divider"></div>
-    <div class="row"><strong>Anzahlung (jetzt online)</strong><div>${currency(service.deposit)}</div></div>
-    <div class="row"><strong>Restbetrag (im Salon)</strong><div>ab ${currency(rest)}</div></div>
+    <div class="pay-choice">
+      <label class="pay-opt${payFull ? '' : ' sel'}">
+        <input type="radio" name="payMode" value="deposit" ${payFull ? '' : 'checked'}>
+        <span><strong>Anzahlung (50 %)</strong><br><span class="muted small">${currency(service.deposit)} jetzt · Rest ab ${currency(rest)} im Salon</span></span>
+      </label>
+      <label class="pay-opt${payFull ? ' sel' : ''}">
+        <input type="radio" name="payMode" value="full" ${payFull ? 'checked' : ''}>
+        <span><strong>Ganze Zahlung (100 %)</strong><br><span class="muted small">${currency(service.priceFrom)} jetzt · kein Restbetrag</span></span>
+      </label>
+    </div>
+    <div class="row" style="margin-top:6px"><strong>Jetzt online</strong><div id="payNowAmount">${currency(payFull ? service.priceFrom : service.deposit)}</div></div>
   `;
+  summary.querySelectorAll('input[name="payMode"]').forEach((r) => r.addEventListener('change', (e) => {
+    payFull = e.target.value === 'full';
+    const amt = document.getElementById('payNowAmount');
+    if (amt) amt.textContent = currency(payFull ? service.priceFrom : service.deposit);
+    summary.querySelectorAll('.pay-opt').forEach((o) => o.classList.remove('sel'));
+    e.target.closest('.pay-opt')?.classList.add('sel');
+  });
 
   // Feature 4: Treuepunkte einlösen (Server rechnet den finalen Rabatt).
   if (pointsBalance >= 100) {
@@ -537,6 +554,8 @@ payDeposit.addEventListener('click', async () => {
     return;
   }
 
+  state.payFull = payFull; // für die Bestätigungsansicht nach Rückkehr von Stripe merken
+  saveState();
   isSubmittingPayment = true;
   payDeposit.disabled = true;
   const originalLabel = payDeposit.textContent;
@@ -550,7 +569,8 @@ payDeposit.addEventListener('click', async () => {
       dateISO: state.dateISO,
       time: state.time,
       customer: buildCustomerPayload(),
-      redeemPoints: redeemPoints || 0
+      redeemPoints: redeemPoints || 0,
+      payFull
     });
 
     if (!checkout.ok || !checkout.url) {
@@ -578,10 +598,11 @@ function renderDone() {
     <div class="row"><strong>Service</strong><div>${service ? service.name : '—'}</div></div>
     <div class="row"><strong>Datum</strong><div>${fmtDate(state.dateISO)} · ${state.time || ''}</div></div>
     <div class="row"><strong>Name</strong><div>${name}</div></div>
-    <div class="row"><strong>Anzahlung</strong><div>${service ? currency(service.deposit) : ''} · Bezahlt ✅</div></div>
-    <div class="row"><strong>Restbetrag</strong><div>im Salon</div></div>
+    ${state.payFull
+      ? `<div class="row"><strong>Gesamtbetrag</strong><div>${service ? currency(service.priceFrom) : ''} · Bezahlt ✅</div></div><div class="row"><strong>Restbetrag</strong><div>kein Restbetrag</div></div>`
+      : `<div class="row"><strong>Anzahlung</strong><div>${service ? currency(service.deposit) : ''} · Bezahlt ✅</div></div><div class="row"><strong>Restbetrag</strong><div>im Salon</div></div>`}
     <div class="divider"></div>
-    <pre class="template">Hallo ${c.firstName || ''}, wir haben deine Anzahlung erhalten und deinen Termin am ${fmtDate(state.dateISO)} um ${state.time || ''} für ${service ? service.name : 'deinen Service'} bestätigt. Wir freuen uns auf dich! – Parrylicious Studio</pre>
+    <pre class="template">Hallo ${c.firstName || ''}, wir haben deine ${state.payFull ? 'Zahlung' : 'Anzahlung'} erhalten und deinen Termin am ${fmtDate(state.dateISO)} um ${state.time || ''} für ${service ? service.name : 'deinen Service'} bestätigt. Wir freuen uns auf dich! – Parrylicious Studio</pre>
   `;
 }
 

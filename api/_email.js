@@ -39,6 +39,8 @@ function buildBookingConfirmationEmail(booking) {
   const price = Number(b.price_from || 0);
   const deposit = Number(b.deposit || 0);
   const rest = Math.max(0, price - deposit);
+  const payFull = String(customer.paymentMode || 'deposit') === 'full';
+  const charged = Number(customer.chargedOnline != null ? customer.chargedOnline : deposit);
   const greeting = firstName ? `Hallo ${firstName},` : 'Hallo,';
 
   const subject = 'Termin bestätigt – Parrylicious ✨';
@@ -51,8 +53,9 @@ function buildBookingConfirmationEmail(booking) {
     `Datum: ${dateStr}\n` +
     `Uhrzeit: ${timeStr} Uhr\n\n` +
     `ZAHLUNG\n` +
-    `Anzahlung (online bezahlt): ${euro(deposit)}\n` +
-    `Restbetrag im Salon (bar): ab ${euro(rest)}\n\n` +
+    (payFull
+      ? `Gesamtbetrag (online bezahlt): ${euro(charged)}\nKein Restbetrag im Salon.\n\n`
+      : `Anzahlung (online bezahlt): ${euro(deposit)}\nRestbetrag im Salon (bar): ab ${euro(rest)}\n\n`) +
     `SALON\n` +
     `Parrylicious – ${SALON_ADDRESS}\n\n` +
     `Fragen oder Umbuchung? Schreib uns per WhatsApp: ${SALON_WHATSAPP}.\n\n` +
@@ -72,8 +75,11 @@ function buildBookingConfirmationEmail(booking) {
     `<tr><td style="padding:6px 0;color:#6e5c60;">Uhrzeit</td><td style="padding:6px 0;text-align:right;font-weight:600;">${escapeHtml(timeStr)} Uhr</td></tr>` +
     `</table>` +
     `<table role="presentation" width="100%" style="border-collapse:collapse;background:#efe4d3;border-radius:10px;font-size:15px;">` +
-    `<tr><td style="padding:12px 16px 4px;color:#6e5c60;">Anzahlung (online bezahlt)</td><td style="padding:12px 16px 4px;text-align:right;"><strong>${euro(deposit)}</strong></td></tr>` +
-    `<tr><td style="padding:4px 16px 12px;color:#6e5c60;">Restbetrag im Salon (bar)</td><td style="padding:4px 16px 12px;text-align:right;"><strong>ab ${euro(rest)}</strong></td></tr>` +
+    (payFull
+      ? `<tr><td style="padding:12px 16px 4px;color:#6e5c60;">Gesamtbetrag (online bezahlt)</td><td style="padding:12px 16px 4px;text-align:right;"><strong>${euro(charged)}</strong></td></tr>` +
+        `<tr><td style="padding:4px 16px 12px;color:#6e5c60;" colspan="2">Kein Restbetrag im Salon.</td></tr>`
+      : `<tr><td style="padding:12px 16px 4px;color:#6e5c60;">Anzahlung (online bezahlt)</td><td style="padding:12px 16px 4px;text-align:right;"><strong>${euro(deposit)}</strong></td></tr>` +
+        `<tr><td style="padding:4px 16px 12px;color:#6e5c60;">Restbetrag im Salon (bar)</td><td style="padding:4px 16px 12px;text-align:right;"><strong>ab ${euro(rest)}</strong></td></tr>`) +
     `</table>` +
     `<p style="margin:20px 0 2px;font-size:13px;color:#94858a;text-transform:uppercase;letter-spacing:1px;">Salon</p>` +
     `<p style="margin:0;font-size:15px;">Parrylicious &middot; ${escapeHtml(SALON_ADDRESS)}</p>` +

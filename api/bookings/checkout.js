@@ -96,6 +96,11 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // Zahlungsart: ganze Zahlung (100 % des Preises, kein Restbetrag) oder 50 % Anzahlung.
+  // chargeAmount = der Betrag, der jetzt online über Stripe berechnet wird.
+  const payFull = body.payFull === true || String(body.payFull) === 'true';
+  let chargeAmount = payFull ? priceFrom : deposit;
+
   // Optional: Treuepunkte einlösen (nur eingeloggte Kunden, volle 100er-Schritte).
   let redeemPoints = Number.parseInt(body.redeemPoints, 10);
   if (!Number.isFinite(redeemPoints) || redeemPoints < 100) redeemPoints = 0;
@@ -121,9 +126,9 @@ module.exports = async function handler(req, res) {
     // An den Hold gebunden: bei Nichtzahlung wird der Hold gelöscht und die
     // Einlösung per ON DELETE CASCADE rückgängig gemacht (Punkte kommen zurück).
     if (userId && redeemPoints >= 100) {
-      // Rabatt deckeln, damit die Anzahlung >= 1 € bleibt (Stripe-Mindestbetrag).
-      const maxByDeposit = Math.floor((deposit - 1) / POINTS_REDEEM_VALUE_EUR_PER_100) * 100;
-      const usePoints = Math.min(redeemPoints, Math.max(0, maxByDeposit));
+      // Rabatt deckeln, damit der Online-Betrag >= 1 € bleibt (Stripe-Mindestbetrag).
+      const maxByCharge = Math.floor((chargeAmount - 1) / POINTS_REDEEM_VALUE_EUR_PER_100) * 100;
+      const usePoints = Math.min(redeemPoints, Math.max(0, maxByCharge));
       if (usePoints >= 100) {
         try {
           const rp = await sql`select public.redeem_points_for_booking(${userId}, ${booking.id}, ${usePoints}) as pts`;
@@ -139,11 +144,17 @@ module.exports = async function handler(req, res) {
       if (pointsRedeemed >= 100) {
         discountValue = Math.round((pointsRedeemed / 100) * POINTS_REDEEM_VALUE_EUR_PER_100 * 100) / 100;
         priceFrom = Math.round((priceFrom - discountValue) * 100) / 100;
-        deposit = Math.round((deposit - discountValue) * 100) / 100;
+        // Bei Anzahlung reduziert der Rabatt die Anzahlung; bei Vollzahlung den Gesamtpreis.
+        if (!payFull) deposit = Math.round((deposit - discountValue) * 100) / 100;
+        chargeAmount = Math.round((chargeAmount - discountValue) * 100) / 100;
         customer.redeem = { points: pointsRedeemed, discountEur: discountValue };
-        await sql`update bookings set price_from = ${priceFrom}, deposit = ${deposit}, customer = ${JSON.stringify(customer)}::jsonb where id = ${booking.id}`;
       }
     }
+
+    // Zahlungsart + tatsächlich online berechneten Betrag am Hold vermerken (für E-Mail/Records).
+    customer.paymentMode = payFull ? 'full' : 'deposit';
+    customer.chargedOnline = chargeAmount;
+    await sql`update bookings set price_from = ${priceFrom}, deposit = ${deposit}, customer = ${JSON.stringify(customer)}::jsonb where id = ${booking.id}`;
 
     // 2) Rückkehr-URLs.
     const origin = (req.headers.origin || '').replace(/\/$/, '');
@@ -165,9 +176,9 @@ module.exports = async function handler(req, res) {
     params.append('client_reference_id', booking.id);
     params.append('expires_at', String(Math.floor(Date.now() / 1000) + 1800)); // 30 min (Stripe-Minimum)
     params.append('line_items[0][price_data][currency]', 'eur');
-    params.append('line_items[0][price_data][unit_amount]', String(toStripeAmount(deposit)));
-    params.append('line_items[0][price_data][product_data][name]', `Anzahlung: ${service.name}`);
-    params.append('line_items[0][price_data][product_data][description]', 'Restbetrag wird vor Ort im Salon bezahlt.');
+    params.append('line_items[0][price_data][unit_amount]', String(toStripeAmount(chargeAmount)));
+    params.append('line_items[0][price_data][product_data][name]', `${payFull ? 'Gesamtbetrag' : 'Anzahlung'}: ${service.name}`);
+    params.append('line_items[0][price_data][product_data][description]', payFull ? 'Vollständige Zahlung – kein Restbetrag im Salon.' : 'Restbetrag wird vor Ort im Salon bezahlt.');
     params.append('line_items[0][quantity]', '1');
     if (customer.email) params.append('customer_email', customer.email);
     params.append('metadata[booking_id]', booking.id);
@@ -186,7 +197,7 @@ module.exports = async function handler(req, res) {
     // Session-ID am Hold vermerken (für Verifikation/Idempotenz).
     await sql`update bookings set stripe_checkout_session_id = ${json.id}, payment_provider = 'stripe' where id = ${booking.id}`;
 
-    return sendJson(res, 200, { url: json.url, sessionId: json.id, bookingId: booking.id, pointsRedeemed, discountValue });
+    return sendJson(res, 200, { url: json.url, sessionId: json.id, bookingId: booking.id, pointsRedeemed, discountValue, paymentMode: customer.paymentMode, chargedOnline: chargeAmount });
   } catch (error) {
     const { status, code } = pgErrorStatus(error);
     if (code === 'SLOT_UNAVAILABLE') {
