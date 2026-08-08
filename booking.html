@@ -9,6 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles-v2.css" />
   <link rel="icon" href="assets/logo.jpg" />
+  <style>
+    /* Leistungs-Details (Phase 04): „Für wen & Ablauf" aufklappbar, Hinweis sichtbar. */
+    .svc-more{ margin:4px 0 10px; border-top:1px solid var(--line-soft, rgba(0,0,0,.1)); padding-top:8px; }
+    .svc-more > summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--accent-2, #7a5c46); list-style:none; display:inline-flex; align-items:center; gap:6px; }
+    .svc-more > summary::-webkit-details-marker{ display:none; }
+    .svc-more > summary::before{ content:'＋'; font-weight:700; }
+    .svc-more[open] > summary::before{ content:'－'; }
+    .svc-more p{ margin:8px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft, #5c5148); }
+    .svc-more p strong{ color:var(--ink, #2a251c); }
+    .svc-note{ margin:0 0 10px; font-size:13px; line-height:1.45; color:var(--ink-soft, #5c5148); background:var(--panel-2, rgba(203,164,107,.1)); border-left:3px solid var(--accent, #cba46b); border-radius:6px; padding:8px 12px; }
+    .svc-note::before{ content:'ℹ️ '; }
+  </style>
 </head>
 <body>
   <header class="topbar">

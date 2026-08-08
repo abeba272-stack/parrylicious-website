@@ -17,6 +17,7 @@ const BOOKING_CATS = [
   { key: 'wash',       label: 'Wash & Cut',        img: 'assets/categories/wash.jpg' },
   { key: 'treatment',  label: 'Treatments',        img: 'assets/categories/treatment.jpg' },
   { key: 'extensions', label: 'Extensions',        img: 'assets/categories/extensions.jpg' },
+  { key: 'weft',       label: 'Weft Extensions',   img: 'assets/placeholder-editorial.jpg' },
   { key: 'kids',       label: 'Kids',              img: 'assets/categories/kids.jpg' }
 ];
 const inCat = (s, key) => (s.tags || []).includes(key);
@@ -151,6 +152,12 @@ function serviceCardEl(s) {
     </div>
     <div class="muted small">${s.category}</div>
     <p class="muted">${s.description}</p>
+    ${(s.forWhom || s.process) ? `<details class="svc-more">
+      <summary>Für wen &amp; Ablauf</summary>
+      ${s.forWhom ? `<p><strong>Für wen:</strong> ${s.forWhom}</p>` : ''}
+      ${s.process ? `<p><strong>Ablauf:</strong> ${s.process}</p>` : ''}
+    </details>` : ''}
+    ${s.note ? `<p class="svc-note">${s.note}</p>` : ''}
     <div class="row between">
       <div class="tag">⏱ ${formatMinutes(s.durationMin)}</div>
       <button class="btn small ${selected ? 'ghost' : ''}" data-service="${s.id}">

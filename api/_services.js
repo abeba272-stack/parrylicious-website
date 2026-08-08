@@ -10,7 +10,7 @@
 // dort MUSS es hier gleich mitgezogen werden. CATEGORY_ORDER = Anzeigereihenfolge.
 const CATEGORY_ORDER = [
   'Locs & Dreads', 'Men', 'Braids', 'Wigs & Extensions',
-  'Ponytails', 'Wash & Cut', 'Microringe', 'Treatments', 'Kids'
+  'Ponytails', 'Wash & Cut', 'Microringe', 'Weft Extensions', 'Treatments', 'Kids'
 ];
 
 const SERVICES = {
@@ -32,7 +32,17 @@ const SERVICES = {
   microringe_refresh:  { name: 'Microringe Hochsetzen',                                     priceFrom: 35,  durationMin: 90,  deposit: 17.5, category: 'Microringe' },
   treatment_afro:      { name: 'Deep Conditioning – Afro-Haar Treatment',                   priceFrom: 48,  durationMin: 60,  deposit: 24,   category: 'Treatments' },
   treatment_european:  { name: 'Deep Conditioning – Europäisches Haar Treatment',           priceFrom: 48,  durationMin: 60,  deposit: 24,   category: 'Treatments' },
-  kids_natural:        { name: 'Natural Hairstyles for Kids',                               priceFrom: 45,  durationMin: 90,  deposit: 22.5, category: 'Kids' }
+  kids_natural:        { name: 'Natural Hairstyles for Kids',                               priceFrom: 45,  durationMin: 90,  deposit: 22.5, category: 'Kids' },
+  weft_beratung:            { name: 'Weft Beratung',                                          priceFrom: 10,  durationMin: 30,  deposit: 5,     category: 'Weft Extensions' },
+  weft_liftup_1:            { name: '1 Weft Lift Up',                                         priceFrom: 40,  durationMin: 20,  deposit: 20,    category: 'Weft Extensions' },
+  weft_liftup_2:            { name: '2 Weft Lift Up',                                         priceFrom: 80,  durationMin: 45,  deposit: 40,    category: 'Weft Extensions' },
+  weft_liftup_3:            { name: '3 Weft Lift Up',                                         priceFrom: 120, durationMin: 70,  deposit: 60,    category: 'Weft Extensions' },
+  weft_neu_2reihen:         { name: 'Neue Weft Einarbeitung – 2 Reihen',                      priceFrom: 150, durationMin: 90,  deposit: 75,    category: 'Weft Extensions' },
+  weft_neu_3reihen:         { name: 'Neue Weft Einarbeitung – 3 Reihen',                      priceFrom: 205, durationMin: 120, deposit: 102.5, category: 'Weft Extensions' },
+  weft_removal:             { name: 'Weft Removal',                                           priceFrom: 40,  durationMin: 30,  deposit: 20,    category: 'Weft Extensions' },
+  weft_removal_neu_2reihen: { name: 'Removal + Neue Einarbeitung – 2 Reihen',                 priceFrom: 180, durationMin: 120, deposit: 90,    category: 'Weft Extensions' },
+  weft_removal_neu_3reihen: { name: 'Removal + Neue Einarbeitung – 3 Reihen',                 priceFrom: 235, durationMin: 150, deposit: 117.5, category: 'Weft Extensions' },
+  weft_wash_styling:        { name: 'Weft – Waschen & Styling',                               priceFrom: 35,  durationMin: 35,  deposit: 17.5,  category: 'Weft Extensions' }
 };
 
 function getService(serviceId) {
