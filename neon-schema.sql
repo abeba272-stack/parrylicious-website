@@ -136,6 +136,8 @@ alter table public.bookings add column if not exists stripe_checkout_session_id 
 alter table public.bookings add column if not exists stripe_payment_intent_id text;
 alter table public.bookings add column if not exists payment_receipt_url text;
 alter table public.bookings add column if not exists paid_at timestamptz;
+-- Termin-Erinnerung per E-Mail: Zeitstempel, wann die Erinnerung verschickt wurde (null = noch nicht).
+alter table public.bookings add column if not exists reminded_at timestamptz;
 alter table public.profiles add column if not exists address text;
 alter table public.profiles add column if not exists avatar_url text;
 
@@ -1113,3 +1115,6 @@ grant select, insert, delete on public.blocked_days to parry_api;
 -- Marketing-Einwilligung (Kundenkonto-Vorteil: Infos zu neuen Leistungen,
 -- Produkten, Pop-ups/Events und Aktionen). DSGVO: Opt-in, Standard false.
 alter table public.profiles add column if not exists marketing_opt_in boolean not null default false;
+
+-- „Mein Bereich": gespeicherte Lieblingsleistungen (Service-IDs) für schnelles Buchen.
+alter table public.profiles add column if not exists favorite_services jsonb not null default '[]'::jsonb;

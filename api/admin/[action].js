@@ -10,6 +10,7 @@ const {
   sql, setCors, sendJson, bodyFromReq, requireAuthUser, hashPassword, pgErrorStatus,
   getUserRole, isStaffRole
 } = require('../_lib');
+const { sendBookingReminderEmail } = require('../_email');
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -136,14 +137,65 @@ async function blockedDaysDelete(req, res, actorId) {
   return sendJson(res, 200, { ok: true, day });
 }
 
+/* ---- run-reminders (Cron-Job) ----
+ * Wird von Vercel Cron 1×/Tag aufgerufen. KEIN JWT — geschützt über CRON_SECRET
+ * (Vercel setzt bei gesetzter Env automatisch `Authorization: Bearer <CRON_SECRET>`).
+ * Verschickt an bestätigte Termine von morgen (Europe/Berlin) eine Erinnerung und
+ * setzt reminded_at, damit nichts doppelt rausgeht.
+ */
+async function runReminders(req, res) {
+  const secret = process.env.CRON_SECRET;
+  const auth = String(req.headers['authorization'] || '');
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return sendJson(res, 401, { error: 'UNAUTHORIZED', message: 'Nicht autorisiert.' });
+  }
+  const rows = await sql`
+    select id, service_name, to_char(date_iso, 'YYYY-MM-DD') as date_iso, time,
+           price_from, deposit, customer
+      from public.bookings
+     where status = 'confirmed'
+       and reminded_at is null
+       and date_iso = ((now() at time zone 'Europe/Berlin')::date + 1)
+     order by time asc
+     limit 200`;
+  const list = Array.isArray(rows) ? rows : [];
+  let sent = 0, skipped = 0, failed = 0;
+  for (const b of list) {
+    try {
+      const result = await sendBookingReminderEmail(b);
+      if (result && result.skipped) { skipped += 1; continue; }
+      await sql`update public.bookings set reminded_at = now() where id = ${b.id}`;
+      sent += 1;
+    } catch (_e) {
+      failed += 1; // Best effort: eine fehlgeschlagene Mail stoppt den Lauf nicht.
+    }
+  }
+  return sendJson(res, 200, { ok: true, candidates: list.length, sent, skipped, failed });
+}
+
 module.exports = async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
 
+  const action = resolveAction(req);
+
+  // Cron-Job: eigener Auth-Weg (CRON_SECRET), daher VOR der JWT-Prüfung.
+  if (action === 'run-reminders') {
+    if (req.method !== 'GET' && req.method !== 'POST') {
+      res.setHeader('Allow', 'GET,POST,OPTIONS');
+      return sendJson(res, 405, { error: 'METHOD_NOT_ALLOWED', message: 'Methode nicht erlaubt.' });
+    }
+    try {
+      return await runReminders(req, res);
+    } catch (error) {
+      const { status } = pgErrorStatus(error);
+      return sendJson(res, status === 500 ? 500 : status, { error: 'INTERNAL', message: MSG.INTERNAL });
+    }
+  }
+
   const user = requireAuthUser(req, res);
   if (!user) return;
 
-  const action = resolveAction(req);
   try {
     if (action === 'roles') {
       if (req.method === 'GET') return await rolesGet(req, res, user.id);
