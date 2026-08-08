@@ -297,7 +297,8 @@ async function handleMe(req, res) {
       phone: profile.phone || '',
       address: profile.address || '',
       avatarUrl: profile.avatar_url || userRow.avatar_url || '',
-      marketingOptIn: Boolean(profile.marketing_opt_in)
+      marketingOptIn: Boolean(profile.marketing_opt_in),
+      favoriteServices: Array.isArray(profile.favorite_services) ? profile.favorite_services : []
     }
   });
 }

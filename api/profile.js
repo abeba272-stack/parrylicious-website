@@ -55,25 +55,28 @@ async function handleGet(req, res, userId) {
 
 async function handlePatch(req, res, userId) {
   const body = bodyFromReq(req) || {};
+  // Partielles Update: nur mitgesendete Felder ändern (null -> bestehenden Wert behalten).
   const fullName = cleanValue(body.fullName);
   const phone = cleanValue(body.phone);
   const address = cleanValue(body.address);
   const avatarUrl = cleanValue(body.avatarUrl);
-  // Marketing-Einwilligung nur ändern, wenn explizit mitgesendet (sonst null -> bestehenden Wert behalten).
   const hasMarketing = Object.prototype.hasOwnProperty.call(body, 'marketingOptIn');
   const marketingOptIn = hasMarketing ? (body.marketingOptIn === true || String(body.marketingOptIn) === 'true') : null;
+  const favJson = Array.isArray(body.favoriteServices)
+    ? JSON.stringify(body.favoriteServices.map((s) => String(s)).filter(Boolean).slice(0, 40))
+    : null;
 
-  // Upsert. role is never writable via this route: on insert it falls back to the
-  // table default, on conflict it is untouched.
+  // Upsert. role ist über diese Route nie schreibbar (Insert: Default, Conflict: unberührt).
   const rows = await sql`
-    insert into profiles (id, full_name, phone, address, avatar_url, marketing_opt_in)
-    values (${userId}, ${fullName}, ${phone}, ${address}, ${avatarUrl}, coalesce(${marketingOptIn}, false))
+    insert into profiles (id, full_name, phone, address, avatar_url, marketing_opt_in, favorite_services)
+    values (${userId}, ${fullName}, ${phone}, ${address}, ${avatarUrl}, coalesce(${marketingOptIn}, false), coalesce(${favJson}::jsonb, '[]'::jsonb))
     on conflict (id) do update
-      set full_name = excluded.full_name,
-          phone = excluded.phone,
-          address = excluded.address,
-          avatar_url = excluded.avatar_url,
-          marketing_opt_in = coalesce(${marketingOptIn}, profiles.marketing_opt_in)
+      set full_name = coalesce(${fullName}, profiles.full_name),
+          phone = coalesce(${phone}, profiles.phone),
+          address = coalesce(${address}, profiles.address),
+          avatar_url = coalesce(${avatarUrl}, profiles.avatar_url),
+          marketing_opt_in = coalesce(${marketingOptIn}, profiles.marketing_opt_in),
+          favorite_services = coalesce(${favJson}::jsonb, profiles.favorite_services)
     returning *
   `;
   return sendJson(res, 200, mapProfileRow(rows[0]));

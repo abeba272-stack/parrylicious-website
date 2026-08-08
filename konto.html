@@ -30,6 +30,16 @@
     .verify-banner .vb-icon{ font-size:22px; line-height:1.1; color:var(--accent); }
     .verify-banner h3{ margin:0 0 4px; }
     .points-empty{ color:var(--ink-soft); padding:6px 0; }
+    .fav-add{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; }
+    .fav-select{ flex:1; min-width:220px; display:grid; gap:6px; }
+    .fav-list{ display:grid; gap:10px; }
+    .fav-item{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 14px; border:1px solid var(--line-soft); border-radius:var(--radius-sm); background:var(--panel-2); }
+    .fav-item .f-info{ display:grid; gap:2px; }
+    .fav-item .f-name{ font-family:var(--font-head); font-size:20px; font-weight:600; line-height:1.1; }
+    .fav-item .f-meta{ color:var(--ink-soft); font-size:14px; }
+    .fav-item .f-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .fav-remove{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px; text-decoration:underline; padding:0; }
+    .fav-remove:hover{ color:var(--accent-2); }
   </style>
 </head>
 <body>
@@ -82,6 +92,19 @@
       <div class="card" id="reviewCard" hidden>
         <h3>Deine Bewertung</h3>
         <div id="reviewCardBody"></div>
+      </div>
+
+      <div class="card" id="favCard" hidden>
+        <h3>Lieblingsleistungen</h3>
+        <p class="muted small">Speichere deine Favoriten und buche sie beim nächsten Mal mit einem Klick.</p>
+        <div class="fav-add">
+          <label class="fav-select">Leistung wählen
+            <select id="favSelect"></select>
+          </label>
+          <button class="btn small" id="favAddBtn" type="button">Hinzufügen</button>
+        </div>
+        <div id="favList" class="fav-list" style="margin-top:14px"></div>
+        <div class="fineprint" id="favStatus"></div>
       </div>
 
       <div class="card">

@@ -339,6 +339,7 @@ function mapProfileRow(row) {
     address: row.address || '',
     avatarUrl: row.avatar_url || '',
     marketingOptIn: Boolean(row.marketing_opt_in),
+    favoriteServices: Array.isArray(row.favorite_services) ? row.favorite_services : [],
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null
   };

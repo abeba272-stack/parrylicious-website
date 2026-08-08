@@ -336,14 +336,16 @@ export async function getCustomerBookings() {
   return Array.isArray(list) ? list : [];
 }
 
-// Profil aktualisieren (Name/Telefon).
+// Profil aktualisieren. Partiell: nur mitgesendete Felder werden geändert
+// (Server behält weggelassene Felder bei), damit z. B. ein reiner Favoriten-Save
+// Name/Telefon nicht überschreibt.
 export async function saveCustomerProfile(profile) {
-  const body = {
-    fullName: String(profile?.fullName || ''),
-    phone: String(profile?.phone || '')
-  };
-  if (profile && typeof profile.marketingOptIn !== 'undefined') {
-    body.marketingOptIn = Boolean(profile.marketingOptIn);
+  const body = {};
+  if (profile && typeof profile.fullName !== 'undefined') body.fullName = String(profile.fullName || '');
+  if (profile && typeof profile.phone !== 'undefined') body.phone = String(profile.phone || '');
+  if (profile && typeof profile.marketingOptIn !== 'undefined') body.marketingOptIn = Boolean(profile.marketingOptIn);
+  if (profile && Array.isArray(profile.favoriteServices)) {
+    body.favoriteServices = profile.favoriteServices.map((s) => String(s));
   }
   return apiFetch('/api/customer/profile', { method: 'PATCH', body });
 }

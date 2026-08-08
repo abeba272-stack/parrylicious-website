@@ -7,6 +7,7 @@ import {
   getCustomerPoints,
   submitReview
 } from './data-client.js';
+import { services } from './data/services.js';
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -349,6 +350,111 @@ document.getElementById('resendVerifyBtn')?.addEventListener('click', async () =
   startResendCooldown(60);
 });
 
+// ---- Lieblingsleistungen (Favoriten) ----
+// Gespeicherte Service-IDs; buchbar mit einem Klick. Speicherung im Profil
+// (partieller PATCH, überschreibt Name/Telefon nicht).
+let favorites = [];
+const serviceById = (id) => services.find((s) => s.id === id) || null;
+
+function refreshFavSelect() {
+  const sel = document.getElementById('favSelect');
+  if (!sel) return;
+  const available = services.filter((s) => !favorites.includes(s.id));
+  if (!available.length) {
+    sel.innerHTML = '<option value="">Alle Leistungen sind gespeichert ✔</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  const cats = [...new Set(available.map((s) => s.category))];
+  sel.innerHTML = cats.map((cat) => {
+    const opts = available
+      .filter((s) => s.category === cat)
+      .map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)} — ab ${escapeHtml(euro(s.priceFrom))}</option>`)
+      .join('');
+    return `<optgroup label="${escapeHtml(cat || 'Leistungen')}">${opts}</optgroup>`;
+  }).join('');
+}
+
+function renderFavList() {
+  const list = document.getElementById('favList');
+  if (!list) return;
+  if (!favorites.length) {
+    list.innerHTML = '<div class="empty">Noch keine Favoriten. Wähle oben eine Leistung und tippe auf „Hinzufügen".</div>';
+    return;
+  }
+  list.innerHTML = favorites.map((id) => {
+    const s = serviceById(id);
+    if (!s) return '';
+    return `
+      <div class="fav-item" data-id="${escapeHtml(id)}">
+        <div class="f-info">
+          <div class="f-name">${escapeHtml(s.name)}</div>
+          <div class="f-meta">${escapeHtml(s.category || '')} · ab ${escapeHtml(euro(s.priceFrom))}</div>
+        </div>
+        <div class="f-actions">
+          <a class="btn small" href="booking.html?service=${encodeURIComponent(id)}" target="_blank" rel="noopener">Jetzt buchen</a>
+          <button type="button" class="fav-remove" data-remove="${escapeHtml(id)}">Entfernen</button>
+        </div>
+      </div>`;
+  }).join('');
+  list.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => removeFavorite(btn.getAttribute('data-remove')));
+  });
+}
+
+async function persistFavorites(previous) {
+  const status = document.getElementById('favStatus');
+  if (status) { status.style.color = ''; status.textContent = 'Speichere…'; }
+  try {
+    await saveCustomerProfile({ favoriteServices: favorites });
+  } catch (error) {
+    favorites = previous; // Rollback bei Fehler
+    refreshFavSelect();
+    renderFavList();
+    if (status) { status.style.color = '#d6807b'; status.textContent = `Speichern fehlgeschlagen: ${error.message}`; }
+    return;
+  }
+  if (currentUser && currentUser.profile) currentUser.profile.favoriteServices = favorites.slice();
+  if (status) status.textContent = 'Gespeichert.';
+}
+
+function addFavorite() {
+  const sel = document.getElementById('favSelect');
+  const id = sel && sel.value;
+  if (!id || favorites.includes(id) || !serviceById(id)) return;
+  const previous = favorites.slice();
+  favorites.push(id);
+  refreshFavSelect();
+  renderFavList();
+  persistFavorites(previous);
+}
+
+function removeFavorite(id) {
+  if (!favorites.includes(id)) return;
+  const previous = favorites.slice();
+  favorites = favorites.filter((x) => x !== id);
+  refreshFavSelect();
+  renderFavList();
+  persistFavorites(previous);
+}
+
+function renderFavorites() {
+  const card = document.getElementById('favCard');
+  if (!card) return;
+  card.hidden = false;
+  favorites = Array.isArray(currentUser?.profile?.favoriteServices)
+    ? currentUser.profile.favoriteServices.filter((id) => serviceById(id))
+    : [];
+  refreshFavSelect();
+  renderFavList();
+  const addBtn = document.getElementById('favAddBtn');
+  if (addBtn && !addBtn.dataset.bound) {
+    addBtn.dataset.bound = '1';
+    addBtn.addEventListener('click', addFavorite);
+  }
+}
+
 onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') window.location.href = 'login.html';
 });
@@ -380,6 +486,7 @@ async function boot() {
   if (pfMarketing) pfMarketing.checked = Boolean(currentUser.profile?.marketingOptIn);
   await loadBookings();
   renderRewards();
+  renderFavorites();
 }
 
 boot();
