@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Über Parrylicious – Kleines Studio, großer Eindruck</title>
+  <meta name="description" content="Parrylicious in Düsseldorf: ein kleines Studio mit großem Herz für Afro-Haar, Braids, Locs & Extensions. Lern uns kennen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-v2.css" />
+  <link rel="icon" href="assets/logo.jpg" />
+  <style>
+    /* „Über Parrylicious" (Phase 05) – editorial, im Marken-Look. */
+    .ueber{ --u-line: var(--line-soft, rgba(40,30,10,.12)); }
+    .u-hero{ display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(24px,4vw,56px); align-items:center; padding:clamp(28px,5vw,64px) 0; }
+    .u-hero .eyebrow{ font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--accent, #9b7534); font-weight:600; }
+    .u-hero h1{ font-family:var(--font-head,'Cormorant Garamond',serif); font-weight:600; font-size:clamp(38px,6vw,68px); line-height:1; letter-spacing:-.5px; margin:14px 0 0; text-wrap:balance; }
+    .u-hero h1 em{ font-style:italic; color:var(--accent, #9b7534); }
+    .u-hero .lead{ color:var(--ink-soft,#5c5148); font-size:clamp(15px,1.7vw,18px); line-height:1.6; margin:18px 0 26px; max-width:52ch; }
+    .u-hero__img{ aspect-ratio:4/5; border-radius:16px; overflow:hidden; box-shadow:0 24px 60px rgba(80,55,25,.18); }
+    .u-hero__img img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .u-actions{ display:flex; gap:12px; flex-wrap:wrap; }
+
+    .u-section{ padding:clamp(30px,5vw,60px) 0; border-top:1px solid var(--u-line); }
+    .u-kicker{ font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent, #9b7534); font-weight:600; margin:0 0 10px; }
+    .u-h2{ font-family:var(--font-head,'Cormorant Garamond',serif); font-weight:600; font-size:clamp(28px,3.6vw,44px); line-height:1.05; letter-spacing:-.3px; margin:0 0 6px; text-wrap:balance; }
+
+    .u-story{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,52px); align-items:center; }
+    .u-story__img{ aspect-ratio:1/1; border-radius:16px; overflow:hidden; box-shadow:0 20px 48px rgba(80,55,25,.15); }
+    .u-story__img img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .u-story p{ color:var(--ink-soft,#5c5148); font-size:16px; line-height:1.7; margin:0 0 16px; }
+    .u-pull{ font-family:var(--font-head,'Cormorant Garamond',serif); font-style:italic; font-size:clamp(22px,2.6vw,30px); line-height:1.3; color:var(--ink,#2a251c); margin:8px 0 0; }
+
+    .u-values{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-top:26px; }
+    .u-value{ background:var(--panel,#fffdf8); border:1px solid var(--u-line); border-radius:14px; padding:22px 22px 24px; }
+    .u-value .n{ font-family:var(--font-head,'Cormorant Garamond',serif); font-size:22px; color:var(--accent,#9b7534); }
+    .u-value h3{ font-size:17px; margin:8px 0 8px; }
+    .u-value p{ color:var(--ink-soft,#5c5148); font-size:14.5px; line-height:1.6; margin:0; }
+
+    .u-strip{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:26px; }
+    .u-strip img{ width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:12px; display:block; }
+
+    .u-place{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,52px); align-items:center; }
+    .u-place__img{ aspect-ratio:5/4; border-radius:16px; overflow:hidden; box-shadow:0 20px 48px rgba(80,55,25,.15); }
+    .u-place__img img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .u-place p{ color:var(--ink-soft,#5c5148); font-size:16px; line-height:1.7; margin:0 0 14px; }
+    .u-place address{ font-style:normal; color:var(--ink,#2a251c); font-size:16px; line-height:1.6; margin:0 0 20px; }
+
+    .u-cta{ text-align:center; padding:clamp(36px,6vw,72px) 0 clamp(20px,4vw,40px); border-top:1px solid var(--u-line); }
+    .u-cta h2{ font-family:var(--font-head,'Cormorant Garamond',serif); font-weight:600; font-size:clamp(28px,4vw,46px); margin:0 0 10px; text-wrap:balance; }
+    .u-cta p{ color:var(--ink-soft,#5c5148); font-size:16px; margin:0 auto 24px; max-width:46ch; }
+
+    @media (max-width:760px){
+      .u-hero, .u-story, .u-place{ grid-template-columns:1fr; }
+      .u-hero__img{ order:-1; aspect-ratio:16/11; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container row">
+      <a class="brand" href="/"><span class="wordmark">Parrylicious</span><span class="wordmark-tag">Studio</span></a>
+      <nav class="nav">
+        <a href="/#services">Styles</a>
+        <a href="/#besuch">Besuch</a>
+        <a class="btn small" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="ueber">
+    <div class="container">
+
+      <!-- HERO -->
+      <section class="u-hero">
+        <div>
+          <div class="eyebrow">Über Parrylicious</div>
+          <h1>Ein kleines Studio.<br><em>Ein großer Eindruck.</em></h1>
+          <p class="lead">Parrylicious ist kein Fließband-Salon. Es ist ein persönlicher Ort in Düsseldorf, an dem dein Haar Zeit, Können und echte Aufmerksamkeit bekommt – ob Braids, Locs, Extensions, Weft oder ein frischer Schnitt.</p>
+          <div class="u-actions">
+            <a class="btn btn--accent" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
+            <a class="btn btn--ghost" href="/#services">Styles entdecken</a>
+          </div>
+        </div>
+        <div class="u-hero__img">
+          <img src="assets/promo/studio-work.jpg" alt="Arbeit im Parrylicious Studio" loading="eager" />
+        </div>
+      </section>
+
+      <!-- GESCHICHTE -->
+      <section class="u-section">
+        <div class="u-story">
+          <div class="u-story__img">
+            <img src="assets/promo/studio-community.jpg" alt="Menschen im Parrylicious Studio" loading="lazy" />
+          </div>
+          <div>
+            <p class="u-kicker">Unsere Geschichte</p>
+            <h2 class="u-h2">Aus Liebe zum Haar</h2>
+            <!-- TODO (Heike): Hier gern deine persönliche Gründungsgeschichte ergänzen –
+                 wie alles begann, was dich antreibt. Der folgende Text ist ein warmer Platzhalter. -->
+            <p>Parrylicious ist aus einer einfachen Überzeugung entstanden: Jeder Mensch sollte sich mit seinem Haar zu Hause fühlen – ganz gleich, welche Textur, welcher Typ, welche Geschichte dahintersteht.</p>
+            <p>Statt Hektik und Massenabfertigung nehmen wir uns Zeit. Wir hören zu, beraten ehrlich und arbeiten mit einem Handwerk, das über Jahre gewachsen ist – besonders für Afro-texturiertes Haar, das andernorts oft zu kurz kommt.</p>
+            <p class="u-pull">„Schönes Haar beginnt damit, dass sich jemand wirklich kümmert."</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- WERTE -->
+      <section class="u-section">
+        <p class="u-kicker">Wofür wir stehen</p>
+        <h2 class="u-h2">Vier Dinge, die uns wichtig sind</h2>
+        <div class="u-values">
+          <div class="u-value">
+            <div class="n">01</div>
+            <h3>Handwerk &amp; Erfahrung</h3>
+            <p>Von Locs über Knotless Braids bis Weft Extensions – gelernt, geübt und immer weiter verfeinert.</p>
+          </div>
+          <div class="u-value">
+            <div class="n">02</div>
+            <h3>Zeit für dich</h3>
+            <p>Ein Termin ist ein Termin – kein Durchlauf. Du bekommst Ruhe, Sorgfalt und ein Ergebnis, das sitzt.</p>
+          </div>
+          <div class="u-value">
+            <div class="n">03</div>
+            <h3>Alle Haartypen</h3>
+            <p>Afro-texturiert, lockig, glatt, Kinderhaar – Vielfalt ist bei uns die Regel, nicht die Ausnahme.</p>
+          </div>
+          <div class="u-value">
+            <div class="n">04</div>
+            <h3>Ehrliche Beratung</h3>
+            <p>Wir sagen dir offen, was zu deinem Haar passt – und was nicht. Ohne Aufschwatzen, mit klarem Preis.</p>
+          </div>
+        </div>
+        <div class="u-strip">
+          <img src="assets/work/w1.jpg" alt="Arbeit von Parrylicious" loading="lazy" />
+          <img src="assets/work/w2.jpg" alt="Arbeit von Parrylicious" loading="lazy" />
+          <img src="assets/work/w3.jpg" alt="Arbeit von Parrylicious" loading="lazy" />
+        </div>
+      </section>
+
+      <!-- DER ORT -->
+      <section class="u-section">
+        <div class="u-place">
+          <div>
+            <p class="u-kicker">Der Ort</p>
+            <h2 class="u-h2">Mitten in Düsseldorf</h2>
+            <p>Unser Studio liegt zentral erreichbar in Düsseldorf. Komm vorbei, fühl dich willkommen – und geh mit einem Look, den du liebst.</p>
+            <address>
+              Parrylicious<br />
+              Bahlenstraße 42<br />
+              40589 Düsseldorf
+            </address>
+            <div class="u-actions">
+              <a class="btn btn--accent" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
+              <a class="btn btn--ghost" href="/#besuch">Anfahrt &amp; Öffnungszeiten</a>
+            </div>
+          </div>
+          <div class="u-place__img">
+            <img src="assets/hero-salon.jpg" alt="Parrylicious Studio in Düsseldorf" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="u-cta">
+        <h2>Lust auf einen neuen Look?</h2>
+        <p>Such dir deinen Style aus, wähl deinen Wunschtermin – wir kümmern uns um den Rest.</p>
+        <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-links">
+        <a href="/">Startseite</a>
+        <a href="ueber.html">Über uns</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="privacy.html">Datenschutz</a>
+        <a href="booking.html" target="_blank" rel="noopener">Termin</a>
+      </div>
+      <div class="muted">© <span id="year"></span> Parrylicious</div>
+    </div>
+  </footer>
+
+  <script type="module">
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script type="module" src="nav.js"></script>
+</body>
+</html>
