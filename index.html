@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Parrylicious Studio — Afro Editorial Luxury · Düsseldorf</title>
-  <meta name="description" content="Parrylicious Studio Düsseldorf — Braids, Locs, Cornrows & Protective Styles. Editorial. Präzise. Termin online buchen." />
+  <title>Parrylicious Studio — Hair · Culture · Community · Düsseldorf</title>
+  <meta name="description" content="Parrylicious Studio Düsseldorf — Afro Hair, Braids, Locs, Cornrows, Extensions, Treatments & mehr. Für alle Haarstrukturen, professionell unter einem Dach. Termin online buchen." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -224,9 +224,9 @@
   <header class="topbar">
     <a class="brand" href="/">Parry<b>licious.</b></a>
     <nav class="nav" id="nav">
-      <a href="#services">Styles</a>
-      <a href="#services">Leistungen</a>
-      <a href="#studio">Studio</a>
+      <a href="#ueber-uns">Philosophie</a>
+      <a href="#arbeit">Arbeit</a>
+      <a href="#geschichte">Geschichte</a>
       <a href="#reviews">Reviews</a>
       <a href="#besuch">Besuch</a>
       <a href="ueber.html">Über uns</a>
@@ -247,35 +247,21 @@
     <div class="wrap">
       <div class="hero__meta">
         <span class="eyebrow anim d1">Ausgabe N° 01</span>
-        <div class="right eyebrow anim d1">AW · 2026<br>Afro Editorial Luxury</div>
+        <div class="right eyebrow anim d1">AW · 2026<br>Hair · Culture · Community</div>
       </div>
-      <p class="hero__kicker eyebrow anim d2"><span class="rule"></span>Afro Hair Studio — Düsseldorf</p>
-      <h1 class="anim d3">Protective<br><span class="it">Styles.</span> Präzise<br>gestaltet<span class="dot">.</span></h1>
+      <p class="hero__kicker eyebrow anim d2"><span class="rule"></span>Studio für alle Haarstrukturen — Düsseldorf</p>
+      <h1 class="anim d3">Afro Hair ist unsere <span class="it">Wurzel.</span><br>Vielfalt ist unsere <span class="it">Vision<span class="dot">.</span></span></h1>
       <div class="hero__lower">
-        <p class="hero__sub anim d4">Braids, Locs, Cornrows und individuelle Styles für unterschiedliche Haarstrukturen — präzise gearbeitet in Düsseldorf.</p>
+        <p class="hero__sub anim d4">Von Braids, Cornrows und Locs über Sleek Styles und Cuts bis zu Treatments, Keratin und modernen Extensions-Techniken – für unterschiedliche Haarstrukturen, professionell unter einem Dach.</p>
         <div class="hero__cta anim d5">
           <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
-          <a class="btn btn--ghost" href="#services">Styles entdecken</a>
+          <a class="btn btn--ghost" href="#ueber-uns">Mehr erfahren</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- MARQUEE -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee__track">
-      <div class="marquee__g">
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-      </div>
-      <div class="marquee__g">
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-        <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
-      </div>
-    </div>
-  </div>
+  <!-- (Marquee „In Parrylicious we trust" ist in die Philosophie-Section gewandert) -->
 
   <style>
     .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:44px; }
@@ -329,71 +315,154 @@
     @media (max-width:860px){ .about-grid, .promo-grid{ grid-template-columns:1fr; } .parallax__bg{ transform:none !important; } }
   </style>
 
-  <!-- UEBER UNS -->
+  <style>
+    /* Update 02 — Startseite-Neuaufbau: größere Typo, neue Sektionen, Mobile/Tablet-Feinschliff */
+    .hero h1{ font-size:clamp(40px,7.2vw,96px); line-height:1.02; }
+    .hero__sub{ font-size:19px; max-width:48ch; }
+    .split-head p{ font-size:17px; line-height:1.6; }
+
+    /* Philosophie — einspaltig, groß & präsent */
+    .philo{ max-width:940px; }
+    .philo__head{ font-size:clamp(46px,8.4vw,108px); }
+    .philo__text{ color:var(--ink-soft); font-size:clamp(18px,2.1vw,23px); line-height:1.62; margin:28px 0 0; max-width:62ch; border-left:2px solid var(--accent); padding-left:22px; }
+
+    /* Referenzen-Banner (nur Namen, keine Logos) */
+    .ref-band{ overflow:hidden; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); background:var(--bg-2); padding:20px 0; margin-top:52px; }
+    .ref-band__track{ display:flex; width:max-content; animation:scroll 30s linear infinite; }
+    .ref-band__track:hover{ animation-play-state:paused; }
+    .ref-band__g{ display:flex; align-items:center; }
+    .ref-band__item{ font-family:var(--font-display); font-size:clamp(22px,3vw,34px); font-weight:600; letter-spacing:.02em; color:var(--ink); padding:0 26px; white-space:nowrap; }
+    .ref-band__dot{ color:var(--accent); font-size:13px; }
+
+    /* Bekannt aus dem Studio — Bilder-Strip */
+    .famous-wrap{ margin-top:64px; }
+    .famous{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(230px,1fr); gap:16px; margin-top:40px; overflow-x:auto; padding-bottom:10px; scroll-snap-type:x mandatory; }
+    .famous__item{ margin:0; aspect-ratio:3/4; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; scroll-snap-align:start; }
+    .famous__item img{ width:100%; height:100%; object-fit:cover; transition:transform .7s var(--ease); }
+    .famous__item:hover img{ transform:scale(1.05); }
+    .famous__ph{ display:grid; place-items:center; }
+    .famous__ph span{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
+
+    .ba-cap{ margin:44px 0 0; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+
+    /* Geschichte & Vision */
+    .story{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(30px,5vw,64px); margin-top:20px; }
+    .story__block h2{ margin:0 0 16px; }
+    .story__block p{ color:var(--ink-soft); font-size:clamp(16px,1.7vw,18px); line-height:1.78; margin:0; }
+
+    /* Leitung / Team */
+    .member__role{ margin-bottom:6px; }
+    .team-sep{ margin-top:66px; }
+    .team-photo{ margin:40px 0 0; border:1px solid var(--line-soft); border-radius:3px; overflow:hidden; background:#1c1c22; aspect-ratio:16/9; }
+    .team-photo img{ width:100%; height:100%; object-fit:cover; }
+
+    /* Kundenkonto-Vorteile — Liste */
+    .perks{ list-style:none; margin:24px 0 28px; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:14px 28px; }
+    .perks li{ border-top:1px solid var(--line-soft); padding-top:14px; }
+    .perks__k{ display:block; font-family:var(--font-display); font-size:22px; font-weight:600; color:var(--ink); line-height:1.2; }
+    .perks__d{ display:block; color:var(--ink-soft); font-size:14px; margin-top:4px; }
+    .reviews-cta{ margin-top:44px; }
+
+    /* Mobile / iPad — übersichtlicher */
+    @media (max-width:900px){
+      .story{ grid-template-columns:1fr; gap:38px; }
+      .perks{ grid-template-columns:1fr; }
+      .philo__text{ font-size:19px; }
+    }
+    @media (max-width:600px){
+      section{ padding:56px 0; }
+      .philo__text{ padding-left:16px; }
+      .work-grid{ grid-template-columns:repeat(2,1fr); }
+      .famous{ grid-auto-columns:80%; }
+      .hero__sub{ font-size:17px; }
+      .split-head p{ font-size:16px; }
+    }
+  </style>
+
+  <!-- 02 · PHILOSOPHIE + Referenzen + Bekannt aus dem Studio -->
   <section id="ueber-uns">
     <div class="wrap">
       <div class="sec-index reveal"><span class="num">N° 02</span><span class="line"></span><span class="label">Philosophie</span></div>
-      <div class="split-head reveal">
-        <h2 class="display">Ein kleines Studio.<br><span class="it">Ein großer Eindruck.</span></h2>
-        <p>Parrylicious ist kein anonymer Luxus-Salon auf der Königsallee – sondern ein kleines, gemütliches Studio in Düsseldorf-Wersten, in dem Persönlichkeit, Nähe und echtes Handwerk im Mittelpunkt stehen. Gerade das macht uns aus: ein Ort mit Herz, ehrlicher Beratung und Ergebnissen, die für sich sprechen. Dass unsere Arbeit Menschen aus Sport, Musik, Medien und Beauty erreicht, zeigt: Wirkung entsteht nicht durch Fassade, sondern durch Können.</p>
+      <div class="philo reveal">
+        <h2 class="display philo__head">Ein kleines Studio.<br><span class="it">Ein großer Eindruck.</span></h2>
+        <p class="philo__text">Parrylicious ist kein anonymer Luxussalon auf der Königsallee, sondern ein kleines, persönliches Studio in Düsseldorf. Ein Ort, an dem echtes Handwerk, Nähe und individuelle Beratung im Mittelpunkt stehen. Wir möchten, dass Menschen nicht nur wegen ihrer Haare zu uns kommen, sondern sich bei uns willkommen und wohl fühlen.</p>
       </div>
-      <div class="about-grid">
-        <article class="card reveal">
-          <h3>Über Parrylicious</h3>
-          <ul class="ulist">
-            <li>Spezialisiertes Team · optionaler Stylist-Choice</li>
-            <li>Termingenaue, ruhige Abläufe</li>
-            <li>Anzahlung online, Restzahlung bequem im Salon</li>
-          </ul>
-        </article>
-        <article class="card reveal">
-          <h3>Storno-Regel</h3>
-          <p class="muted-p">Mit Kundenkonto bis <strong>48 Stunden</strong> vor dem Termin kostenlos stornieren oder verschieben — die Anzahlung wird dir <strong>erstattet</strong>.</p>
-          <a class="link" href="privacy.html">Datenschutz &amp; Bedingungen</a>
-        </article>
+    </div>
+
+    <!-- „In Parrylicious we trust" — Schriftzug-Banner (unter der Philosophie) -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <div class="marquee__g">
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        </div>
+        <div class="marquee__g">
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+          <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referenzen-Banner: NUR Namen, keine Logos. PLATZHALTER-Kategorien.
+         TODO Salon: echte Namen/Vereine/Brands + dokumentierte Freigaben liefern
+         (Persönlichkeits- & Markenrecht) — dann hier eintragen. -->
+    <div class="ref-band" aria-label="Referenzen aus dem Studio">
+      <div class="ref-band__track">
+        <div class="ref-band__g">
+          <span class="ref-band__item">Sport</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Musik</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Medien</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Entertainment</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Kooperationen</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Community</span><span class="ref-band__dot">✦</span>
+        </div>
+        <div class="ref-band__g" aria-hidden="true">
+          <span class="ref-band__item">Sport</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Musik</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Medien</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Entertainment</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Kooperationen</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Community</span><span class="ref-band__dot">✦</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bekannt aus dem Studio -->
+    <div class="wrap famous-wrap">
+      <div class="split-head reveal">
+        <h2 class="display">Bekannt aus<br>dem <span class="it">Studio.</span></h2>
+        <p>Unsere Arbeit verbindet Menschen aus Sport, Musik, Entertainment und unserer Community.</p>
+      </div>
+      <div class="famous reveal">
+        <figure class="famous__item"><img src="assets/promo/studio-community.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
+        <figure class="famous__item"><img src="assets/promo/studio-work.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
+        <figure class="famous__item"><img src="assets/work/w4.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
+        <figure class="famous__item"><img src="assets/work/w2.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
+        <figure class="famous__item famous__ph"><span>Bild folgt</span></figure>
+        <figure class="famous__item famous__ph"><span>Bild folgt</span></figure>
       </div>
     </div>
   </section>
 
-  <!-- SERVICES -->
-  <section id="services">
+  <!-- 03 · UNSERE ARBEIT (Portfolio + Vorher/Nachher — zusammengelegt) -->
+  <section class="studio" id="arbeit">
     <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 03</span><span class="line"></span><span class="label">Services</span></div>
-      <div class="split-head reveal">
-        <h2 class="display">Wähle deine<br><span class="it">Kategorie.</span></h2>
-        <p>Alle Preise sind Startpreise. Wähle eine Kategorie – die passenden Styles wählst du direkt im nächsten Schritt bei der Terminbuchung.</p>
-      </div>
-      <div class="cat-tiles reveal" id="catTiles"></div>
-    </div>
-  </section>
-
-  <!-- UNSERE ARBEIT -->
-  <section id="arbeit">
-    <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 04</span><span class="line"></span><span class="label">Unsere Arbeit</span></div>
+      <div class="sec-index reveal"><span class="num">N° 03</span><span class="line"></span><span class="label">Unsere Arbeit</span></div>
       <div class="split-head reveal">
         <h2 class="display">Ergebnisse, die<br><span class="it">für sich sprechen.</span></h2>
-        <p>Ein Einblick in echte Styles aus unserem Studio — Cornrows, Braids und Locs, präzise gearbeitet.</p>
+        <p>Echte Arbeiten aus dem Studio – Braids, Locs, Cornrows, Extensions, Tressen und Treatments. Für jede Haarstruktur.</p>
       </div>
       <div class="work-grid reveal">
-        <figure class="work"><img src="assets/work/w1.jpg" alt="Cornrows-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="work"><img src="assets/work/w2.jpg" alt="Cornrow-Muster im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="work"><img src="assets/work/w3.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="work"><img src="assets/work/w4.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="work"><img src="assets/work/w5.jpg" alt="Cornrows-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="work"><img src="assets/work/w6.jpg" alt="Braids-Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w1.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w2.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w3.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w4.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w5.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
+        <figure class="work"><img src="assets/work/w6.jpg" alt="Ergebnis im Parrylicious Studio" loading="lazy"></figure>
       </div>
-    </div>
-  </section>
-
-  <!-- STUDIO / BEFORE-AFTER -->
-  <section class="studio" id="studio">
-    <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 05</span><span class="line"></span><span class="label">Studio</span></div>
-      <div class="split-head reveal">
-        <h2 class="display">Die Ergebnisse<br>sprechen <span class="it">für sich.</span></h2>
-        <p>Scrolle durch die Sektion — der Regler wandert mit und zeigt Ansatz und Ergebnis. Echte Arbeiten aus dem Studio.</p>
-      </div>
+      <p class="ba-cap reveal">Vorher / Nachher — scrolle, der Regler wandert mit.</p>
       <div class="ba reveal" id="ba">
         <img class="ba__before" src="assets/services/plain_twist_braids.jpg" alt="Vorher">
         <img class="ba__after" id="baAfter" src="assets/services/dreadlocs_retwist.jpg" alt="Nachher">
@@ -404,67 +473,98 @@
     </div>
   </section>
 
+  <!-- 04 · UNSERE GESCHICHTE & VISION -->
+  <section id="geschichte">
+    <div class="wrap">
+      <div class="sec-index reveal"><span class="num">N° 04</span><span class="line"></span><span class="label">Geschichte &amp; Vision</span></div>
+      <div class="story">
+        <div class="story__block reveal">
+          <h2 class="display">Unsere <span class="it">Geschichte.</span></h2>
+          <p>Parrylicious entstand aus meiner eigenen Erfahrung. Als schwarzes Mädchen in Deutschland habe ich früh gemerkt, dass Afro-Haar nicht dieselbe Selbstverständlichkeit an professionellen Angeboten hatte wie europäisches Haar. Meine Reise führte mich nach England, wo ich eine andere Welt rund um Afro Hair, Braids, Locs und Extensions kennenlernte. Was klein und von zu Hause begann, entwickelte sich mit der Zeit zu einer Community, einer Marke und schließlich zu unserem eigenen Studio in Düsseldorf.</p>
+        </div>
+        <div class="story__block reveal">
+          <h2 class="display">Unsere <span class="it">Vision.</span></h2>
+          <p>Wir möchten einen Salon schaffen, in dem keine Haarstruktur die Ausnahme ist. Afro-Haar soll genauso selbstverständlich professionell analysiert, gepflegt und behandelt werden wie europäisches Haar. Gleichzeitig möchten wir unterschiedliche Techniken und Haarwelten miteinander verbinden – von Locs und Braids bis zu Tressen, Extensions, Keratin und Treatments. Bei Parrylicious soll niemand überlegen müssen, ob seine Haarstruktur, Herkunft oder Hautfarbe „passt". Schönheit hat für uns keine Hautfarbe und Haare keine Grenzen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PARALLAX (Scroll-Animation) -->
   <div class="parallax" id="parallax" aria-hidden="true">
     <div class="parallax__bg" id="parallaxBg"></div>
     <div class="parallax__inner">
-      <p class="eyebrow" style="color:var(--accent)">Afro Editorial Luxury</p>
+      <p class="eyebrow" style="color:var(--accent)">Hair · Culture · Community</p>
       <p class="parallax__quote">In Parrylicious<br>we <span class="it">trust.</span></p>
     </div>
   </div>
 
-  <!-- TEAM -->
+  <!-- 06 · LEITUNG & TEAM -->
   <section id="team">
     <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Team</span></div>
+      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Leitung &amp; Team</span></div>
       <div class="split-head reveal">
-        <h2 class="display">Die Hände hinter<br><span class="it">jedem Style.</span></h2>
-        <p>Unser Team arbeitet spezialisiert — mit klaren Techniken für unterschiedliche Haarstrukturen.</p>
+        <h2 class="display">Unsere Parrylicious<br><span class="it">Leitung.</span></h2>
+        <p>Die Menschen, die Parrylicious leiten und fachlich repräsentieren.</p>
       </div>
+      <!-- TODO Salon: echte Fotos + Positionen/Spezialisierungen der Leitung -->
       <div class="team-grid">
         <article class="member reveal">
-          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
-          <div class="member__name">Heike Louise</div>
-          <div class="member__role">Founder · Locs &amp; Braids</div>
-          <p class="member__quote">„Jeder Style beginnt mit einem Gespräch — nicht mit einer Schablone."</p>
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Heike – Leitung"></div>
+          <div class="member__name">Heike</div>
+          <div class="member__role">Gründerin &amp; Leitung</div>
         </article>
         <article class="member reveal">
-          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
-          <div class="member__name">Platzhalter</div>
-          <div class="member__role">Cornrows &amp; Sleek Styles</div>
-          <p class="member__quote">„Saubere Linien, klare Struktur, kein Schnellverfahren."</p>
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Heidi – Leitung"></div>
+          <div class="member__name">Heidi</div>
+          <div class="member__role">Leitung</div>
         </article>
         <article class="member reveal">
-          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Team-Mitglied"></div>
-          <div class="member__name">Platzhalter</div>
-          <div class="member__role">Twists &amp; Wigs</div>
-          <p class="member__quote">„Der beste Style ist der, mit dem du das Studio selbstbewusst verlässt."</p>
+          <div class="member__img"><img src="assets/placeholder-editorial.jpg" alt="Beyoncé – Leitung"></div>
+          <div class="member__name">Beyoncé</div>
+          <div class="member__role">Leitung</div>
         </article>
       </div>
+
+      <div class="split-head reveal team-sep">
+        <h2 class="display">Unser <span class="it">Team.</span></h2>
+        <p>Und die Hände, die im Studio täglich für deinen Look sorgen.</p>
+      </div>
+      <!-- TODO Salon: gemeinsames Teamfoto + weitere Mitglieder (z. B. Ashley) -->
+      <figure class="team-photo reveal">
+        <img src="assets/promo/studio-work.jpg" alt="Das Team von Parrylicious" loading="lazy">
+      </figure>
     </div>
   </section>
 
-  <!-- COMMUNITY -->
-  <section id="community">
+  <!-- („Bekannt aus dem Studio" ist in die Philosophie-Section oben gewandert) -->
+
+  <!-- 07 · KUNDENKONTO-VORTEILE -->
+  <section id="konto-vorteile">
     <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 08</span><span class="line"></span><span class="label">Community</span></div>
-      <div class="split-head reveal">
-        <h2 class="display">Bekannt aus<br>dem <span class="it">Studio.</span></h2>
-        <p>Unsere Arbeiten erreichen auch bekannte Gesichter aus Sport und Social Media.</p>
-      </div>
-      <div class="promo-grid">
-        <figure class="promo reveal"><img src="assets/promo/studio-community.jpg" alt="Community im Parrylicious Studio" loading="lazy"></figure>
-        <figure class="promo reveal"><img src="assets/promo/studio-work.jpg" alt="Handarbeit im Parrylicious Studio" loading="lazy"></figure>
+      <div class="sec-index reveal"><span class="num">N° 07</span><span class="line"></span><span class="label">Kundenkonto</span></div>
+      <div class="account-cta reveal">
+        <h2 class="display">Mehr Vorteile mit<br><span class="it">deinem Kundenkonto.</span></h2>
+        <ul class="perks">
+          <li><span class="perks__k">Treuepunkte sammeln</span><span class="perks__d">Bei jeder Buchung – später gegen Rabatt einlösen.</span></li>
+          <li><span class="perks__k">Schneller Termine buchen</span><span class="perks__d">Daten vorausgefüllt, alle Termine an einem Ort.</span></li>
+          <li><span class="perks__k">Exklusive Informationen</span><span class="perks__d">Als Erste:r von Neuem &amp; Aktionen erfahren.</span></li>
+          <li><span class="perks__k">Neuigkeiten zu Services, Produkten &amp; Events</span><span class="perks__d">Wenn du möchtest – jederzeit abbestellbar.</span></li>
+        </ul>
+        <div class="account-cta__btns">
+          <a class="btn btn--accent" href="login.html?register=1">Kostenlos registrieren</a>
+          <a class="btn btn--ghost" href="booking.html" target="_blank" rel="noopener">Als Gast buchen</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- RATING -->
+  <!-- 08 · REVIEWS -->
   <section class="rating studio" id="reviews">
     <div class="wrap">
       <div>
-        <div class="sec-index reveal"><span class="num">N° 07</span><span class="line"></span><span class="label">Reviews</span></div>
-        <h2 class="display reveal">The results <span class="it">speak.</span><br>The community <span class="it">confirms<span class="dot">.</span></span></h2>
+        <div class="sec-index reveal"><span class="num">N° 08</span><span class="line"></span><span class="label">Reviews</span></div>
+        <h2 class="display reveal">The results <span class="it">speak.</span><br>Our community <span class="it">confirms<span class="dot">.</span></span></h2>
       </div>
       <div class="reveal">
         <div class="rating__num" id="ratingNum">—</div>
@@ -472,20 +572,8 @@
         <div class="rating__note" id="ratingNote">Bewertungen werden geladen…</div>
       </div>
       <div class="home-reviews" id="homeReviews" style="grid-column:1/-1"></div>
-    </div>
-  </section>
-
-  <!-- KUNDENKONTO-VORTEILE -->
-  <section id="konto-vorteile">
-    <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Kundenkonto</span></div>
-      <div class="account-cta reveal">
-        <h2 class="display">Mehr Vorteile mit<br><span class="it">deinem Kundenkonto.</span></h2>
-        <p>Erstelle kostenlos ein Kundenkonto und profitiere von Treuepunkten, einer schnelleren Terminbuchung sowie exklusiven Informationen zu neuen Dienstleistungen, Produkten und Veranstaltungen.</p>
-        <div class="account-cta__btns">
-          <a class="btn btn--accent" href="login.html?register=1">Kostenlos registrieren</a>
-          <a class="btn btn--ghost" href="booking.html" target="_blank" rel="noopener">Als Gast buchen</a>
-        </div>
+      <div class="reviews-cta reveal" style="grid-column:1/-1">
+        <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
       </div>
     </div>
   </section>
@@ -552,11 +640,17 @@
         const num = document.getElementById('ratingNum');
         const starsEl = document.getElementById('ratingStars');
         const note = document.getElementById('ratingNote');
-        if (summary && Number(summary.count) > 0) {
+        const count = Number(summary && summary.count) || 0;
+        if (count >= 3) {
           const avg = Number(summary.avg) || 0;
           if (num) num.innerHTML = `${String(summary.avg).replace('.', ',')}<small>/ 5</small>`;
           if (starsEl) starsEl.textContent = '★'.repeat(Math.max(1, Math.min(5, Math.round(avg))));
-          if (note) note.textContent = `${summary.count} verifizierte Bewertung${Number(summary.count) === 1 ? '' : 'en'}`;
+          if (note) note.textContent = `${count} verifizierte Bewertungen`;
+        } else if (count > 0) {
+          // Bei nur 1–2 Bewertungen KEINE prominente Gesamtnote zeigen.
+          if (num) num.textContent = 'Neu';
+          if (starsEl) starsEl.textContent = '';
+          if (note) note.textContent = 'Erste Stimmen sind da — bald mehr.';
         } else {
           if (num) num.textContent = 'Neu';
           if (starsEl) starsEl.textContent = '';
@@ -583,41 +677,8 @@
     const eur = (n) => new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n);
     const dur = (m) => { const h=Math.floor(m/60), r=m%60; return h&&r?`${h} Std ${r} Min`:h?`${h} Std`:`${r} Min`; };
 
-    // Oberkategorien: erst Kachel-Auswahl, dann die Frisuren der Kategorie.
-    const CATS = [
-      { key:'locs',       label:'Locs & Dreads',     img:'assets/categories/locs.jpg' },
-      { key:'braids',     label:'Braids & Cornrows', img:'assets/categories/braids.jpg' },
-      { key:'ponytails',  label:'Ponytails',         img:'assets/categories/ponytails.jpg' },
-      { key:'men',        label:'Herren',            img:'assets/categories/men.jpg' },
-      { key:'wash',       label:'Wash & Cut',        img:'assets/categories/wash.jpg' },
-      { key:'treatment',  label:'Treatments',        img:'assets/categories/treatment.jpg' },
-      { key:'extensions', label:'Extensions',        img:'assets/categories/extensions.jpg' },
-      { key:'weft',       label:'Weft Extensions',   img:'assets/placeholder-editorial.jpg' },
-      { key:'kids',       label:'Kids',              img:'assets/categories/kids.jpg' }
-    ];
-    const catTiles = document.getElementById('catTiles');
-    const inCat = (s, key) => (s.tags || []).includes(key);
-
-    function renderTiles(){
-      catTiles.innerHTML = '';
-      CATS.forEach(c => {
-        const count = services.filter(s => inCat(s, c.key)).length;
-        if (!count) return;
-        const t = document.createElement('button');
-        t.className = 'cat-tile';
-        t.innerHTML = `
-          <img src="${c.img}" alt="${c.label}" loading="lazy">
-          <span class="cat-tile__arrow">↗</span>
-          <span class="cat-tile__label">
-            <span class="cat-tile__name">${c.label}</span>
-            <span class="cat-tile__count">${count} ${count === 1 ? 'Style' : 'Styles'}</span>
-          </span>`;
-        t.addEventListener('click', () => { window.open('booking.html?category=' + encodeURIComponent(c.key), '_blank', 'noopener'); });
-        catTiles.appendChild(t);
-      });
-    }
-
-    renderTiles();
+    // (Kategorie-Kacheln sind von der Startseite entfernt — Auswahl erfolgt nur noch
+    //  auf der Buchungsseite, booking.html.)
 
     // Mobile nav
     const nav = document.getElementById('nav'), toggle = document.getElementById('navToggle');
