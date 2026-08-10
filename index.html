@@ -261,6 +261,18 @@
     </div>
   </section>
 
+  <!-- EXTENSIONS IM FOKUS -->
+  <div class="ext-band">
+    <div class="wrap ext-band__inner">
+      <div class="ext-band__text">
+        <div class="ext-band__eyebrow">Im Fokus</div>
+        <h3 class="ext-band__title">Extensions für jede Haarstruktur</h3>
+        <p class="ext-band__sub">Weft, Microlinks &amp; Tressen – für Afro- und europäisches Haar, inklusive Beratung.</p>
+      </div>
+      <a class="btn btn--accent btn--arrow" href="booking.html?category=weft" target="_blank" rel="noopener">Extensions buchen</a>
+    </div>
+  </div>
+
   <!-- (Marquee „In Parrylicious we trust" ist in die Philosophie-Section gewandert) -->
 
   <style>
@@ -363,6 +375,18 @@
     .perks__d{ display:block; color:var(--ink-soft); font-size:14px; margin-top:4px; }
     .reviews-cta{ margin-top:44px; }
 
+    /* Abstand Philosophie-Text → Banner; „Bekannt aus dem Studio"-Bilder */
+    .philo-gap{ margin-top:clamp(44px,8vh,100px); }
+    .famous-wrap2{ margin-top:38px; }
+
+    /* Extensions im Fokus (direkt nach dem Hero) */
+    .ext-band{ border-bottom:1px solid var(--line-soft); background:linear-gradient(135deg, rgba(203,164,107,.13), transparent 72%); }
+    .ext-band__inner{ display:flex; align-items:center; justify-content:space-between; gap:26px; padding:clamp(24px,4.5vh,46px) 0; flex-wrap:wrap; }
+    .ext-band__text{ min-width:260px; }
+    .ext-band__eyebrow{ font-size:11px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); }
+    .ext-band__title{ font-family:var(--font-display); font-size:clamp(26px,3.6vw,42px); font-weight:600; margin:8px 0 8px; line-height:1.05; }
+    .ext-band__sub{ color:var(--ink-soft); font-size:16px; margin:0; max-width:56ch; }
+
     /* Mobile / iPad — übersichtlicher */
     @media (max-width:900px){
       .story{ grid-template-columns:1fr; gap:38px; }
@@ -389,8 +413,8 @@
       </div>
     </div>
 
-    <!-- „In Parrylicious we trust" — Schriftzug-Banner (unter der Philosophie) -->
-    <div class="marquee" aria-hidden="true">
+    <!-- 1. Banner: „In Parrylicious we trust" (mit Abstand zum Philosophie-Text) -->
+    <div class="marquee philo-gap" aria-hidden="true">
       <div class="marquee__track">
         <div class="marquee__g">
           <span class="marquee__item">In Parrylicious we trust</span><span class="marquee__dot"></span>
@@ -405,36 +429,72 @@
       </div>
     </div>
 
-    <!-- Referenzen-Banner: NUR Namen, keine Logos. PLATZHALTER-Kategorien.
-         TODO Salon: echte Namen/Vereine/Brands + dokumentierte Freigaben liefern
-         (Persönlichkeits- & Markenrecht) — dann hier eintragen. -->
-    <div class="ref-band" aria-label="Referenzen aus dem Studio">
-      <div class="ref-band__track">
-        <div class="ref-band__g">
-          <span class="ref-band__item">Sport</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Musik</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Medien</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Entertainment</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Kooperationen</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Community</span><span class="ref-band__dot">✦</span>
-        </div>
-        <div class="ref-band__g" aria-hidden="true">
-          <span class="ref-band__item">Sport</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Musik</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Medien</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Entertainment</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Kooperationen</span><span class="ref-band__dot">✦</span>
-          <span class="ref-band__item">Community</span><span class="ref-band__dot">✦</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bekannt aus dem Studio -->
+    <!-- „Bekannt aus dem Studio" (weiter oben) + dazu passender Namen-Banner -->
     <div class="wrap famous-wrap">
       <div class="split-head reveal">
         <h2 class="display">Bekannt aus<br>dem <span class="it">Studio.</span></h2>
         <p>Unsere Arbeit verbindet Menschen aus Sport, Musik, Entertainment und unserer Community.</p>
       </div>
+    </div>
+
+    <!-- 2. Banner: Namen bekannter Kund:innen.
+         WICHTIG (rechtlich): Namen realer Prominenter NUR mit dokumentierter
+         Einwilligung der jeweiligen Person für Werbung verwenden (§12 BGB, §22 KUG, UWG).
+         Vom Salon so freigegeben — bei fehlender Freigabe einzelne Namen hier entfernen. -->
+    <div class="ref-band" aria-label="Bekannt aus dem Studio">
+      <div class="ref-band__track">
+        <div class="ref-band__g">
+          <span class="ref-band__item">Jeremy Frimpong</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Karim Adeyemi</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Robert Andrich</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Edmond Tapsoba</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Odilon Kossounou</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jamie Bynoe-Gittens</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Manu Koné</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Breel Embolo</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Denis Zakaria</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Nnamdi Collins</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Nathan Tella</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Loïc Badé</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Amine Adli</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Loredana</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Lil Yachty</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Reezy</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">badmómzjay</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Billa Joe</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Pajel</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jazeek</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jennifer Iglesias</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Cecilia Asoro</span><span class="ref-band__dot">✦</span>
+        </div>
+        <div class="ref-band__g" aria-hidden="true">
+          <span class="ref-band__item">Jeremy Frimpong</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Karim Adeyemi</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Robert Andrich</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Edmond Tapsoba</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Odilon Kossounou</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jamie Bynoe-Gittens</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Manu Koné</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Breel Embolo</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Denis Zakaria</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Nnamdi Collins</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Nathan Tella</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Loïc Badé</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Amine Adli</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Loredana</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Lil Yachty</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Reezy</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">badmómzjay</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Billa Joe</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Pajel</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jazeek</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Jennifer Iglesias</span><span class="ref-band__dot">✦</span>
+          <span class="ref-band__item">Cecilia Asoro</span><span class="ref-band__dot">✦</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap famous-wrap2">
       <div class="famous reveal">
         <figure class="famous__item"><img src="assets/promo/studio-community.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
         <figure class="famous__item"><img src="assets/promo/studio-work.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
@@ -502,7 +562,7 @@
   <!-- 06 · LEITUNG & TEAM -->
   <section id="team">
     <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Leitung &amp; Team</span></div>
+      <div class="sec-index reveal"><span class="num">N° 06</span><span class="line"></span><span class="label">Leitung</span></div>
       <div class="split-head reveal">
         <h2 class="display">Unsere Parrylicious<br><span class="it">Leitung.</span></h2>
         <p>Die Menschen, die Parrylicious leiten und fachlich repräsentieren.</p>
@@ -525,15 +585,6 @@
           <div class="member__role">Leitung</div>
         </article>
       </div>
-
-      <div class="split-head reveal team-sep">
-        <h2 class="display">Unser <span class="it">Team.</span></h2>
-        <p>Und die Hände, die im Studio täglich für deinen Look sorgen.</p>
-      </div>
-      <!-- TODO Salon: gemeinsames Teamfoto + weitere Mitglieder (z. B. Ashley) -->
-      <figure class="team-photo reveal">
-        <img src="assets/promo/studio-work.jpg" alt="Das Team von Parrylicious" loading="lazy">
-      </figure>
     </div>
   </section>
 
