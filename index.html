@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="assets/logo.jpg" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="alternate icon" href="assets/logo.jpg" />
   <style>
     :root{
       --bg: #0a0a0c;
@@ -196,6 +197,10 @@
     .foot-grid{ display:flex; justify-content:space-between; align-items:flex-end; gap:30px; flex-wrap:wrap; }
     .foot-brand{ font-family:var(--font-display); font-size:40px; font-weight:600; }
     .foot-brand b{ color:var(--accent); }
+    .foot-emblem{ display:block; width:74px; height:74px; margin:0 0 20px;
+      -webkit-mask:url("assets/logo.svg") center/contain no-repeat;
+      mask:url("assets/logo.svg") center/contain no-repeat;
+      background:var(--accent); }
     .foot-links{ display:flex; gap:22px; flex-wrap:wrap; }
     .foot-links a{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
     .foot-links a:hover{ color:var(--ink); }
@@ -752,6 +757,7 @@
     <div class="wrap">
       <div class="foot-grid">
         <div>
+          <span class="foot-emblem" aria-hidden="true"></span>
           <div class="foot-brand">Parry<b>licious.</b></div>
           <div class="foot-copy">Bahlenstraße 42 · 40589 Düsseldorf · Di–Sa 11:00–19:30</div>
         </div>
