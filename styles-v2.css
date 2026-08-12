@@ -61,7 +61,7 @@ a{ color:inherit; transition:color var(--transition), opacity var(--transition);
 .pl-mark{ display:inline-block; flex:none; background:var(--accent);
   -webkit-mask:url("assets/logo.svg") center/contain no-repeat;
   mask:url("assets/logo.svg") center/contain no-repeat; }
-.brand .pl-mark{ width:32px; height:32px; }
+.brand .pl-mark{ width:46px; height:46px; }
 .footer-grid .foot-mark{ width:42px; height:42px; }
 .nav{ display:flex; align-items:center; gap:24px; }
 .topbar .nav{ margin-left:auto; }
