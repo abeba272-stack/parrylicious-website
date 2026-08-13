@@ -38,6 +38,9 @@
       -webkit-font-smoothing:antialiased; overflow-x:hidden;
     }
     a{ color:inherit; text-decoration:none; }
+    /* Sichtbare Tastatur-Fokus-Ringe (Accessibility, UI/UX Pro Max Checkliste) */
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible, .cat-tile:focus-visible, .booking-cat:focus-visible{
+      outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
     img{ max-width:100%; display:block; }
     .wrap{ width:min(var(--max), 92%); margin:0 auto; }
     .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-soft); }
@@ -598,8 +601,8 @@
         <figure class="famous__item"><img src="assets/promo/studio-work.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
         <figure class="famous__item"><img src="assets/work/w4.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
         <figure class="famous__item"><img src="assets/work/w2.jpg" alt="Projekt aus dem Parrylicious Studio" loading="lazy"></figure>
-        <figure class="famous__item famous__ph"><span>Bild folgt</span></figure>
-        <figure class="famous__item famous__ph"><span>Bild folgt</span></figure>
+        <figure class="famous__item"><img src="assets/studio/knotless-braids.jpg" alt="Knotless Braids aus dem Parrylicious Studio" loading="lazy"></figure>
+        <figure class="famous__item"><img src="assets/studio/cornrows-men.jpg" alt="Herren-Cornrows aus dem Parrylicious Studio" loading="lazy"></figure>
       </div>
     </div>
   </section>

@@ -63,6 +63,8 @@ a{ color:inherit; transition:color var(--transition), opacity var(--transition);
   mask:url("assets/logo.svg") center/contain no-repeat; }
 .brand .pl-mark{ width:46px; height:46px; }
 .footer-grid .foot-mark{ width:42px; height:42px; }
+/* Sichtbare Tastatur-Fokus-Ringe (Accessibility) */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:3px; }
 .nav{ display:flex; align-items:center; gap:24px; }
 .topbar .nav{ margin-left:auto; }
 .nav a{ text-decoration:none; color:var(--ink-soft); font-weight:600; font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; position:relative; }
