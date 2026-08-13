@@ -504,6 +504,37 @@
     }
   </style>
 
+  <style>
+    /* ===== Premium-Polish (UI/UX Pro Max Pass) — edler & mehr Tiefe ===== */
+    /* CTAs: Gold-Verlauf + weicher Schatten + Pfeil-Micro-Interaktion */
+    .btn--accent{ background:linear-gradient(135deg, var(--accent-2), var(--accent)); box-shadow:0 4px 16px rgba(203,164,107,.22); }
+    .btn--accent:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(203,164,107,.42); }
+    .btn--ghost:hover{ border-color:var(--accent); color:var(--accent); }
+    .btn--arrow::after{ transition:transform .25s var(--ease); }
+    .btn--arrow:hover::after{ transform:translateX(5px); }
+
+    /* Nav: animierter Gold-Unterstrich */
+    .nav a:not(.cta-mobile){ position:relative; }
+    .nav a:not(.cta-mobile)::after{ content:""; position:absolute; left:0; right:0; bottom:-7px; height:1.5px; background:var(--accent); transform:scaleX(0); transform-origin:left; transition:transform .32s var(--ease); }
+    .nav a:not(.cta-mobile):hover::after{ transform:scaleX(1); }
+
+    /* Bild-Karten: rundere Ecken, Tiefe, sanftes Anheben */
+    .work, .famous__item{ border-radius:8px; box-shadow:0 8px 22px rgba(0,0,0,.32); transition:transform .5s var(--ease), box-shadow .5s var(--ease); }
+    .work:hover, .famous__item:hover{ transform:translateY(-5px); box-shadow:0 18px 44px rgba(0,0,0,.5); }
+
+    /* Karten allgemein + Leitung + Reviews */
+    .card:hover{ box-shadow:0 14px 36px rgba(0,0,0,.35); }
+    .member__img{ border-radius:8px; }
+    .member:hover .member__img img{ transform:scale(1.05); }
+    .hr-card{ border-radius:8px; transition:transform .3s var(--ease), border-color .3s var(--ease); }
+    .hr-card:hover{ transform:translateY(-3px); border-color:var(--line); }
+
+    /* Feinschliff */
+    .sec-index .num{ color:var(--accent); }
+    .ba{ border-radius:8px; }
+    .parallax__bg{ filter:saturate(1.05); }
+  </style>
+
   <!-- 02 · PHILOSOPHIE + Referenzen + Bekannt aus dem Studio -->
   <section id="ueber-uns">
     <div class="wrap">
