@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Termin buchen – Parrylicious Studio</title>
+  <meta name="description" content="Buche deinen Termin bei Parrylicious in Düsseldorf – Braids, Locs, Cornrows, Extensions & mehr. Online-Buchung über Planity." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,16 +12,14 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png" />
   <link rel="apple-touch-icon" href="assets/icon-512.png" />
   <style>
-    /* Leistungs-Details (Phase 04): „Für wen & Ablauf" aufklappbar, Hinweis sichtbar. */
-    .svc-more{ margin:4px 0 10px; border-top:1px solid var(--line-soft, rgba(0,0,0,.1)); padding-top:8px; }
-    .svc-more > summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--accent-2, #7a5c46); list-style:none; display:inline-flex; align-items:center; gap:6px; }
-    .svc-more > summary::-webkit-details-marker{ display:none; }
-    .svc-more > summary::before{ content:'＋'; font-weight:700; }
-    .svc-more[open] > summary::before{ content:'－'; }
-    .svc-more p{ margin:8px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-soft, #5c5148); }
-    .svc-more p strong{ color:var(--ink, #2a251c); }
-    .svc-note{ margin:0 0 10px; font-size:13px; line-height:1.45; color:var(--ink-soft, #5c5148); background:var(--panel-2, rgba(203,164,107,.1)); border-left:3px solid var(--accent, #cba46b); border-radius:6px; padding:8px 12px; }
-    .svc-note::before{ content:'ℹ️ '; }
+    .booking-wrap{ padding:clamp(28px,5vw,56px) 0 90px; }
+    .booking-head{ margin-bottom:26px; max-width:60ch; }
+    .booking-head h1{ margin:8px 0 12px; }
+    /* Planity-Modul: eigener Rahmen, damit es sauber in die Seite eingebettet ist. */
+    #planity{ min-height:520px; border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel);
+      padding:clamp(10px,2vw,22px); box-shadow:var(--shadow-soft); }
+    .booking-note{ margin-top:16px; font-size:13px; color:var(--ink-faint); }
+    .booking-note a{ color:var(--accent); }
   </style>
 </head>
 <body>
@@ -28,179 +27,54 @@
     <div class="container row">
       <a class="brand" href="/"><span class="pl-mark" aria-hidden="true"></span><span class="wordmark">Parrylicious</span><span class="wordmark-tag">Studio</span></a>
       <nav class="nav">
-        <a href="home.html#services">Leistungen</a>
-        <a class="btn small" href="/">Zurück</a>
+        <a href="/#services">Styles</a>
+        <a href="/#besuch">Besuch</a>
+        <a href="ueber.html">Über uns</a>
       </nav>
     </div>
   </header>
 
-  <main class="section">
-    <div class="container">
-      <div class="section-head">
-        <h2>Termin anfragen</h2>
-        <p class="muted">
-          Ablauf: Service wählen → Datum/Slot auswählen → Daten eingeben → Anzahlung online → Termin bestätigt.
-        </p>
-        <p class="muted" id="bookingModeHint">Sichere deinen Termin mit einer Anzahlung – der Rest wird vor Ort im Salon bezahlt.</p>
+  <main>
+    <div class="container booking-wrap">
+      <div class="booking-head">
+        <p class="kicker">Termin buchen</p>
+        <h1>Online buchen bei Parrylicious</h1>
+        <p class="muted">Wähle deine Leistung, deinen Wunschtermin und buche direkt online – inklusive „Mein Konto".</p>
       </div>
 
-      <div class="card" id="bookingGate" hidden>
-        <h3>Wie möchtest du buchen?</h3>
-        <p class="muted">Buche als Gast — oder mit kostenlosem Kundenkonto und sichere dir <strong>10 % Neukundenrabatt</strong>, <strong>Treuepunkte</strong> und die Möglichkeit, Termine zu <strong>stornieren/verschieben</strong>.</p>
-        <div class="row gap" style="margin-top:14px; flex-wrap:wrap">
-          <button class="btn" id="gateAccount" type="button">Mit Kundenkonto anmelden</button>
-          <button class="btn ghost" id="gateGuest" type="button">Als Gast buchen</button>
-        </div>
-        <p class="fineprint" style="margin-top:12px">Noch kein Konto? <a class="link" href="login.html?next=booking.html&register=1">Kostenlos registrieren</a></p>
-      </div>
+      <!-- Planity White-Label-Modul (Buchung + Konto + weitere abonnierte Optionen) -->
+      <div id="planity"></div>
 
-      <div class="wizard">
-        <div class="steps" aria-label="Buchungsschritte">
-          <div class="step active" data-step="1">1 · Style</div>
-          <div class="step" data-step="2">2 · Stylist</div>
-          <div class="step" data-step="3">3 · Datum & Zeit</div>
-          <div class="step" data-step="4">4 · Details</div>
-          <div class="step" data-step="5">5 · Anzahlung</div>
-        </div>
-
-        <section class="panel" id="step1">
-          <h3>Style auswählen</h3>
-          <p class="muted">Alle Preise verstehen sich „ab“ – der genaue Betrag hängt von Haarlänge und -zustand ab.</p>
-          <div class="grid" id="servicePicker"></div>
-          <div class="row end gap">
-            <button class="btn" id="toStep2" disabled>Weiter</button>
-          </div>
-        </section>
-
-        <section class="panel hidden" id="step2">
-          <h3>Stylist (optional)</h3>
-          <p class="muted">Du kannst einen Stylisten wählen oder „Egal“ – dann weist das System automatisch zu (Kapazität: 4 Plätze).</p>
-          <div class="grid" id="stylistPicker"></div>
-          <div class="row between gap">
-            <button class="btn ghost" data-back="1">Zurück</button>
-            <button class="btn" data-next="3">Weiter</button>
-          </div>
-        </section>
-
-        <section class="panel hidden" id="step3">
-          <h3>Datum & Zeit</h3>
-          <p class="muted">Öffnungszeiten Di–Sa 11:00–19:30. Slots werden nach Service-Dauer berechnet.</p>
-          <div class="two-col">
-            <div class="card">
-              <div class="row between">
-                <div class="muted">Kalender</div>
-                <button class="btn small ghost" id="resetDate">Reset</button>
-              </div>
-              <div class="calendar" id="calendar"></div>
-            </div>
-            <div class="card">
-              <div class="row between">
-                <div>
-                  <div class="muted">Verfügbare Zeiten</div>
-                  <div class="small" id="slotHint">Wähle links ein Datum.</div>
-                </div>
-                <button class="btn small ghost" id="joinWaitlist">Warteliste</button>
-              </div>
-              <div class="slots" id="slots"></div>
-            </div>
-          </div>
-          <div class="row between gap">
-            <button class="btn ghost" data-back="2">Zurück</button>
-            <button class="btn" id="toStep4" disabled>Weiter</button>
-          </div>
-        </section>
-
-        <section class="panel hidden" id="step4">
-          <h3>Deine Angaben</h3>
-          <p class="muted">Wir brauchen diese Angaben für die Terminbestätigung und Rückfragen.</p>
-
-          <form id="detailsForm" class="form">
-            <div class="two-col">
-              <label>Vorname
-                <input name="firstName" required placeholder="z. B. Amina" />
-              </label>
-              <label>Nachname
-                <input name="lastName" required placeholder="z. B. Okafor" />
-              </label>
-            </div>
-
-            <div class="two-col">
-              <label>Telefonnummer
-                <input name="phone" required placeholder="z. B. 0176..." />
-              </label>
-              <label>E‑Mail
-                <input name="email" type="email" required placeholder="z. B. name@mail.de" />
-              </label>
-            </div>
-
-            <label>Adresse
-              <input name="address" required placeholder="Straße, Hausnummer, PLZ, Ort" />
-            </label>
-
-            <label>Hinweise / Haarzustand (optional)
-              <textarea name="notes" placeholder="z. B. nicht frisch gewaschen, sehr dickes Haar, Wunsch-Style, Allergien …"></textarea>
-            </label>
-
-            <label class="checkbox">
-              <input type="checkbox" name="privacy" required />
-              <span>Ich stimme der Verarbeitung meiner Daten gemäß <a href="privacy.html">Datenschutzerklärung</a> zu (notwendig für die Buchung).</span>
-            </label>
-
-            <div class="row between gap">
-              <button type="button" class="btn ghost" data-back="3">Zurück</button>
-              <button type="submit" class="btn">Weiter zur Anzahlung</button>
-            </div>
-          </form>
-        </section>
-
-        <section class="panel hidden" id="step5">
-          <h3>Anzahlung &amp; Terminbestätigung</h3>
-          <p class="muted">Zahle jetzt sicher deine Anzahlung online – damit ist dein Termin fest reserviert. Der Restbetrag wird vor Ort im Salon bezahlt.</p>
-          <div class="card">
-            <div class="summary" id="summary"></div>
-            <div class="row gap">
-              <button class="btn" id="payDeposit">Anzahlung sicher online bezahlen</button>
-            </div>
-            <p class="fineprint">
-              Zahlung erfolgt verschlüsselt über Stripe. Stornierung und Verschiebung sind mit Kundenkonto bis 48 Std. vor dem Termin über „Mein Konto“ möglich – die Anzahlung wird dann erstattet.
-            </p>
-          </div>
-          <div class="row between gap">
-            <button class="btn ghost" data-back="4">Zurück</button>
-            <a class="btn ghost" href="/">Abbrechen</a>
-          </div>
-        </section>
-
-        <section class="panel hidden" id="done">
-          <h3>✅ Termin bestätigt</h3>
-          <p class="muted">Deine Anzahlung ist eingegangen und dein Termin ist fest reserviert. Wir freuen uns auf dich!</p>
-          <div class="card">
-            <div class="summary" id="doneSummary"></div>
-            <div class="row gap">
-              <button class="btn" id="downloadIcs">Kalender-Datei (.ics)</button>
-              <a class="btn ghost" href="/">Fertig</a>
-            </div>
-          </div>
-        </section>
-
-      </div>
-
+      <p class="booking-note">Die Online-Buchung wird über <strong>Planity</strong> abgewickelt. Fragen? Schreib uns per
+        <a href="https://wa.me/4915170588497" target="_blank" rel="noreferrer">WhatsApp</a>.</p>
     </div>
   </main>
 
   <footer class="footer">
     <div class="container footer-grid"><span class="pl-mark foot-mark" aria-hidden="true"></span>
       <div class="footer-links">
+        <a href="/">Startseite</a>
+        <a href="ueber.html">Über uns</a>
         <a href="impressum.html">Impressum</a>
         <a href="privacy.html">Datenschutz</a>
-        <a href="login.html">Team-Login</a>
       </div>
       <div class="muted">© <span id="year"></span> Parrylicious</div>
     </div>
   </footer>
 
-  <script type="module" src="booking.js"></script>
-  <script type="module" src="nav.js"></script>
-  <script src="demo-banner.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    // Planity-Konfiguration MUSS vor dem Laden der App-Skripte gesetzt sein.
+    var planityContainer = document.getElementById('planity');
+    window.planity = {
+      key: '-OzlA8UjkvtRJg81gCvC',
+      primaryColor: '#cba46b',
+      options: { countryCode: 'DE' },
+      container: planityContainer
+    };
+  </script>
+  <script src="https://d2skjte8udjqxw.cloudfront.net/widget/production/2/polyfills.latest.js"></script>
+  <script src="https://d2skjte8udjqxw.cloudfront.net/widget/production/2/app.latest.js"></script>
+  <script src="nav.js"></script>
 </body>
 </html>

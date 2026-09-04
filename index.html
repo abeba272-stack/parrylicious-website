@@ -238,7 +238,6 @@
       <a href="#ueber-uns">Philosophie</a>
       <a href="#arbeit">Arbeit</a>
       <a href="#geschichte">Geschichte</a>
-      <a href="#reviews">Reviews</a>
       <a href="#besuch">Besuch</a>
       <a href="ueber.html">Über uns</a>
       <a href="booking.html" target="_blank" rel="noopener" class="cta-mobile">Termin buchen</a>
@@ -280,7 +279,7 @@
         <h3 class="ext-band__title">Extensions – auch für glattes, europäisches Haar</h3>
         <p class="ext-band__sub"><span class="t-full">Ob Afro-Haar oder glattes, europäisches Haar: Bei uns bist du richtig. Weft, Microlinks &amp; Tressen – professionell für jede Haarstruktur, mit persönlicher Beratung.</span><span class="t-short">Ob Afro- oder glattes, europäisches Haar – Weft, Microlinks &amp; Tressen für jede Haarstruktur.</span></p>
       </div>
-      <a class="btn btn--accent btn--arrow" href="booking.html?category=weft" target="_blank" rel="noopener">Extensions buchen</a>
+      <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Extensions buchen</a>
     </div>
   </div>
 
@@ -722,41 +721,16 @@
 
   <!-- („Bekannt aus dem Studio" ist in die Philosophie-Section oben gewandert) -->
 
-  <!-- 07 · KUNDENKONTO-VORTEILE -->
-  <section id="konto-vorteile">
-    <div class="wrap">
-      <div class="sec-index reveal"><span class="num">N° 07</span><span class="line"></span><span class="label">Kundenkonto</span></div>
-      <div class="account-cta reveal">
-        <h2 class="display">Mehr Vorteile mit<br><span class="it">deinem Kundenkonto.</span></h2>
-        <ul class="perks">
-          <li><span class="perks__k">Treuepunkte sammeln</span><span class="perks__d">Bei jeder Buchung – später gegen Rabatt einlösen.</span></li>
-          <li><span class="perks__k">Schneller Termine buchen</span><span class="perks__d">Daten vorausgefüllt, alle Termine an einem Ort.</span></li>
-          <li><span class="perks__k">Exklusive Informationen</span><span class="perks__d">Als Erste:r von Neuem &amp; Aktionen erfahren.</span></li>
-          <li><span class="perks__k">Neuigkeiten zu Services, Produkten &amp; Events</span><span class="perks__d">Wenn du möchtest – jederzeit abbestellbar.</span></li>
-        </ul>
-        <div class="account-cta__btns">
-          <a class="btn btn--accent" href="login.html?register=1">Kostenlos registrieren</a>
-          <a class="btn btn--ghost" href="booking.html" target="_blank" rel="noopener">Als Gast buchen</a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- (Kundenkonto-Vorteile & Reviews entfernt — Buchung & Konto laufen jetzt über Planity) -->
 
-  <!-- 08 · REVIEWS -->
-  <section class="rating studio" id="reviews">
-    <div class="wrap">
-      <div>
-        <div class="sec-index reveal"><span class="num">N° 08</span><span class="line"></span><span class="label">Reviews</span></div>
-        <h2 class="display reveal">The results <span class="it">speak.</span><br>Our community <span class="it">confirms<span class="dot">.</span></span></h2>
-      </div>
-      <div class="reveal">
-        <div class="rating__num" id="ratingNum">—</div>
-        <div class="rating__stars" id="ratingStars"></div>
-        <div class="rating__note" id="ratingNote">Bewertungen werden geladen…</div>
-      </div>
-      <div class="home-reviews" id="homeReviews" style="grid-column:1/-1"></div>
-      <div class="reviews-cta reveal" style="grid-column:1/-1">
+  <!-- 07 · ABSCHLUSS-CTA -->
+  <section id="cta">
+    <div class="wrap" style="text-align:center">
+      <div class="sec-index reveal" style="justify-content:center"><span class="num">N° 07</span><span class="line"></span><span class="label">Termin</span></div>
+      <h2 class="display reveal">Bereit für deinen<br><span class="it">neuen Look?</span></h2>
+      <div class="reveal" style="margin-top:28px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap">
         <a class="btn btn--accent btn--arrow" href="booking.html" target="_blank" rel="noopener">Termin buchen</a>
+        <a class="btn btn--ghost" href="https://wa.me/4915170588497" target="_blank" rel="noreferrer">WhatsApp</a>
       </div>
     </div>
   </section>
@@ -803,7 +777,6 @@
           <a href="impressum.html">Impressum</a>
           <a href="privacy.html">Datenschutz</a>
           <a href="https://instagram.com/parrylicious_studio" target="_blank" rel="noreferrer">Instagram</a>
-          <a href="login.html">Team-Login</a>
         </div>
       </div>
     </div>
@@ -811,59 +784,7 @@
 
   
 
-  <script type="module">
-    import { services } from './data/services.js';
-    import { getReviews, getReviewsSummary } from './data-client.js';
-
-    // Feature 2: echte Reviews laden (graceful — bleibt beim statischen Stand, wenn Backend fehlt/leer).
-    (async () => {
-      const host = document.getElementById('homeReviews');
-      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-      try {
-        const summary = await getReviewsSummary();
-        const num = document.getElementById('ratingNum');
-        const starsEl = document.getElementById('ratingStars');
-        const note = document.getElementById('ratingNote');
-        const count = Number(summary && summary.count) || 0;
-        if (count >= 3) {
-          const avg = Number(summary.avg) || 0;
-          if (num) num.innerHTML = `${String(summary.avg).replace('.', ',')}<small>/ 5</small>`;
-          if (starsEl) starsEl.textContent = '★'.repeat(Math.max(1, Math.min(5, Math.round(avg))));
-          if (note) note.textContent = `${count} verifizierte Bewertungen`;
-        } else if (count > 0) {
-          // Bei nur 1–2 Bewertungen KEINE prominente Gesamtnote zeigen.
-          if (num) num.textContent = 'Neu';
-          if (starsEl) starsEl.textContent = '';
-          if (note) note.textContent = 'Erste Stimmen sind da — bald mehr.';
-        } else {
-          if (num) num.textContent = 'Neu';
-          if (starsEl) starsEl.textContent = '';
-          if (note) note.innerHTML = 'Noch keine Bewertungen — <a class="link" href="konto.html">schreib die erste</a>.';
-        }
-        const list = await getReviews(null, 4);
-        if (host && Array.isArray(list) && list.length) {
-          host.innerHTML = list.map((r) => `
-            <figure class="hr-card">
-              <div class="hr-stars">${'★'.repeat(Math.max(1, Math.min(5, Number(r.rating) || 5)))}</div>
-              <blockquote>${esc(r.text || '')}</blockquote>
-              <figcaption>${esc(r.firstName || 'Gast')}${r.serviceName ? ` · ${esc(r.serviceName)}` : ''}</figcaption>
-            </figure>`).join('');
-        }
-      } catch (_e) {
-        const num = document.getElementById('ratingNum');
-        const note = document.getElementById('ratingNote');
-        if (num && num.textContent === '—') num.textContent = 'Neu';
-        if (note) note.textContent = 'Bewertungen bald verfügbar.';
-      }
-    })();
-    import { getCurrentUser } from './auth-client.js';
-
-    const eur = (n) => new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR' }).format(n);
-    const dur = (m) => { const h=Math.floor(m/60), r=m%60; return h&&r?`${h} Std ${r} Min`:h?`${h} Std`:`${r} Min`; };
-
-    // (Kategorie-Kacheln sind von der Startseite entfernt — Auswahl erfolgt nur noch
-    //  auf der Buchungsseite, booking.html.)
-
+  <script>
     // Mobile nav
     const nav = document.getElementById('nav'), toggle = document.getElementById('navToggle');
     toggle.addEventListener('click', () => {
@@ -872,18 +793,6 @@
       toggle.setAttribute('aria-expanded', String(open));
     });
     nav.addEventListener('click', e => { if (e.target.closest('a')) { nav.classList.remove('open'); toggle.classList.remove('open'); } });
-
-    // Konto-/Anmelden-Link im Header (rollenabhängig).
-    (async () => {
-      let user = null;
-      try { user = await getCurrentUser(); } catch (_e) { /* nicht eingeloggt */ }
-      const a = document.createElement('a');
-      if (user && (user.role === 'staff' || user.role === 'admin')) { a.href = 'admin.html'; a.textContent = 'Dashboard'; }
-      else if (user) { a.href = 'konto.html'; a.textContent = 'Mein Konto'; }
-      else { a.href = 'login.html'; a.textContent = 'Anmelden'; }
-      const cta = nav.querySelector('.cta-mobile');
-      if (cta) nav.insertBefore(a, cta); else nav.appendChild(a);
-    })();
 
     // Hero-Video: laeuft immer als sanfter Endlos-Loop (jederzeit sichtbar).
     const heroVideo = document.getElementById('heroVideo');
@@ -935,6 +844,5 @@
       document.querySelectorAll('.reveal').forEach(n => n.classList.add('vis'));
     }
   </script>
-  <script src="demo-banner.js"></script>
 </body>
 </html>

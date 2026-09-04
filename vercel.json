@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/reviews/summary", "destination": "/api/reviews?summary=1" }
-  ],
-  "crons": [
-    { "path": "/api/admin/run-reminders", "schedule": "0 7 * * *" }
-  ]
-}
