@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/booking.html",
+      "destination": "https://www.planity.com/parrylicious_studio-40589-dusseldorf",
+      "permanent": true
+    },
+    {
+      "source": "/booking",
+      "destination": "https://www.planity.com/parrylicious_studio-40589-dusseldorf",
+      "permanent": true
+    }
+  ]
+}
